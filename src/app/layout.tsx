@@ -1,8 +1,15 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
+
+/* --- Fonts --- */
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +21,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/* --- Viewport --- */
+export const viewport: Viewport = {
+  themeColor: "#030712",
+  width: "device-width",
+  initialScale: 1,
+};
+
+/* --- Metadata --- */
 export const metadata: Metadata = {
-  title: "Farhan Akhtar Makandar | ML Systems Engineer — Agentic AI & Deep Learning",
+  title: "Farhan Akhtar Makandar | ML Systems Engineer",
   description:
-    "ML Systems Engineer specializing in Agentic AI, Deep Learning, Transformers, and RAG pipelines. Built Temporal Fusion Transformer with 22% improvement over XGBoost. Research at NIT Calicut.",
+    "Portfolio of Farhan Akhtar Makandar — AI/ML Engineer specializing in Agentic AI, Deep Learning, and Transformers",
   keywords: [
     "Farhan Akhtar Makandar",
     "ML Systems Engineer",
@@ -48,6 +63,7 @@ export const metadata: Metadata = {
   },
 };
 
+/* --- Root Layout --- */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -56,7 +72,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0f] text-foreground font-sans`}
+        className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-[#030712] text-foreground font-sans`}
       >
         <ThemeProvider
           attribute="class"

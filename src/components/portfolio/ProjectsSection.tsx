@@ -1,627 +1,477 @@
-"use client";
+'use client';
 
-import { useState, useRef, useCallback, type MouseEvent } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ExternalLink,
-  Github,
-  ChevronDown,
-  ChevronUp,
-  ChevronRight,
-  Sparkles,
-  Layers,
-  Zap,
-  TrendingUp,
-  Brain,
-  Database,
-  MessageSquare,
-  BarChart3,
-  Cpu,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
-import SectionHeading from "./SectionHeading";
-import { projects, projectCategories, type Project } from "@/lib/data";
-import TiltCard from "./TiltCard";
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { Github, ExternalLink, Star, Zap, ChevronRight } from 'lucide-react';
+import { projects, projectCategories, type Project } from '@/lib/data';
 
-const comparisonData = [
-  { name: "TFT (Ours)", accuracy: 92, fill: "#8b5cf6" },
-  { name: "XGBoost", accuracy: 75, fill: "#4b5563" },
-  { name: "KNN", accuracy: 70, fill: "#4b5563" },
-];
+// ---------------------------------------------------------------------------
+// Animation variants
+// ---------------------------------------------------------------------------
 
-const iconMap: Record<string, React.ElementType> = {
-  Layers,
-  Zap,
-  TrendingUp,
-  MessageSquare,
-  Database,
-  Brain,
-  Sparkles,
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
-/* ────────────────────────────── spotlight hook ────────────────────────────── */
+const filterTabVariant = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      delay: 0.15 + i * 0.08,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+};
 
-function useSpotlight() {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [hovering, setHovering] = useState(false);
+const cardVariant = {
+  hidden: { opacity: 0, y: 24, scale: 0.97 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      delay: i * 0.1,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 12,
+    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
+  },
+};
 
-  const onMove = useCallback((e: MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const r = cardRef.current.getBoundingClientRect();
-    setPos({ x: e.clientX - r.left, y: e.clientY - r.top });
-  }, []);
+// ---------------------------------------------------------------------------
+// Category color map
+// ---------------------------------------------------------------------------
 
-  const onEnter = useCallback(() => setHovering(true), []);
-  const onLeave = useCallback(() => setHovering(false), []);
+const categoryColors: Record<string, string> = {
+  'Deep Learning': 'bg-purple-500/15 text-purple-300 border-purple-500/20',
+  'Agentic AI': 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20',
+  Analytics: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
+};
 
-  return { cardRef, pos, hovering, onMove, onEnter, onLeave };
+// ---------------------------------------------------------------------------
+// Architecture layer icon resolver
+// ---------------------------------------------------------------------------
+
+function ArchitectureIcon({ name }: { name: string }) {
+  const IconComponent = (() => {
+    switch (name) {
+      case 'Layers':
+        return (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+            <polyline points="2 17 12 22 22 17" />
+            <polyline points="2 12 12 17 22 12" />
+          </svg>
+        );
+      case 'Zap':
+        return <Zap className="h-4 w-4" />;
+      case 'TrendingUp':
+        return (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+            <polyline points="17 6 23 6 23 12" />
+          </svg>
+        );
+      case 'MessageSquare':
+        return (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        );
+      case 'Database':
+        return (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          </svg>
+        );
+      case 'Brain':
+        return (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+            <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+            <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
+            <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
+            <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+            <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
+            <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
+            <path d="M6 18a4 4 0 0 1-1.967-.516" />
+            <path d="M19.967 17.484A4 4 0 0 1 18 18" />
+          </svg>
+        );
+      case 'Sparkles':
+        return (
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+            <path d="M5 3v4" />
+            <path d="M19 17v4" />
+            <path d="M3 5h4" />
+            <path d="M17 19h4" />
+          </svg>
+        );
+      default:
+        return <Zap className="h-4 w-4" />;
+    }
+  })();
+
+  return <span className="text-cyan-400">{IconComponent}</span>;
 }
 
-/* ────────────────────────── ArchitectureDiagram ───────────────────────────── */
+// ---------------------------------------------------------------------------
+// Section heading
+// ---------------------------------------------------------------------------
 
-function ArchitectureDiagram({
-  layers,
-  title,
-}: {
-  layers: { label: string; sublabel: string; icon: string }[];
-  title: string;
-}) {
+function SectionHeading() {
   return (
-    <div className="rounded-xl bg-[#0a0a0f] border border-white/[0.06] p-4 overflow-x-auto">
-      <div className="flex items-center gap-3 min-w-[360px]">
-        {layers.map((layer, i) => {
-          const Icon = iconMap[layer.icon] || Cpu;
-          return (
-            <div key={i} className="flex items-center gap-3">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br from-purple-600/20 to-cyan-600/10 border border-white/[0.08] flex items-center justify-center">
-                  <Icon className="h-5 w-5 text-purple-400" />
-                </div>
-                <span className="text-[10px] text-gray-400 mt-1.5 font-medium">
-                  {layer.label}
-                </span>
-                <span className="text-[9px] text-gray-600">{layer.sublabel}</span>
-              </div>
-              {i < layers.length - 1 && (
-                <div className="flex-shrink-0">
-                  <div className="w-6 sm:w-8 h-[1px] bg-gradient-to-r from-purple-500/40 to-cyan-500/40" />
-                  <div className="w-6 sm:w-8 flex justify-center -mt-[1px]">
-                    <ChevronRight className="h-3 w-3 text-gray-600" />
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <p className="text-[10px] text-gray-600 mt-3 text-center">{title}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-100px' }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="mb-14 text-center"
+    >
+      <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-cyan-400/70">
+        What I&apos;ve Built
+      </p>
+      <h2 className="mb-4 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl md:text-5xl">
+        My <span className="gradient-text">Projects</span>
+      </h2>
+      <div className="heading-gradient-line mx-auto mt-2 w-24 sm:w-32" />
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Filter tabs
+// ---------------------------------------------------------------------------
+
+interface FilterTabsProps {
+  activeCategory: string;
+  onCategoryChange: (category: string) => void;
+}
+
+function FilterTabs({ activeCategory, onCategoryChange }: FilterTabsProps) {
+  return (
+    <div className="mb-10 flex flex-wrap items-center justify-center gap-2.5">
+      {projectCategories.map((category, i) => {
+        const isActive = activeCategory === category;
+        return (
+          <motion.button
+            key={category}
+            custom={i}
+            variants={filterTabVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-100px' }}
+            onClick={() => onCategoryChange(category)}
+            className={`
+              relative rounded-full px-5 py-2 text-xs font-semibold tracking-wide
+              transition-all duration-300
+              ${
+                isActive
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_16px_rgba(6,182,212,0.12)]'
+                  : 'glass text-[var(--text-secondary)] border border-white/[0.06] hover:border-white/[0.12] hover:text-[var(--text-primary)]'
+              }
+            `}
+          >
+            {category}
+            {isActive && (
+              <motion.span
+                layoutId="project-filter-indicator"
+                className="absolute inset-0 -z-10 rounded-full bg-cyan-500/20"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+          </motion.button>
+        );
+      })}
     </div>
   );
 }
 
-/* ──────────────────────── Metric shimmer wrapper ──────────────────────────── */
+// ---------------------------------------------------------------------------
+// Architecture diagram
+// ---------------------------------------------------------------------------
 
-function MetricCard({
-  metric,
-  index,
+function ArchitectureDiagram({
+  architecture,
 }: {
-  metric: { value: string; label: string; accent?: boolean };
-  index: number;
+  architecture: NonNullable<Project['architecture']>;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1, type: "spring", stiffness: 260, damping: 20 }}
-      className="relative glass-card p-3 text-center overflow-hidden"
-    >
-      {/* shimmer overlay */}
-      <motion.span
-        className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/[0.04] to-transparent"
-        initial={{ x: "-100%" }}
-        whileInView={{ x: "100%" }}
-        viewport={{ once: true }}
-        transition={{ delay: index * 0.1 + 0.3, duration: 0.8, ease: "easeInOut" }}
-      />
-      {metric.accent && (
-        <span className="absolute inset-0 rounded-[inherit] ring-1 ring-purple-500/30" />
-      )}
-      <div
-        className={`relative text-lg md:text-xl font-bold ${
-          metric.accent ? "gradient-text" : "text-white"
-        }`}
-      >
-        {metric.value}
+    <div className="mt-5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+      <p className="mb-3.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-secondary)]">
+        {architecture.title}
+      </p>
+      <div className="flex flex-col items-center gap-0">
+        {architecture.layers.map((layer, i) => (
+          <React.Fragment key={layer.label + layer.sublabel}>
+            {/* Layer node */}
+            <div className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] px-4 py-2.5">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-cyan-500/10">
+                <ArchitectureIcon name={layer.icon} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold leading-tight text-[var(--text-primary)]">
+                  {layer.label}
+                </span>
+                <span className="text-[10px] text-[var(--text-secondary)]">{layer.sublabel}</span>
+              </div>
+            </div>
+            {/* Connector line */}
+            {i < architecture.layers.length - 1 && (
+              <div className="flex flex-col items-center py-1">
+                <div className="h-4 w-px bg-gradient-to-b from-cyan-500/30 to-purple-500/30" />
+                <ChevronRight className="h-2.5 w-2.5 rotate-90 text-cyan-500/30" />
+              </div>
+            )}
+          </React.Fragment>
+        ))}
       </div>
-      <div className="relative text-xs text-gray-500 mt-0.5">{metric.label}</div>
-    </motion.div>
+    </div>
   );
 }
 
-/* ─────────────────────── FlagshipProjectCard ──────────────────────────────── */
+// ---------------------------------------------------------------------------
+// Project card
+// ---------------------------------------------------------------------------
 
-function FlagshipProjectCard({ project }: { project: Project }) {
-  const [open, setOpen] = useState(false);
+interface ProjectCardProps {
+  project: Project;
+  index: number;
+}
+
+function ProjectCard({ project, index }: ProjectCardProps) {
+  const hasLinks = project.github || project.huggingface;
 
   return (
-    <motion.div
+    <motion.article
       layout
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ type: "spring", stiffness: 200, damping: 24 }}
-      className="col-span-full"
+      layoutId={project.id}
+      custom={index}
+      variants={cardVariant}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-60px' }}
+      whileHover={{ y: -4, transition: { duration: 0.25 } }}
+      className="glass-card group relative flex flex-col overflow-hidden"
     >
-      <TiltCard tiltAmount={6} glareOpacity={0.08}>
-        <Collapsible open={open} onOpenChange={setOpen}>
-          <div className="relative glass-card p-6 md:p-8 glow-hover overflow-hidden group/card">
-            {/* ── animated gradient border on hover ── */}
-            <span className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 group-hover/card:opacity-100 transition-opacity duration-500">
-              <span className="absolute inset-[-1px] rounded-[inherit] bg-gradient-to-r from-purple-500/30 via-cyan-500/20 to-purple-500/30 animate-[gradient-shift_4s_ease_infinite]" />
-            </span>
+      {/* Gradient accent line at top for flagship projects */}
+      {project.isFlagship && (
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+      )}
 
-            {/* Featured badge */}
-            <div className="absolute top-4 right-4 z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-600/20 to-cyan-600/20 border border-purple-500/30 text-xs font-semibold text-purple-300 shadow-[0_0_16px_rgba(139,92,246,0.15)]">
-                <Sparkles className="h-3 w-3" />
-                Flagship Project
-              </span>
-            </div>
-
-            {/* Gradient top line */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-600 via-purple-400 to-cyan-500" />
-
-            <div className="pt-4 relative z-[1]">
-              {/* Title block */}
-              <div className="flex items-start gap-3 mb-2">
-                <div className="p-2.5 rounded-lg bg-gradient-to-br from-purple-600/20 to-cyan-600/10 border border-purple-500/20 flex-shrink-0">
-                  <TrendingUp className="h-5 w-5 text-purple-400" />
-                </div>
-                <div>
-                  <h3 className="text-xl md:text-2xl font-bold text-white">
-                    {project.title}
-                  </h3>
-                  <p className="text-sm text-cyan-400/80 font-medium mt-0.5">
-                    {project.oneLiner}
-                  </p>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="text-gray-400 text-sm leading-relaxed mb-5 ml-[3.25rem]">
-                {project.description}
-              </p>
-
-              {/* Metrics */}
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                {project.metrics?.map((metric, i) => (
-                  <MetricCard key={i} metric={metric} index={i} />
-                ))}
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 mb-5">
-                {project.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="bg-white/[0.06] text-gray-300 border-white/[0.08] hover:bg-white/[0.1] text-xs"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-
-              {/* Architecture */}
-              {project.architecture && (
-                <div className="mb-5">
-                  <ArchitectureDiagram
-                    layers={project.architecture.layers}
-                    title={project.architecture.title}
-                  />
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5 hover:border-purple-500/50"
-                  onClick={() =>
-                    window.open(project.github, "_blank", "noopener,noreferrer")
-                  }
-                >
-                  <Github className="mr-2 h-3.5 w-3.5" />
-                  View Code
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5 hover:border-cyan-500/50"
-                  onClick={() => window.open(project.huggingface || 'https://huggingface.co/spaces/FarhanAkhtar11/SEISMIC_PREDICTOR', '_blank')}
-                >
-                  <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                  Live Demo
-                </Button>
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-400 hover:text-white hover:bg-white/5"
-                  >
-                    {open ? (
-                      <>
-                        Less Details <ChevronUp className="ml-1 h-3.5 w-3.5" />
-                      </>
-                    ) : (
-                      <>
-                        More Details <ChevronDown className="ml-1 h-3.5 w-3.5" />
-                      </>
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-            </div>
-
-            {/* Expandable */}
-            <CollapsibleContent>
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 26 }}
-                className="mt-6 pt-6 border-t border-white/[0.06] relative z-[1]"
-              >
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-sm font-semibold text-white mb-2 uppercase tracking-wider">
-                        Problem
-                      </h4>
-                      <p className="text-sm text-gray-400 leading-relaxed">
-                        Predicting seismic structural responses is critical for
-                        earthquake engineering. Traditional ML models like XGBoost
-                        and KNN cannot capture complex temporal dependencies in
-                        time-series seismic data, leading to suboptimal predictions.
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-white mb-2 uppercase tracking-wider">
-                        Approach
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {project.highlights?.map((h, i) => (
-                          <li
-                            key={i}
-                            className="flex items-start gap-2 text-sm text-gray-400"
-                          >
-                            <span className="mt-1.5 w-1 h-1 rounded-full bg-cyan-400 flex-shrink-0" />
-                            {h}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-white mb-3 uppercase tracking-wider">
-                      Model Comparison
-                    </h4>
-                    <div className="bg-[#0a0a0f] rounded-lg border border-white/[0.06] p-4 h-[220px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={comparisonData}
-                          layout="vertical"
-                          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                        >
-                          <XAxis
-                            type="number"
-                            domain={[0, 100]}
-                            tick={{ fill: "#6b7280", fontSize: 11 }}
-                            axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            type="category"
-                            dataKey="name"
-                            tick={{ fill: "#9ca3af", fontSize: 11 }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={85}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "#1a1a24",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              borderRadius: "8px",
-                              color: "#f0f0f5",
-                              fontSize: "12px",
-                            }}
-                            formatter={(value: number) => [`${value}%`, "Accuracy"]}
-                          />
-                          <Bar dataKey="accuracy" radius={[0, 4, 4, 0]} barSize={22}>
-                            {comparisonData.map((entry, index) => (
-                              <Cell key={index} fill={entry.fill} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
-      </TiltCard>
-    </motion.div>
-  );
-}
-
-/* ──────────────────────── ProjectCard ─────────────────────────────────────── */
-
-function ProjectCard({ project }: { project: Project }) {
-  const [open, setOpen] = useState(false);
-  const { cardRef, pos, hovering, onMove, onEnter, onLeave } = useSpotlight();
-
-  const categoryIcon: Record<string, React.ElementType> = {
-    "Agentic AI": Brain,
-    "Deep Learning": Layers,
-    Analytics: BarChart3,
-  };
-  const Icon = categoryIcon[project.category] || Cpu;
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-    >
-      <TiltCard tiltAmount={8} glareOpacity={0.12}>
-        <Collapsible open={open} onOpenChange={setOpen}>
-          <div
-            ref={cardRef}
-            onMouseMove={onMove}
-            onMouseEnter={onEnter}
-            onMouseLeave={onLeave}
-            className="relative glass-card p-5 h-full flex flex-col glow-hover group cursor-pointer overflow-hidden"
-          >
-            {/* ── spotlight radial gradient following cursor ── */}
-            <span
-              className="pointer-events-none absolute inset-0 rounded-[inherit] transition-opacity duration-300 z-0"
-              style={{
-                opacity: hovering ? 1 : 0,
-                background: `radial-gradient(400px circle at ${pos.x}px ${pos.y}px, rgba(139,92,246,0.06), transparent 60%)`,
-              }}
-            />
-
-            {/* ── subtle glow shadow on hover ── */}
-            <span className="pointer-events-none absolute -inset-px rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-500 shadow-[0_0_40px_-12px_rgba(139,92,246,0.35)] z-[-1]" />
-
-            {/* Content */}
-            <div className="relative z-[1] flex flex-col h-full">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-white/[0.04] border border-white/[0.06]">
-                    <Icon className="h-3.5 w-3.5 text-purple-400" />
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="text-[10px] bg-white/[0.04] text-gray-500 border-white/[0.06]"
-                  >
-                    {project.category}
-                  </Badge>
-                </div>
-                <ExternalLink className="h-3.5 w-3.5 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-purple-300 transition-colors">
-                {project.title}
-              </h3>
-
-              {/* One-liner */}
-              {project.oneLiner && (
-                <p className="text-xs text-cyan-400/70 font-medium mb-2">
-                  {project.oneLiner}
-                </p>
-              )}
-
-              {/* Description */}
-              <p className="text-sm text-gray-400 leading-relaxed mb-4 flex-1">
-                {project.description}
-              </p>
-
-              {/* Architecture diagram (if available) */}
-              {project.architecture && (
-                <div className="mb-4">
-                  <ArchitectureDiagram
-                    layers={project.architecture.layers}
-                    title={project.architecture.title}
-                  />
-                </div>
-              )}
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {project.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 rounded text-[11px] bg-white/[0.04] text-gray-500 border border-white/[0.06]"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 mt-auto">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 border-white/10 text-gray-400 hover:text-white hover:bg-white/5 hover:border-purple-500/50 text-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(project.github, "_blank", "noopener,noreferrer");
-                  }}
-                >
-                  <Github className="mr-1.5 h-3 w-3" />
-                  Code
-                </Button>
-                {project.highlights && project.highlights.length > 0 && (
-                  <CollapsibleTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-gray-500 hover:text-white hover:bg-white/5 text-xs"
-                    >
-                      {open ? "Less" : "Details"}
-                      {open ? (
-                        <ChevronUp className="ml-1 h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="ml-1 h-3 w-3" />
-                      )}
-                    </Button>
-                  </CollapsibleTrigger>
-                )}
-              </div>
-
-              {/* Expandable */}
-              <CollapsibleContent>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-4 pt-4 border-t border-white/[0.06] space-y-2"
-                >
-                  {project.highlights?.map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-2 text-xs text-gray-400"
-                    >
-                      <span className="mt-1.5 w-1 h-1 rounded-full bg-purple-400/60 flex-shrink-0" />
-                      {h}
-                    </div>
-                  ))}
-                </motion.div>
-              </CollapsibleContent>
-            </div>
-          </div>
-        </Collapsible>
-      </TiltCard>
-    </motion.div>
-  );
-}
-
-/* ─────────────────────── ProjectsSection ──────────────────────────────────── */
-
-export default function ProjectsSection() {
-  const [activeCategory, setActiveCategory] = useState<string>("All");
-
-  const filteredProjects =
-    activeCategory === "All"
-      ? projects
-      : projects.filter((p) => p.category === activeCategory);
-
-  return (
-    <section id="projects" className="py-20 md:py-28 relative">
-      {/* Ambient gradient orb */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-purple-600/[0.03] rounded-full blur-[150px] pointer-events-none" />
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <SectionHeading
-          title="Projects"
-          subtitle="ML systems, agentic AI workflows, and data-driven solutions"
-        />
-
-        {/* Category Filter – premium pill design */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 200, damping: 22 }}
-          className="flex flex-wrap justify-center gap-2 mb-10"
+      {/* Header row: category badge + flagship star */}
+      <div className="mb-3 flex items-center justify-between">
+        <span
+          className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${
+            categoryColors[project.category] ?? 'bg-white/10 text-white/60'
+          }`}
         >
-          <AnimatePresence mode="popLayout">
-            {projectCategories.map((cat) => {
-              const isActive = activeCategory === cat;
-              return (
-                <motion.button
-                  key={cat}
-                  layout
-                  onClick={() => setActiveCategory(cat)}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  className={`relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 outline-none ${
-                    isActive
-                      ? "text-purple-200"
-                      : "text-gray-500 hover:text-gray-300"
+          {project.category}
+        </span>
+        {project.isFlagship && (
+          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-400/80">
+            <Star className="h-3 w-3 fill-amber-400/70 text-amber-400/70" />
+            Featured
+          </span>
+        )}
+      </div>
+
+      {/* Title */}
+      <h3 className="mb-1.5 text-lg font-bold leading-snug text-[var(--text-primary)] transition-colors duration-200 group-hover:text-cyan-300">
+        {project.title}
+      </h3>
+
+      {/* One-liner */}
+      <p className="mb-2 text-xs font-medium text-cyan-400/60">{project.oneLiner}</p>
+
+      {/* Description */}
+      <p className="mb-4 text-[13px] leading-relaxed text-[var(--text-secondary)] line-clamp-3">
+        {project.description}
+      </p>
+
+      {/* Tags */}
+      <div className="mb-4 flex flex-wrap gap-1.5">
+        {project.tags.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center rounded-md bg-gradient-to-br from-purple-500/10 to-cyan-500/10 px-2 py-0.5 text-[10px] font-medium text-cyan-300/80 border border-white/[0.04]"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Metrics row */}
+      {project.metrics && project.metrics.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {project.metrics.map((metric) => (
+            <div
+              key={metric.label}
+              className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 ${
+                metric.accent
+                  ? 'border-cyan-500/20 bg-cyan-500/10'
+                  : 'border-white/[0.06] bg-white/[0.02]'
+              }`}
+            >
+              {metric.accent && (
+                <Zap className="h-3 w-3 text-cyan-400" />
+              )}
+              <div className="flex flex-col">
+                <span
+                  className={`text-xs font-bold leading-tight ${
+                    metric.accent ? 'text-cyan-300' : 'text-[var(--text-primary)]'
                   }`}
                 >
-                  {/* active gradient background */}
-                  {isActive && (
-                    <motion.span
-                      layoutId="category-bg"
-                      className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600/25 to-cyan-600/15 border border-purple-500/30 shadow-[0_0_18px_-4px_rgba(139,92,246,0.4)]"
-                      transition={{
-                        type: "spring",
-                        stiffness: 340,
-                        damping: 28,
-                      }}
-                    />
-                  )}
-                  {/* glow ring on active */}
-                  {isActive && (
-                    <motion.span
-                      layoutId="category-ring"
-                      className="absolute inset-[-3px] rounded-full ring-1 ring-purple-400/20 pointer-events-none"
-                      transition={{
-                        type: "spring",
-                        stiffness: 340,
-                        damping: 28,
-                      }}
-                    />
-                  )}
-                  <span className="relative z-[1]">{cat}</span>
-                </motion.button>
-              );
-            })}
-          </AnimatePresence>
-        </motion.div>
+                  {metric.value}
+                </span>
+                <span className="text-[9px] leading-tight text-[var(--text-secondary)]">
+                  {metric.label}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* Projects Grid */}
-        <motion.div layout className="grid md:grid-cols-2 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project) =>
-              project.isFlagship ? (
-                <FlagshipProjectCard key={project.id} project={project} />
-              ) : (
-                <ProjectCard key={project.id} project={project} />
-              )
-            )}
-          </AnimatePresence>
-        </motion.div>
+      {/* Highlights list */}
+      {project.highlights && project.highlights.length > 0 && (
+        <ul className="mb-4 flex flex-col gap-2">
+          {project.highlights.map((highlight, i) => (
+            <li
+              key={i}
+              className="flex items-start gap-2 text-[11px] leading-relaxed text-[var(--text-secondary)]"
+            >
+              <ChevronRight className="mt-0.5 h-3 w-3 shrink-0 text-emerald-400/60" />
+              <span>{highlight}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Architecture diagram */}
+      {project.architecture && (
+        <ArchitectureDiagram architecture={project.architecture} />
+      )}
+
+      {/* Spacer to push links to bottom */}
+      <div className="mt-auto pt-4" />
+
+      {/* Links row */}
+      {hasLinks && (
+        <div className="flex items-center gap-3 border-t border-white/[0.06] pt-4">
+          {project.github && (
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`GitHub: ${project.title}`}
+              className="group/link flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors duration-200 hover:bg-white/[0.05] hover:text-[var(--text-primary)]"
+            >
+              <Github className="h-3.5 w-3.5" />
+              <span>GitHub</span>
+            </a>
+          )}
+          {project.huggingface && (
+            <a
+              href={project.huggingface}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`HuggingFace: ${project.title}`}
+              className="group/link flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors duration-200 hover:bg-white/[0.05] hover:text-[var(--text-primary)]"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.41 16.09V18.4c-2.69-.08-3.79-1.83-3.79-1.83 0-.61.4-1.26.4-1.26s1.04.62 1.75.77c.36.07.72.09 1.06.09.52 0 1.02-.06 1.52-.2.05-.01.09-.02.13-.03l.03-.01c.02-.01.04-.02.06-.03l.02-.01c.04-.02.07-.04.1-.06.05-.03.09-.06.13-.09l.01-.01c.02-.02.04-.03.06-.05.02-.02.04-.04.06-.07.01-.01.02-.02.03-.04.02-.03.04-.06.06-.09.01-.02.02-.03.03-.05.01-.03.03-.06.04-.09.01-.02.02-.04.02-.07.01-.03.02-.07.03-.1 0-.02.01-.04.01-.07.01-.04.01-.08.01-.12v-.04c0-.05 0-.1-.01-.14 0-.03 0-.05-.01-.08 0-.04-.01-.08-.02-.12 0-.02-.01-.04-.02-.07-.01-.04-.02-.07-.04-.11-.01-.02-.02-.04-.03-.07-.02-.04-.04-.07-.06-.11l-.03-.05c-.03-.04-.06-.08-.09-.12l-.03-.03c-.04-.04-.08-.08-.12-.12l-.04-.03c-.04-.03-.09-.07-.14-.1l-.03-.02c-.06-.03-.12-.06-.18-.08-.04-.02-.07-.03-.11-.04-.02 0-.05-.01-.07-.02-.04-.01-.08-.02-.13-.02h-.06c-.05 0-.1.01-.15.02-.02 0-.05.01-.07.02-.04.01-.08.02-.12.04-.02.01-.05.02-.07.03-.04.02-.08.05-.12.07l-.03.02c-.05.04-.1.08-.14.12l-.02.02c-.04.04-.08.09-.11.14l-.01.02c-.03.05-.06.1-.08.15v.01c-.02.05-.04.1-.05.15 0 .02-.01.04-.01.07-.01.04-.01.09-.02.14v.03c0 .05 0 .11.01.16 0 .02 0 .04.01.07.01.05.02.09.03.14.01.02.01.04.02.06.02.05.04.1.06.14.01.02.02.04.03.05.03.04.05.08.08.12l.02.03c.03.03.05.06.08.09.01.01.02.02.03.04.03.03.05.05.08.07.01.01.02.02.03.03.03.02.05.04.08.06.02.01.03.02.05.03.03.02.05.03.08.05l.06.03c.03.01.05.03.08.04l.06.02c.04.01.07.02.11.03.03.01.05.01.08.02.04.01.07.01.11.02h.1c.04 0 .07 0 .11-.01h.03c.04-.01.07-.01.11-.02l.03-.01c.04-.01.07-.02.11-.03.01 0 .02 0 .03-.01.04-.01.07-.03.11-.04l.02-.01c.04-.02.08-.04.12-.07.01 0 .01-.01.02-.01.04-.02.08-.05.12-.08l.02-.01c.04-.03.08-.07.12-.1l.02-.02c.04-.04.07-.08.11-.12l.01-.01c.03-.04.07-.09.1-.13l.01-.02c.03-.05.06-.1.08-.15l.01-.02c.03-.05.05-.11.07-.16v-.01c.02-.06.03-.11.04-.17 0-.02 0-.04.01-.07.01-.06.01-.12.01-.18v-.03c0-.06 0-.12-.01-.18 0-.02 0-.04-.01-.07-.01-.06-.02-.12-.04-.18 0-.02-.01-.04-.02-.07-.02-.06-.04-.11-.06-.17-.01-.02-.02-.04-.03-.07-.02-.05-.05-.11-.08-.16l-.03-.05c-.03-.05-.06-.1-.09-.14l-.03-.04c-.04-.05-.07-.09-.11-.13l-.03-.03c-.04-.04-.08-.08-.13-.12l-.03-.03c-.05-.04-.1-.08-.15-.11l-.03-.02c-.05-.03-.1-.06-.16-.09l-.03-.01c-.06-.03-.11-.05-.17-.07l-.03-.01c-.06-.02-.12-.04-.18-.05h-.03c-.06-.01-.13-.02-.19-.02h-.04c-.07 0-.13.01-.2.02h-.03c-.06.01-.13.03-.19.05l-.03.01c-.06.02-.12.05-.18.07l-.03.02c-.06.03-.11.07-.16.11l-.03.02c-.05.04-.09.08-.14.12l-.02.03c-.04.04-.08.09-.12.14l-.02.03c-.03.05-.07.1-.09.16l-.02.05c-.03.05-.05.11-.07.17-.01.02-.02.04-.02.07-.02.06-.04.12-.05.18 0 .02 0 .04-.01.07-.01.06-.01.12-.01.18v.03c0 .06 0 .12.01.18 0 .02 0 .04.01.07.01.06.02.12.04.18 0 .02.01.05.02.07.02.06.04.11.06.17.01.02.02.05.03.07.03.05.05.1.08.16l.03.04c.04.05.07.1.11.14l.03.03c.04.04.08.08.12.13l.03.03c.04.04.09.08.14.12l.03.02c.05.04.1.07.15.11l.03.02c.05.03.11.06.16.09l.03.01c.06.03.11.05.17.07l.03.01c.06.02.12.04.19.05h.03c.06.01.13.02.2.02h.04z" />
+              </svg>
+              <span>HuggingFace</span>
+            </a>
+          )}
+          {project.github && (
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View ${project.title}`}
+              className="ml-auto flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors duration-200 hover:bg-white/[0.05] hover:text-cyan-400"
+            >
+              <ExternalLink className="h-3 w-3" />
+              <span>View</span>
+            </a>
+          )}
+        </div>
+      )}
+    </motion.article>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ProjectsSection — main exported component
+// ---------------------------------------------------------------------------
+
+function ProjectsSection() {
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+
+  const filteredProjects = useMemo(() => {
+    if (activeCategory === 'All') return projects;
+    return projects.filter((p) => p.category === activeCategory);
+  }, [activeCategory]);
+
+  return (
+    <section id="projects" className="relative z-10 section-padding">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-32 top-1/4 h-80 w-80 rounded-full bg-cyan-600/[0.05] blur-[120px]" />
+        <div className="absolute -right-32 bottom-1/3 h-72 w-72 rounded-full bg-purple-500/[0.04] blur-[120px]" />
+      </div>
+
+      <div className="container-custom relative">
+        <SectionHeading />
+        <FilterTabs
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+        />
+
+        {/* Project cards grid */}
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={activeCategory}
+            layout
+            className="grid grid-cols-1 gap-6 md:grid-cols-2"
+          >
+            {filteredProjects.map((project, i) => (
+              <ProjectCard key={project.id} project={project} index={i} />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Empty state */}
+        {filteredProjects.length === 0 && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-16 text-center text-sm text-[var(--text-secondary)]"
+          >
+            No projects found in this category.
+          </motion.p>
+        )}
       </div>
     </section>
   );
 }
+
+export default ProjectsSection;

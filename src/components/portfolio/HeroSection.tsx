@@ -1,362 +1,368 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
-import { ChevronDown, ArrowRight, Download, Cpu, Github, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { siteConfig, heroTaglines } from "@/lib/data";
-import AnimatedCounter from "./AnimatedCounter";
-import MagneticButton from "./MagneticButton";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { ArrowDown, Github, Linkedin, Mail, MapPin } from 'lucide-react';
+import { siteConfig, heroTaglines } from '@/lib/data';
 
-const ParticleField = dynamic(() => import("./ParticleField"), { ssr: false });
+// ---------------------------------------------------------------------------
+// Typewriter hook — cycles through taglines character by character
+// ---------------------------------------------------------------------------
 
-const resumeOptions = [
-  {
-    label: "General Resume",
-    description: "Agentic AI + ML focused",
-    file: "/resume.pdf",
-    accent: false,
-  },
-  { label: "separator", file: "" },
-  {
-    label: "ML Engineer",
-    description: "Deep Learning, PyTorch, Transformers",
-    file: "/resumes/Farhan_Akhtar_ML_Engineer.pdf",
-    accent: false,
-  },
-  {
-    label: "Agentic AI Engineer",
-    description: "RAG, LLMs, Vector DBs, LangChain",
-    file: "/resumes/Farhan_Akhtar_Agentic_AI_Engineer.pdf",
-    accent: true,
-  },
-  {
-    label: "Generative AI Engineer",
-    description: "GenAI, Fine-Tuning, Prompt Engineering",
-    file: "/resumes/Farhan_Akhtar_GenAI_Engineer.pdf",
-    accent: false,
-  },
-  {
-    label: "AI Engineer",
-    description: "Full-stack AI/ML coverage",
-    file: "/resumes/Farhan_Akhtar_AI_Engineer.pdf",
-    accent: false,
-  },
-];
-
-function useTypewriter(
-  strings: string[],
-  typingSpeed = 50,
-  deletingSpeed = 25,
-  pauseTime = 2500
-) {
-  const [text, setText] = useState("");
-  const [stringIndex, setStringIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
+function useTypewriter(taglines: string[], charDelay = 50, pauseDuration = 2200) {
+  const [displayedText, setDisplayedText] = useState('');
+  const [taglineIndex, setTaglineIndex] = useState(0);
+  const [phase, setPhase] = useState<'typing' | 'pausing' | 'erasing'>('typing');
 
   useEffect(() => {
-    const current = strings[stringIndex];
+    const currentTagline = taglines[taglineIndex];
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-    const timeout = setTimeout(
-      () => {
-        if (!isDeleting) {
-          setText(current.substring(0, charIndex + 1));
-          setCharIndex((prev) => prev + 1);
+    if (phase === 'typing') {
+      if (displayedText.length < currentTagline.length) {
+        timeoutId = setTimeout(() => {
+          setDisplayedText(currentTagline.slice(0, displayedText.length + 1));
+        }, charDelay);
+      } else {
+        timeoutId = setTimeout(() => setPhase('pausing'), pauseDuration);
+      }
+    } else if (phase === 'pausing') {
+      timeoutId = setTimeout(() => setPhase('erasing'), 800);
+    } else if (phase === 'erasing') {
+      if (displayedText.length > 0) {
+        timeoutId = setTimeout(() => {
+          setDisplayedText(displayedText.slice(0, -1));
+        }, charDelay * 0.5);
+      } else {
+        // Wrap in setTimeout to avoid synchronous setState in effect
+        timeoutId = setTimeout(() => {
+          setTaglineIndex((prev) => (prev + 1) % taglines.length);
+          setPhase('typing');
+        }, 0);
+      }
+    }
 
-          if (charIndex + 1 === current.length) {
-            setTimeout(() => setIsDeleting(true), pauseTime);
-          }
-        } else {
-          setText(current.substring(0, charIndex - 1));
-          setCharIndex((prev) => prev - 1);
+    return () => clearTimeout(timeoutId);
+  }, [displayedText, taglineIndex, phase, taglines, charDelay, pauseDuration]);
 
-          if (charIndex - 1 === 0) {
-            setIsDeleting(false);
-            setStringIndex((prev) => (prev + 1) % strings.length);
-          }
-        }
-      },
-      isDeleting ? deletingSpeed : typingSpeed
-    );
-
-    return () => clearTimeout(timeout);
-  }, [charIndex, isDeleting, stringIndex, strings, typingSpeed, deletingSpeed, pauseTime]);
-
-  return text;
+  return displayedText;
 }
 
-export default function HeroSection() {
+// ---------------------------------------------------------------------------
+// Animated counter hook — counts from 0 to target using requestAnimationFrame
+// ---------------------------------------------------------------------------
+
+function useCounter(target: number, duration = 2000, startOnView = false) {
+  const [count, setCount] = useState(0);
+  const hasStarted = useRef(false);
+  const rafId = useRef<number>(0);
+
+  const startCounting = useCallback(() => {
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+
+    const startTime = performance.now();
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * target));
+
+      if (progress < 1) {
+        rafId.current = requestAnimationFrame(step);
+      }
+    };
+
+    rafId.current = requestAnimationFrame(step);
+  }, [target, duration]);
+
+  useEffect(() => {
+    return () => {
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, []);
+
+  return { count, startCounting };
+}
+
+// ---------------------------------------------------------------------------
+// StatCard — single animated stat card
+// ---------------------------------------------------------------------------
+
+interface StatCardProps {
+  value: number;
+  suffix: string;
+  label: string;
+  delay: number;
+}
+
+function StatCard({ value, suffix, label, delay }: StatCardProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const { count, startCounting } = useCounter(value, 1800);
+
+  useEffect(() => {
+    if (isInView) {
+      const timer = setTimeout(startCounting, delay);
+      return () => clearTimeout(timer);
+    }
+  }, [isInView, startCounting, delay]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, x: 30 }}
+      animate={isInView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.6, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
+      className="glass-card flex flex-col items-center justify-center p-5 text-center"
+    >
+      <span className="gradient-text text-3xl font-bold tracking-tight md:text-4xl">
+        {count}
+        {suffix}
+      </span>
+      <span className="mt-1.5 text-xs font-medium tracking-wide uppercase text-[var(--text-secondary)]">
+        {label}
+      </span>
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Stats grid — right-side visible on md+ screens
+// ---------------------------------------------------------------------------
+
+const stats: { value: number; suffix: string; label: string }[] = [
+  { value: 5, suffix: '+', label: 'Projects' },
+  { value: 11, suffix: '', label: 'Certifications' },
+  { value: 1, suffix: '+', label: 'Year Experience' },
+  { value: 5, suffix: '+', label: 'Skills Categories' },
+];
+
+function StatsGrid() {
+  return (
+    <div className="hidden grid-cols-2 gap-4 md:grid">
+      {stats.map((stat, i) => (
+        <StatCard
+          key={stat.label}
+          value={stat.value}
+          suffix={stat.suffix}
+          label={stat.label}
+          delay={600 + i * 150}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Social icon button
+// ---------------------------------------------------------------------------
+
+interface SocialLinkProps {
+  href: string;
+  'aria-label': string;
+  children: React.ReactNode;
+}
+
+function SocialLink({ href, 'aria-label': ariaLabel, children }: SocialLinkProps) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={ariaLabel}
+      className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03] text-[var(--text-secondary)] backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]"
+    >
+      {children}
+    </a>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// HeroSection — main exported component
+// ---------------------------------------------------------------------------
+
+const sectionVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.12, delayChildren: 0.2 },
+  },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+function HeroSection() {
   const typedText = useTypewriter(heroTaglines);
+  const [showCursor, setShowCursor] = useState(true);
 
-  const scrollToProjects = () => {
-    const el = document.getElementById("projects");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
+  // Blinking cursor
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowCursor((prev) => !prev);
+    }, 530);
+    return () => clearInterval(interval);
+  }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.15,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 40, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-        mass: 0.8,
-      },
-    },
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
     <section
       id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      className="relative z-10 flex min-h-screen items-center justify-center overflow-hidden px-4 pt-16 sm:px-6 md:pt-0"
     >
-      {/* === BACKGROUND LAYERS === */}
-
-      {/* 3D Particle field — deepest layer */}
-      <ParticleField />
-
-      {/* Gradient mesh background layer */}
+      {/* Ambient gradient orbs behind content */}
       <div
-        className="absolute inset-0 z-[1] opacity-40"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 50% at 20% 40%, rgba(120, 50, 220, 0.08) 0%, transparent 70%), " +
-            "radial-gradient(ellipse 60% 60% at 80% 60%, rgba(34, 211, 238, 0.06) 0%, transparent 70%), " +
-            "radial-gradient(ellipse 50% 80% at 50% 20%, rgba(168, 85, 247, 0.05) 0%, transparent 60%)",
-        }}
-      />
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+        aria-hidden="true"
+      >
+        <div className="absolute -left-32 top-1/4 h-96 w-96 rounded-full bg-purple-600/[0.07] blur-[120px]" />
+        <div className="absolute -right-32 bottom-1/4 h-80 w-80 rounded-full bg-cyan-500/[0.06] blur-[120px]" />
+        <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/[0.04] blur-[100px]" />
+      </div>
 
-      {/* Hero grid overlay */}
-      <div className="absolute inset-0 z-[2] hero-grid opacity-30" />
-
-      {/* Gradient orbs — larger and more subtle */}
-      <div className="absolute top-[10%] -left-48 w-[700px] h-[700px] bg-purple-600/[0.04] rounded-full blur-[160px] orb-purple z-[3]" />
-      <div className="absolute bottom-[5%] -right-48 w-[700px] h-[700px] bg-cyan-500/[0.035] rounded-full blur-[160px] orb-cyan z-[3]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-purple-600/[0.02] rounded-full blur-[200px] z-[3]" />
-
-      {/* Radial vignette overlay */}
-      <div
-        className="absolute inset-0 z-[4] pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(0,0,0,0.45) 100%)",
-        }}
-      />
-
-      {/* === CONTENT === */}
       <motion.div
-        variants={containerVariants}
+        variants={sectionVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 text-center px-4 max-w-4xl mx-auto"
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-12 md:flex-row md:items-center md:gap-16 lg:gap-20"
       >
-        {/* Availability badge */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-border text-sm text-gray-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Open to opportunities
-          </span>
-        </motion.div>
+        {/* ---- Left side: main content ---- */}
+        <div className="flex flex-1 flex-col items-center text-center md:items-start md:text-left">
+          {/* Greeting */}
+          <motion.p
+            variants={fadeUp}
+            className="mb-3 text-sm font-medium tracking-wider text-[var(--text-secondary)] sm:text-base"
+          >
+            Hello, I&apos;m
+          </motion.p>
 
-        {/* Role tag — premium with animated border */}
-        <motion.div variants={itemVariants} className="mb-5">
-          <span className="relative inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm text-purple-300 font-medium overflow-hidden">
-            {/* Animated gradient border */}
-            <span className="absolute inset-0 rounded-lg p-[1px] overflow-hidden">
-              <span className="absolute inset-[-200%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0%,rgba(168,85,247,0.5)_25%,transparent_50%,rgba(34,211,238,0.4)_75%,transparent_100%)]" />
+          {/* Name */}
+          <motion.h1
+            variants={fadeUp}
+            className="gradient-text mb-4 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl md:text-7xl"
+          >
+            {siteConfig.name.split(' ')[0]}
+            <br />
+            <span className="text-[var(--text-primary)]">
+              {siteConfig.name.split(' ').slice(1).join(' ')}
             </span>
-            {/* Inner background */}
-            <span className="relative z-10 flex items-center gap-2 rounded-[7px] bg-[#12121a] px-3 py-1">
-              <Cpu className="h-3.5 w-3.5" />
+          </motion.h1>
+
+          {/* Role — typewriter */}
+          <motion.div variants={fadeUp} className="mb-5 flex items-center gap-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-cyan-400" />
+            <p className="text-lg font-medium text-[var(--text-secondary)] sm:text-xl md:text-2xl">
               {siteConfig.role}
-            </span>
-          </span>
-        </motion.div>
+            </p>
+          </motion.div>
 
-        {/* Name — massive, immediate */}
-        <motion.h1
-          variants={itemVariants}
-          className="text-5xl sm:text-6xl md:text-8xl font-black tracking-tight mb-5 leading-[0.95]"
-        >
-          <span className="text-white">{siteConfig.firstName}</span>
-          <br />
-          <span className="gradient-text">{siteConfig.lastName}</span>
-        </motion.h1>
+          {/* Typewriter tagline */}
+          <motion.p
+            variants={fadeUp}
+            className="mb-3 min-h-[1.75rem] font-mono text-sm leading-relaxed text-cyan-300/70 sm:text-base md:min-h-[1.875rem]"
+          >
+            {typedText}
+            <span
+              className={`ml-0.5 inline-block w-[2px] translate-y-[1px] bg-cyan-400 transition-opacity duration-100 ${showCursor ? 'opacity-100' : 'opacity-0'}`}
+              style={{ height: '1em' }}
+            />
+          </motion.p>
 
-        {/* One-liner positioning */}
-        <motion.p
-          variants={itemVariants}
-          className="text-base sm:text-lg text-gray-400 font-medium mb-8 max-w-2xl mx-auto leading-relaxed"
-        >
-          {siteConfig.roleShort}
-        </motion.p>
+          {/* Subtitle */}
+          <motion.p
+            variants={fadeUp}
+            className="mb-6 max-w-lg text-sm leading-relaxed text-[var(--text-secondary)] sm:text-base"
+          >
+            Specializing in deep learning systems, transformer architectures,
+            <br className="hidden sm:inline" /> and agentic AI workflows for real-world engineering problems.
+          </motion.p>
 
-        {/* Typewriter — proof of capability */}
-        <motion.div
-          variants={itemVariants}
-          className="h-8 mb-10 flex items-center justify-center"
-        >
-          <span className="text-sm sm:text-base text-gray-500 font-mono">
-            &gt; {typedText}
-            <span className="inline-block w-0.5 h-5 bg-purple-500 ml-0.5 animate-pulse" />
-          </span>
-        </motion.div>
+          {/* Social links */}
+          <motion.div variants={fadeUp} className="mb-6 flex items-center gap-3">
+            <SocialLink href={siteConfig.github} aria-label="GitHub">
+              <Github className="h-4 w-4" />
+            </SocialLink>
+            <SocialLink href={siteConfig.linkedin} aria-label="LinkedIn">
+              <Linkedin className="h-4 w-4" />
+            </SocialLink>
+            <SocialLink href={`mailto:${siteConfig.email}`} aria-label="Email">
+              <Mail className="h-4 w-4" />
+            </SocialLink>
+          </motion.div>
 
-        {/* CTA Buttons */}
-        <motion.div
-          variants={itemVariants}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14"
-        >
-          <MagneticButton>
-            <Button
-              size="lg"
-              onClick={scrollToProjects}
-              className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-semibold px-8 py-6 text-base shadow-lg shadow-purple-500/25 transition-all hover:shadow-purple-500/40 hover:scale-[1.02]"
+          {/* Location */}
+          <motion.div
+            variants={fadeUp}
+            className="mb-8 flex items-center gap-1.5 text-xs text-[var(--text-secondary)] sm:text-sm"
+          >
+            <MapPin className="h-3.5 w-3.5 text-cyan-400/60" />
+            <span>{siteConfig.location}</span>
+          </motion.div>
+
+          {/* CTA buttons */}
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-wrap items-center gap-4"
+          >
+            {/* Primary — View Projects */}
+            <button
+              onClick={() => scrollTo('projects')}
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-400 px-6 py-3 text-sm font-semibold text-gray-950 shadow-lg shadow-cyan-500/20 transition-all duration-300 hover:scale-[1.04] hover:shadow-xl hover:shadow-cyan-500/30 active:scale-[0.98] sm:px-7 sm:py-3.5 sm:text-base"
             >
-              View My Work
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </MagneticButton>
-
-          {/* Resume dropdown */}
-          <MagneticButton>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5 hover:border-purple-500/50 px-8 py-6 text-base transition-all hover:scale-[1.02]"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Resume
-                  <ChevronDown className="ml-2 h-3.5 w-3.5 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="center"
-                className="w-72 bg-[#12121a] border-white/[0.08] backdrop-blur-xl"
+              <span className="relative z-10">View Projects</span>
+              <svg
+                className="relative z-10 h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
               >
-                {resumeOptions.map((opt) => {
-                  if (opt.label === "separator") {
-                    return <DropdownMenuSeparator key="sep" className="bg-white/[0.06]" />;
-                  }
-                  return (
-                    <DropdownMenuItem
-                      key={opt.label}
-                      onClick={() => window.open(opt.file, "_blank")}
-                      className="flex items-start gap-3 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] cursor-pointer"
-                    >
-                      <FileText className={`h-4 w-4 mt-0.5 flex-shrink-0 ${opt.accent ? "text-yellow-400" : "text-gray-500"}`} />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium flex items-center gap-2">
-                          {opt.label}
-                          {opt.accent && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-yellow-500/15 text-yellow-300 font-semibold">
-                              In Demand
-                            </span>
-                          )}
-                        </div>
-                        {opt.description && (
-                          <div className="text-[11px] text-gray-500 mt-0.5">{opt.description}</div>
-                        )}
-                      </div>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </MagneticButton>
-        </motion.div>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+              {/* Shine overlay on hover */}
+              <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
+            </button>
 
-        {/* Proof stats — scannable in 2 seconds */}
-        <motion.div
-          variants={itemVariants}
-          className="flex items-center justify-center gap-8 sm:gap-12"
-        >
-          {[
-            { value: 22, suffix: "%", label: "Model Improvement", sublabel: "over XGBoost" },
-            { value: 4, suffix: "", label: "Production Projects", sublabel: "ML + AI systems" },
-            { value: 11, suffix: "", label: "Certifications", sublabel: "AWS \u00b7 NVIDIA \u00b7 IBM" },
-          ].map((stat, i) => (
-            <div key={i} className="text-center">
-              <div className="text-2xl sm:text-3xl font-extrabold gradient-text">
-                <AnimatedCounter target={stat.value} suffix={stat.suffix} />
-              </div>
-              <div className="text-xs sm:text-sm text-gray-400 font-medium mt-0.5">
-                {stat.label}
-              </div>
-              <div className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-                {stat.sublabel}
-              </div>
-            </div>
-          ))}
-        </motion.div>
+            {/* Secondary — Contact Me */}
+            <button
+              onClick={() => scrollTo('contact')}
+              className="inline-flex items-center gap-2 rounded-lg border border-white/[0.1] bg-white/[0.03] px-6 py-3 text-sm font-semibold text-[var(--text-primary)] backdrop-blur-sm transition-all duration-300 hover:scale-[1.04] hover:border-cyan-500/30 hover:bg-cyan-500/10 active:scale-[0.98] sm:px-7 sm:py-3.5 sm:text-base"
+            >
+              <Mail className="h-4 w-4" />
+              <span>Contact Me</span>
+            </button>
+          </motion.div>
+        </div>
 
-        {/* Social links — enhanced hover glow */}
-        <motion.div
-          variants={itemVariants}
-          className="flex items-center justify-center gap-4 mt-8"
-        >
-          <a
-            href={siteConfig.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2.5 rounded-lg glass-card text-gray-500 hover:text-white hover:bg-white/[0.08] transition-all hover:scale-110 glow-hover"
-          >
-            <Github className="h-5 w-5" />
-          </a>
-          <a
-            href={siteConfig.huggingface}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2.5 rounded-lg glass-card text-gray-500 hover:text-yellow-400 hover:bg-white/[0.08] transition-all hover:scale-110 glow-hover"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.41 14.59c-.23.34-.53.12-.93.38-.41-.5.86-1.54 1.17-2.47 1.15-.7-.02-1.23-.26-1.23-.92v-3.15c0-2.09-1.72-3.4-3.59-3.4-1.57 0-2.58 1.04-2.58 2.6 0 .55.24 1.04.61 1.34l2.41 1.77c.7.51 1.57.34 2.49-.42 3.47z" />
-            </svg>
-          </a>
-        </motion.div>
-
+        {/* ---- Right side: stats grid (md+) ---- */}
+        <StatsGrid />
       </motion.div>
 
-      {/* Scroll indicator */}
+      {/* ---- Scroll indicator ---- */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2.5 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-indicator z-10"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 2, duration: 0.8 }}
+        className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2"
       >
-        <button
-          onClick={scrollToProjects}
-          className="flex flex-col items-center gap-2 text-gray-600 hover:text-gray-400 transition-colors"
-        >
-          <span className="text-[10px] uppercase tracking-[0.2em]">Scroll to Projects</span>
-          <ChevronDown className="h-4 w-4" />
-        </button>
+        <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--text-secondary)]">
+          Scroll
+        </span>
+        <ArrowDown className="h-4 w-4 text-[var(--text-secondary)] scroll-indicator" />
       </motion.div>
     </section>
   );
 }
+
+export default HeroSection;

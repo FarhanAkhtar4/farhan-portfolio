@@ -1,209 +1,391 @@
-"use client";
+'use client';
 
-import { useRef, useMemo } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import { Line } from '@react-three/drei';
 
-function Particles({ count = 250 }: { count?: number }) {
-  const mesh = useRef<THREE.Points>(null!);
-  const mousePos = useRef({ x: 0, y: 0 });
-  const { viewport } = useThree();
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
-  const [positions, velocities, colors] = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
-    const col = new Float32Array(count * 3);
-    const purple = new THREE.Color("#8b5cf6");
-    const cyan = new THREE.Color("#06b6d4");
-    const white = new THREE.Color("#ffffff");
+const PARTICLE_COUNT = 200;
+const CONNECTION_DISTANCE = 1.8;
+const MAX_CONNECTIONS = 30;
+const PARTICLE_SIZE = 2.5;
+const FLOAT_SPEED = 0.15;
+const FLOAT_AMPLITUDE = 0.3;
+const WIREFRAME_OPACITY = 0.08;
 
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3;
-      pos[i3] = (Math.random() - 0.5) * 20;
-      pos[i3 + 1] = (Math.random() - 0.5) * 20;
-      pos[i3 + 2] = (Math.random() - 0.5) * 10;
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
-      vel[i3] = (Math.random() - 0.5) * 0.004;
-      vel[i3 + 1] = (Math.random() - 0.5) * 0.004;
-      vel[i3 + 2] = (Math.random() - 0.5) * 0.001;
+interface ParticleData {
+  positions: Float32Array;
+  basePositions: Float32Array;
+  velocities: number[];
+}
 
-      const t = Math.random();
-      const c = t < 0.4 ? purple : t < 0.7 ? cyan : white;
-      col[i3] = c.r;
-      col[i3 + 1] = c.g;
-      col[i3 + 2] = c.b;
+// ---------------------------------------------------------------------------
+// Particles – rendered as a single Points object
+// ---------------------------------------------------------------------------
+
+const Particles = React.memo(function Particles() {
+  const pointsRef = useRef<THREE.Points>(null);
+
+  // Generate stable random positions once
+  const particleData = useMemo<ParticleData>(() => {
+    const positions = new Float32Array(PARTICLE_COUNT * 3);
+    const basePositions = new Float32Array(PARTICLE_COUNT * 3);
+    const velocities: number[] = [];
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const x = (Math.random() - 0.5) * 12;
+      const y = (Math.random() - 0.5) * 12;
+      const z = (Math.random() - 0.5) * 8;
+      const idx = i * 3;
+
+      positions[idx] = x;
+      positions[idx + 1] = y;
+      positions[idx + 2] = z;
+
+      basePositions[idx] = x;
+      basePositions[idx + 1] = y;
+      basePositions[idx + 2] = z;
+
+      velocities.push(Math.random() * Math.PI * 2);
     }
-    return [pos, vel, col];
-  }, [count]);
 
-  useFrame((state) => {
-    if (!mesh.current) return;
-    const time = state.clock.elapsedTime;
-    const pa = mesh.current.geometry.attributes.position.array as Float32Array;
+    return { positions, basePositions, velocities };
+  }, []);
 
-    const mx = mousePos.current.x * viewport.width * 0.5;
-    const my = mousePos.current.y * viewport.height * 0.5;
-    const mouseRadius = 3;
-    const mouseRadiusSq = mouseRadius * mouseRadius;
+  // Custom shader material for round, soft particles
+  const material = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uSize: { value: PARTICLE_SIZE * window.devicePixelRatio },
+      },
+      vertexShader: /* glsl */ `
+        attribute float aOpacity;
+        varying float vOpacity;
+        uniform float uTime;
+        uniform float uSize;
 
-    for (let i = 0; i < count; i++) {
-      const i3 = i * 3;
-      pa[i3] += velocities[i3] + Math.sin(time * 0.3 + i * 0.1) * 0.0008;
-      pa[i3 + 1] += velocities[i3 + 1] + Math.cos(time * 0.2 + i * 0.1) * 0.0008;
+        void main() {
+          vOpacity = aOpacity;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = uSize * (200.0 / -mvPosition.z);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        varying float vOpacity;
 
-      if (pa[i3] > 10) pa[i3] = -10;
-      if (pa[i3] < -10) pa[i3] = 10;
-      if (pa[i3 + 1] > 10) pa[i3 + 1] = -10;
-      if (pa[i3 + 1] < -10) pa[i3 + 1] = 10;
+        void main() {
+          float dist = length(gl_PointCoord - vec2(0.5));
+          if (dist > 0.5) discard;
 
-      // Mouse influence — distance squared (no sqrt)
-      const dx = pa[i3] - mx;
-      const dy = pa[i3 + 1] - my;
-      const distSq = dx * dx + dy * dy;
-      if (distSq < mouseRadiusSq) {
-        const dist = Math.sqrt(distSq);
-        const force = (mouseRadius - dist) * 0.0015;
-        pa[i3] += (dx / dist) * force;
-        pa[i3 + 1] += (dy / dist) * force;
+          float alpha = smoothstep(0.5, 0.1, dist) * vOpacity;
+
+          // Cyan-white mix
+          vec3 cyan = vec3(0.5, 0.95, 1.0);
+          vec3 white = vec3(1.0);
+          vec3 color = mix(cyan, white, smoothstep(0.3, 0.0, dist));
+
+          gl_FragColor = vec4(color, alpha * 0.7);
+        }
+      `,
+    });
+  }, []);
+
+  // Build geometry once
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(particleData.positions, 3));
+
+    // Per-particle opacity for visual variety
+    const opacities = new Float32Array(PARTICLE_COUNT);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      opacities[i] = 0.3 + Math.random() * 0.7;
+    }
+    geo.setAttribute('aOpacity', new THREE.BufferAttribute(opacities, 1));
+
+    return geo;
+  }, [particleData.positions]);
+
+  // Animate floating
+  useFrame(({ clock }) => {
+    if (!pointsRef.current) return;
+
+    const t = clock.getElapsedTime();
+    const posAttr = pointsRef.current.geometry.getAttribute('position');
+    if (!posAttr) return;
+
+    const arr = posAttr.array as Float32Array;
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const idx = i * 3;
+      const phase = particleData.velocities[i];
+      arr[idx] = particleData.basePositions[idx];
+      arr[idx + 1] =
+        particleData.basePositions[idx + 1] +
+        Math.sin(t * FLOAT_SPEED + phase) * FLOAT_AMPLITUDE;
+      arr[idx + 2] = particleData.basePositions[idx + 2];
+    }
+
+    posAttr.needsUpdate = true;
+  });
+
+  // Cleanup material on unmount
+  useEffect(() => {
+    return () => {
+      material.dispose();
+      geometry.dispose();
+    };
+  }, [material, geometry]);
+
+  return <points ref={pointsRef} geometry={geometry} material={material} />;
+});
+
+// ---------------------------------------------------------------------------
+// ParticleConnections – lines between nearby particles
+// ---------------------------------------------------------------------------
+
+const ParticleConnections = React.memo(function ParticleConnections() {
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Stable base positions (shared concept with Particles)
+  const basePositions = useMemo(() => {
+    const pos: [number, number, number][] = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      pos.push([
+        (Math.random() - 0.5) * 12,
+        (Math.random() - 0.5) * 12,
+        (Math.random() - 0.5) * 8,
+      ]);
+    }
+    return pos;
+  }, []);
+
+  // Pre-compute which connections to show (fixed pairs)
+  const connections = useMemo(() => {
+    const pairs: [number, number][] = [];
+    const dists: { a: number; b: number; d: number }[] = [];
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      for (let j = i + 1; j < PARTICLE_COUNT; j++) {
+        const dx = basePositions[i][0] - basePositions[j][0];
+        const dy = basePositions[i][1] - basePositions[j][1];
+        const dz = basePositions[i][2] - basePositions[j][2];
+        const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (d < CONNECTION_DISTANCE) {
+          dists.push({ a: i, b: j, d });
+        }
       }
     }
 
-    mesh.current.geometry.attributes.position.needsUpdate = true;
-    mesh.current.rotation.z = time * 0.01;
+    // Sort by distance ascending and take the closest MAX_CONNECTIONS
+    dists.sort((a, b) => a.d - b.d);
+    for (let k = 0; k < Math.min(MAX_CONNECTIONS, dists.length); k++) {
+      pairs.push([dists[k].a, dists[k].b]);
+    }
+
+    return pairs;
+  }, [basePositions]);
+
+  // Animate line endpoints to follow particle float
+  useFrame(({ clock }) => {
+    if (!groupRef.current) return;
+    const t = clock.getElapsedTime();
+    const children = groupRef.current.children;
+
+    for (let c = 0; c < children.length; c++) {
+      const line = children[c] as THREE.Line;
+      const posAttr = line.geometry.getAttribute('position');
+      if (!posAttr) continue;
+
+      const [a, b] = connections[c];
+      const phaseA = (a / PARTICLE_COUNT) * Math.PI * 2;
+      const phaseB = (b / PARTICLE_COUNT) * Math.PI * 2;
+
+      const arr = posAttr.array as Float32Array;
+      arr[0] = basePositions[a][0];
+      arr[1] = basePositions[a][1] + Math.sin(t * FLOAT_SPEED + phaseA) * FLOAT_AMPLITUDE;
+      arr[2] = basePositions[a][2];
+      arr[3] = basePositions[b][0];
+      arr[4] = basePositions[b][1] + Math.sin(t * FLOAT_SPEED + phaseB) * FLOAT_AMPLITUDE;
+      arr[5] = basePositions[b][2];
+
+      posAttr.needsUpdate = true;
+    }
   });
 
+  // Build geometries for lines
+  const lineGeometries = useMemo(() => {
+    return connections.map(([a, b]) => {
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array([
+        basePositions[a][0], basePositions[a][1], basePositions[a][2],
+        basePositions[b][0], basePositions[b][1], basePositions[b][2],
+      ]);
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      return geo;
+    });
+  }, [connections, basePositions]);
+
   return (
-    <points ref={mesh}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={count}
-          array={colors}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.04}
-        vertexColors
+    <group ref={groupRef}>
+      {lineGeometries.map((geo, i) => (
+        <primitive key={i} object={new THREE.Line(geo, new THREE.LineBasicMaterial({
+          color: new THREE.Color(0x66ddee),
+          transparent: true,
+          opacity: 0.12,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        }))} />
+      ))}
+    </group>
+  );
+});
+
+// ---------------------------------------------------------------------------
+// Floating wireframe geometry
+// ---------------------------------------------------------------------------
+
+interface WireframeProps {
+  position: [number, number, number];
+  rotationSpeed: [number, number, number];
+  geometry: 'icosahedron' | 'torus' | 'octahedron';
+  scale?: number;
+}
+
+const WireframeShape = React.memo(function WireframeShape({
+  position,
+  rotationSpeed,
+  geometry,
+  scale = 1,
+}: WireframeProps) {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  const geo = useMemo(() => {
+    switch (geometry) {
+      case 'icosahedron':
+        return new THREE.IcosahedronGeometry(1, 1);
+      case 'torus':
+        return new THREE.TorusGeometry(1, 0.35, 8, 16);
+      case 'octahedron':
+        return new THREE.OctahedronGeometry(1, 0);
+      default:
+        return new THREE.IcosahedronGeometry(1, 1);
+    }
+  }, [geometry]);
+
+  useFrame(({ clock }) => {
+    if (!meshRef.current) return;
+    const t = clock.getElapsedTime();
+    meshRef.current.rotation.x = t * rotationSpeed[0];
+    meshRef.current.rotation.y = t * rotationSpeed[1];
+    meshRef.current.rotation.z = t * rotationSpeed[2];
+
+    // Gentle bobbing
+    meshRef.current.position.y =
+      position[1] + Math.sin(t * 0.1 + position[0]) * 0.3;
+  });
+
+  useEffect(() => {
+    return () => {
+      geo.dispose();
+    };
+  }, [geo]);
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={position}
+      scale={scale}
+      geometry={geo}
+    >
+      <meshBasicMaterial
+        color="#55ccdd"
+        wireframe
         transparent
-        opacity={0.5}
-        sizeAttenuation
+        opacity={WIREFRAME_OPACITY}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
-    </points>
+    </mesh>
   );
-}
+});
 
-function NeuralLines() {
-  const linesRef = useRef<THREE.LineSegments>(null!);
+// ---------------------------------------------------------------------------
+// Scene – everything inside the Canvas
+// ---------------------------------------------------------------------------
 
-  const { positions } = useMemo(() => {
-    const pos: number[] = [];
-    for (let i = 0; i < 60; i++) {
-      const x1 = (Math.random() - 0.5) * 12;
-      const y1 = (Math.random() - 0.5) * 12;
-      const z1 = (Math.random() - 0.5) * 6;
-      const x2 = x1 + (Math.random() - 0.5) * 3;
-      const y2 = y1 + (Math.random() - 0.5) * 3;
-      const z2 = z1 + (Math.random() - 0.5) * 2;
-      pos.push(x1, y1, z1, x2, y2, z2);
-    }
-    return { positions: new Float32Array(pos) };
-  }, []);
-
-  useFrame((state) => {
-    if (!linesRef.current) return;
-    linesRef.current.rotation.z = state.clock.elapsedTime * 0.008;
-  });
-
-  return (
-    <lineSegments ref={linesRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <lineBasicMaterial
-        color="#8b5cf6"
-        transparent
-        opacity={0.035}
-        blending={THREE.AdditiveBlending}
-      />
-    </lineSegments>
-  );
-}
-
-function FloatingGeometry() {
-  const torusRef = useRef<THREE.Mesh>(null!);
-  const icosaRef = useRef<THREE.Mesh>(null!);
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    if (torusRef.current) {
-      torusRef.current.rotation.x = t * 0.15;
-      torusRef.current.rotation.y = t * 0.1;
-      torusRef.current.position.y = Math.sin(t * 0.3) * 0.4;
-    }
-    if (icosaRef.current) {
-      icosaRef.current.rotation.x = t * 0.1;
-      icosaRef.current.rotation.z = t * 0.08;
-      icosaRef.current.position.y = Math.cos(t * 0.25) * 0.3;
-    }
-  });
-
+const Scene = React.memo(function Scene() {
   return (
     <>
-      <mesh ref={torusRef} position={[4, 1, -3]}>
-        <torusGeometry args={[0.6, 0.15, 12, 24]} />
-        <meshBasicMaterial
-          color="#8b5cf6"
-          transparent
-          opacity={0.1}
-          wireframe
-        />
-      </mesh>
-      <mesh ref={icosaRef} position={[-4.5, -1, -2]}>
-        <icosahedronGeometry args={[0.5, 0]} />
-        <meshBasicMaterial
-          color="#06b6d4"
-          transparent
-          opacity={0.08}
-          wireframe
-        />
-      </mesh>
+      <ambientLight intensity={0.5} />
+
+      {/* Particles */}
+      <Particles />
+
+      {/* Connections */}
+      <ParticleConnections />
+
+      {/* Floating wireframes */}
+      <WireframeShape
+        geometry="icosahedron"
+        position={[-3.5, 1.5, -2]}
+        rotationSpeed={[0.03, 0.05, 0.01]}
+        scale={1.2}
+      />
+      <WireframeShape
+        geometry="torus"
+        position={[3, -1, -1.5]}
+        rotationSpeed={[0.02, 0.04, 0.015]}
+        scale={1.4}
+      />
+      <WireframeShape
+        geometry="octahedron"
+        position={[0, 2.5, -3]}
+        rotationSpeed={[0.025, 0.03, 0.02]}
+        scale={0.9}
+      />
     </>
   );
-}
+});
 
-export default function ParticleField() {
+// ---------------------------------------------------------------------------
+// ParticleField – main exported component
+// ---------------------------------------------------------------------------
+
+const ParticleField = React.memo(function ParticleField() {
   return (
-    <div className="absolute inset-0 z-0">
+    <div
+      className="fixed inset-0 z-0"
+      style={{ pointerEvents: 'none' }}
+      aria-hidden="true"
+    >
       <Canvas
-        camera={{ position: [0, 0, 6], fov: 60 }}
-        dpr={[1, 1]}
+        camera={{ position: [0, 0, 5], fov: 60 }}
+        dpr={1}
         gl={{
           antialias: false,
           alpha: true,
-          powerPreference: "high-performance",
+          powerPreference: 'low-power',
         }}
+        style={{ background: 'transparent' }}
         frameloop="always"
-        style={{ background: "transparent" }}
       >
-        <ambientLight intensity={0.2} />
-        <Particles count={250} />
-        <NeuralLines />
-        <FloatingGeometry />
+        <Scene />
       </Canvas>
     </div>
   );
-}
+});
+
+export default ParticleField;

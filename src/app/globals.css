@@ -1,13 +1,27 @@
+/* ============================================================
+   Farhan Akhtar Makandar — Portfolio
+   Comprehensive Dark Theme CSS
+   ============================================================
+   Color System: Dark navy/black with cyan/purple/emerald accents
+   Framework: Tailwind CSS v4
+   ============================================================ */
+
+/* --- Tailwind v4 Imports --- */
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   @theme inline — Tailwind v4 theme tokens
+   ============================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter), var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Sidebar tokens */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -16,11 +30,15 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+
+  /* Chart tokens */
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+
+  /* UI tokens */
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -37,14 +55,32 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Radius tokens */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ============================================================
+   :root & .dark — CSS Custom Properties (Color System)
+   ============================================================ */
 :root {
   --radius: 0.625rem;
+
+  /* Portfolio custom design tokens */
+  --bg-primary: #030712;
+  --bg-secondary: #0a0f1e;
+  --bg-card: rgba(15, 23, 42, 0.7);
+  --accent-cyan: #06b6d4;
+  --accent-purple: #a855f7;
+  --accent-emerald: #10b981;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-glass: rgba(148, 163, 184, 0.1);
+
+  /* shadcn/ui tokens */
   --background: #0a0a0f;
   --foreground: #f0f0f5;
   --card: #111118;
@@ -113,85 +149,360 @@
 }
 
 /* ============================================================
-   @layer base
+   @layer base — Global Reset & Defaults
    ============================================================ */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    scroll-behavior: smooth;
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
-  /* Hide default cursor on non-touch devices */
-  @media (pointer: fine) {
-    body, a, button, [role="button"], input, textarea, select, label, summary, [onclick] {
-      cursor: none !important;
-    }
+  *,
+  *::before,
+  *::after {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-[var(--bg-primary)] text-foreground;
+    overflow-x: hidden;
+  }
+
+  /* Selection styling with accent colors */
+  ::selection {
+    background: rgba(139, 92, 246, 0.35);
+    color: #f1f5f9;
+  }
+
+  ::-moz-selection {
+    background: rgba(139, 92, 246, 0.35);
+    color: #f1f5f9;
+  }
+
+  /* Custom cursor handled at component level if needed */
+}
+
+/* ============================================================
+   Custom Scrollbar — Thin, dark, with accent gradient thumb
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.4),
+    rgba(6, 182, 212, 0.3)
+  );
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.6),
+    rgba(6, 182, 212, 0.5)
+  );
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.3) rgba(3, 7, 18, 0.8);
+}
+
+/* ============================================================
+   @keyframes — CSS Animation Library
+   ============================================================ */
+
+/* fade-in-up: opacity 0→1, translateY 20px→0 */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* fade-in: simple opacity 0→1 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* slide-in-left: translateX -30px→0 */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* slide-in-right: translateX 30px→0 */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* float: translateY 0→-10px→0, slow breathing float */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -25px) scale(1.03);
+  }
+  50% {
+    transform: translateY(-10px) scale(1);
+  }
+  75% {
+    transform: translate(-25px, 15px) scale(0.97);
+  }
+}
+
+/* Varied float speeds */
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(15px, -20px) scale(1.02);
+  }
+  66% {
+    transform: translate(-10px, 15px) scale(0.98);
+  }
+}
+
+@keyframes float-slower {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(-20px, -10px) scale(1.01);
+  }
+  50% {
+    transform: translate(10px, -30px) scale(1.04);
+  }
+  75% {
+    transform: translate(25px, 10px) scale(0.99);
+  }
+}
+
+/* pulse-glow: box-shadow pulse with accent color */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(139, 92, 246, 0.4),
+      0 0 0 0 rgba(6, 182, 212, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(139, 92, 246, 0),
+      0 0 0 16px rgba(6, 182, 212, 0);
+  }
+}
+
+/* gradient-shift: background-position animation for gradient text */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* shimmer: translateX for loading shimmer effect */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* scale-in: scale 0.95→1 with fade */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* spin-slow: 360deg rotation in 20s */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* morph: organic blob shape morphing */
+@keyframes morph {
+  0%,
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    transform: rotate(5deg) scale(1.03);
+  }
+  50% {
+    border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%;
+    transform: rotate(-3deg) scale(0.97);
+  }
+  75% {
+    border-radius: 60% 30% 60% 40% / 70% 50% 40% 60%;
+    transform: rotate(4deg) scale(1.02);
+  }
+}
+
+/* scroll-bounce: scroll indicator bounce */
+@keyframes scroll-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 0.5;
+  }
+}
+
+/* rotate-slow: 3D Y-axis rotation */
+@keyframes rotate-slow {
+  from {
+    transform: rotateY(0deg) rotateX(0deg);
+  }
+  to {
+    transform: rotateY(360deg) rotateX(0deg);
   }
 }
 
 /* ============================================================
-   Glassmorphism Utilities
+   @layer components — Glassmorphism & UI Components
    ============================================================ */
+
+/* .glass — Base glassmorphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
+/* .glass-border — Glass with subtle border */
 .glass-border {
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-glass);
   position: relative;
 }
 
+/* .glass-card — Glass card with rounded corners and padding */
 .glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-glass);
   border-radius: 1rem;
+  padding: 1.5rem;
   box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
-  will-change: box-shadow;
+  transition:
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease;
+  will-change: box-shadow, transform;
 }
 
 .glass-card:hover {
   border-color: rgba(139, 92, 246, 0.15);
   box-shadow: 0 8px 32px -8px rgba(139, 92, 246, 0.12);
+  transform: translateY(-2px);
 }
 
+/* .glass-nav — Navigation glass effect */
 .glass-nav {
-  background: rgba(10, 10, 15, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(3, 7, 18, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border-glass);
 }
 
 /* ============================================================
    Gradient Text Utilities
    ============================================================ */
+
+/* .gradient-text — Animated gradient text (cyan→purple→emerald) */
 .gradient-text {
   background: linear-gradient(
     135deg,
-    #8b5cf6 0%,
-    #a78bfa 25%,
-    #06b6d4 50%,
-    #22d3ee 75%,
-    #8b5cf6 100%
+    #06b6d4 0%,
+    #a855f7 25%,
+    #10b981 50%,
+    #06b6d4 75%,
+    #a855f7 100%
   );
-  background-size: 200% 200%;
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: gradient-shift 6s ease infinite;
 }
 
+/* .gradient-text-hover — Gradient text with hover state */
 .gradient-text-hover {
   background: linear-gradient(
     135deg,
@@ -212,285 +523,15 @@
   background-position: 100% 100%;
 }
 
-/* ============================================================
-   Gradient Border Utility
-   ============================================================ */
-.gradient-border {
-  position: relative;
+/* .text-glow — Text-shadow glow effect */
+.text-glow {
+  text-shadow:
+    0 0 10px rgba(139, 92, 246, 0.5),
+    0 0 20px rgba(139, 92, 246, 0.3),
+    0 0 40px rgba(6, 182, 212, 0.15);
 }
 
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    #8b5cf6 0%,
-    #06b6d4 40%,
-    #f59e0b 70%,
-    #8b5cf6 100%
-  );
-  background-size: 300% 300%;
-  animation: gradient-shift 6s ease infinite;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  pointer-events: none;
-}
-
-/* ============================================================
-   Glow Hover Effect (multi-color)
-   ============================================================ */
-.glow-hover {
-  transition: box-shadow 0.3s ease;
-  will-change: box-shadow;
-}
-
-.glow-hover:hover {
-  box-shadow:
-    0 0 20px rgba(139, 92, 246, 0.15),
-    0 0 40px rgba(6, 182, 212, 0.08);
-}
-
-/* ============================================================
-   Custom Scrollbar (purple/cyan)
-   ============================================================ */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(10, 10, 15, 0.8);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(139, 92, 246, 0.4), rgba(6, 182, 212, 0.3));
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(139, 92, 246, 0.6), rgba(6, 182, 212, 0.5));
-}
-
-::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* Firefox scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.3) rgba(10, 10, 15, 0.8);
-}
-
-/* ============================================================
-   Hero Grid Background (subtle dots)
-   ============================================================ */
-.hero-grid {
-  background-image:
-    radial-gradient(circle, rgba(139, 92, 246, 0.08) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
-/* ============================================================
-   Animated Gradient Orbs
-   ============================================================ */
-@keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(20px, -25px) scale(1.03); }
-  50% { transform: translate(-15px, -40px) scale(1.05); }
-  75% { transform: translate(-25px, 15px) scale(0.97); }
-}
-
-.orb-purple {
-  animation: float 8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
-
-.orb-cyan {
-  animation: float 10s cubic-bezier(0.45, 0, 0.55, 1) infinite reverse;
-}
-
-/* ============================================================
-   Scroll Indicator Bounce
-   ============================================================ */
-@keyframes scroll-bounce {
-  0%, 100% { transform: translateY(0); opacity: 1; }
-  50% { transform: translateY(8px); opacity: 0.5; }
-}
-
-.scroll-indicator {
-  animation: scroll-bounce 2s ease-in-out infinite;
-}
-
-/* ============================================================
-   Animated Heading Gradient Line
-   ============================================================ */
-.heading-gradient-line {
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    #8b5cf6 0%,
-    #06b6d4 30%,
-    #f59e0b 60%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: gradient-shift 4s ease infinite;
-  border-radius: 1px;
-}
-
-/* ============================================================
-   Card Hover Gradient Border
-   ============================================================ */
-.card-hover-gradient {
-  position: relative;
-  overflow: hidden;
-}
-
-.card-hover-gradient::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    transparent 0%,
-    rgba(139, 92, 246, 0.35) 30%,
-    rgba(6, 182, 212, 0.35) 60%,
-    rgba(245, 158, 11, 0.15) 80%,
-    transparent 100%
-  );
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask-composite: xor;
-  opacity: 0;
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  pointer-events: none;
-}
-
-.card-hover-gradient:hover::after {
-  opacity: 1;
-}
-
-/* ============================================================
-   Noise Texture Overlay
-   ============================================================ */
-.noise-overlay::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0;
-}
-
-/* ============================================================
-   Section Divider (ambient gradient)
-   ============================================================ */
-.section-divider {
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(139, 92, 246, 0.2) 25%,
-    rgba(6, 182, 212, 0.18) 50%,
-    rgba(139, 92, 246, 0.12) 75%,
-    transparent 100%
-  );
-}
-
-/* ============================================================
-   Shimmer Animation (loading states)
-   ============================================================ */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.shimmer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.04) 60%,
-    transparent 100%
-  );
-  animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  pointer-events: none;
-}
-
-/* ============================================================
-   Morph Blob Animation
-   ============================================================ */
-@keyframes morph {
-  0%, 100% {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    transform: rotate(0deg) scale(1);
-  }
-  25% {
-    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-    transform: rotate(5deg) scale(1.03);
-  }
-  50% {
-    border-radius: 50% 60% 30% 60% / 30% 60% 70% 40%;
-    transform: rotate(-3deg) scale(0.97);
-  }
-  75% {
-    border-radius: 60% 30% 60% 40% / 70% 50% 40% 60%;
-    transform: rotate(4deg) scale(1.02);
-  }
-}
-
-.morph-blob {
-  animation: morph 12s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  background: linear-gradient(
-    135deg,
-    rgba(139, 92, 246, 0.15) 0%,
-    rgba(6, 182, 212, 0.1) 50%,
-    rgba(139, 92, 246, 0.08) 100%
-  );
-  filter: blur(30px);
-  will-change: border-radius, transform;
-}
-
-/* ============================================================
-   Pulse Glow Ring
-   ============================================================ */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 0 rgba(139, 92, 246, 0.4),
-      0 0 0 0 rgba(6, 182, 212, 0.2);
-  }
-  50% {
-    box-shadow:
-      0 0 0 8px rgba(139, 92, 246, 0),
-      0 0 0 16px rgba(6, 182, 212, 0);
-  }
-}
-
-.pulse-glow-ring {
-  animation: pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* ============================================================
-   Animated Gradient Text
-   ============================================================ */
+/* .text-gradient-animate — Full spectrum animated gradient text */
 .text-gradient-animate {
   background: linear-gradient(
     90deg,
@@ -509,31 +550,285 @@
 }
 
 /* ============================================================
-   Varied Float Speed Animations
+   Card Hover & Interaction Effects
    ============================================================ */
-@keyframes float-slow {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(15px, -20px) scale(1.02); }
-  66% { transform: translate(-10px, 15px) scale(0.98); }
+
+/* .card-hover — Hover scale + shadow transition */
+.card-hover {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
 }
 
-@keyframes float-slower {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(-20px, -10px) scale(1.01); }
-  50% { transform: translate(10px, -30px) scale(1.04); }
-  75% { transform: translate(25px, 10px) scale(0.99); }
+.card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 12px 40px -8px rgba(139, 92, 246, 0.2),
+    0 0 20px rgba(6, 182, 212, 0.08);
 }
 
-.float-slow {
-  animation: float-slow 12s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+/* .glow-hover — Multi-color glow on hover */
+.glow-hover {
+  transition: box-shadow 0.3s ease;
+  will-change: box-shadow;
 }
 
-.float-slower {
-  animation: float-slower 16s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+.glow-hover:hover {
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.15),
+    0 0 40px rgba(6, 182, 212, 0.08);
+}
+
+/* .card-hover-gradient — Hover gradient border reveal */
+.card-hover-gradient {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-hover-gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.35) 30%,
+    rgba(6, 182, 212, 0.35) 60%,
+    rgba(16, 185, 129, 0.15) 80%,
+    transparent 100%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.card-hover-gradient:hover::after {
+  opacity: 1;
+}
+
+/* .gradient-border — Always-visible gradient border */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    #8b5cf6 0%,
+    #06b6d4 40%,
+    #10b981 70%,
+    #8b5cf6 100%
+  );
+  background-size: 300% 300%;
+  animation: gradient-shift 6s ease infinite;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
 }
 
 /* ============================================================
-   Spotlight Card (mouse-following spotlight)
+   Animation Utility Classes
+   ============================================================ */
+
+/* .animate-on-scroll — Base class, elements start invisible */
+.animate-on-scroll {
+  opacity: 0;
+}
+
+/* .animate-on-scroll.is-visible — Applied by IntersectionObserver */
+.animate-on-scroll.is-visible {
+  animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Staggered delay utilities for children */
+.animate-on-scroll.delay-100.is-visible {
+  animation-delay: 100ms;
+}
+
+.animate-on-scroll.delay-200.is-visible {
+  animation-delay: 200ms;
+}
+
+.animate-on-scroll.delay-300.is-visible {
+  animation-delay: 300ms;
+}
+
+.animate-on-scroll.delay-400.is-visible {
+  animation-delay: 400ms;
+}
+
+.animate-on-scroll.delay-500.is-visible {
+  animation-delay: 500ms;
+}
+
+.animate-on-scroll.delay-600.is-visible {
+  animation-delay: 600ms;
+}
+
+.animate-on-scroll.delay-700.is-visible {
+  animation-delay: 700ms;
+}
+
+/* Animation class shortcuts */
+.anim-fade-in-up {
+  animation: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-fade-in {
+  animation: fade-in 0.6s ease forwards;
+}
+
+.anim-slide-left {
+  animation: slide-in-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-slide-right {
+  animation: slide-in-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ============================================================
+   Noise Overlay — Subtle noise texture via SVG filter
+   ============================================================ */
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+/* ============================================================
+   Layout Utility Classes
+   ============================================================ */
+
+/* .section-padding — Consistent section padding */
+.section-padding {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+@media (min-width: 768px) {
+  .section-padding {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
+  }
+}
+
+/* .container-custom — max-w-6xl mx-auto px-4 sm:px-6 */
+.container-custom {
+  width: 100%;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-custom {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ============================================================
+   Custom Cursor Styles
+   ============================================================ */
+
+/* .custom-cursor — Fixed positioning container for cursor elements */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: difference;
+}
+
+/* .cursor-dot — Small 6px dot */
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.2s ease,
+    height 0.2s ease,
+    background 0.2s ease;
+}
+
+/* .cursor-ring — Outer 36px ring */
+.cursor-ring {
+  position: fixed;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(139, 92, 246, 0.5);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s ease,
+    opacity 0.3s ease;
+}
+
+/* .cursor-hover — Scale up effect on interactive elements */
+.cursor-hover .cursor-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--accent-purple);
+}
+
+.cursor-hover .cursor-ring {
+  width: 56px;
+  height: 56px;
+  border-color: rgba(168, 85, 247, 0.4);
+  opacity: 0.6;
+}
+
+/* Hide custom cursor on touch devices */
+@media (pointer: coarse) {
+  .custom-cursor,
+  .cursor-dot,
+  .cursor-ring {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   Spotlight Card — Mouse-following spotlight effect
    ============================================================ */
 .spotlight-card {
   position: relative;
@@ -568,6 +863,156 @@
 }
 
 /* ============================================================
+   Animated Gradient Orbs
+   ============================================================ */
+.orb-purple {
+  animation: float 8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.orb-cyan {
+  animation: float 10s cubic-bezier(0.45, 0, 0.55, 1) infinite reverse;
+}
+
+.float-slow {
+  animation: float-slow 12s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.float-slower {
+  animation: float-slower 16s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* ============================================================
+   Morph Blob — Organic shape animation
+   ============================================================ */
+.morph-blob {
+  animation: morph 12s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.15) 0%,
+    rgba(6, 182, 212, 0.1) 50%,
+    rgba(16, 185, 129, 0.08) 100%
+  );
+  filter: blur(30px);
+  will-change: border-radius, transform;
+}
+
+/* ============================================================
+   Pulse Glow Ring — Pulsing border glow
+   ============================================================ */
+.pulse-glow-ring {
+  animation: pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ============================================================
+   Shimmer Effect — Loading shimmer overlay
+   ============================================================ */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 60%,
+    transparent 100%
+  );
+  animation: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Scroll Indicator — Bounce animation
+   ============================================================ */
+.scroll-indicator {
+  animation: scroll-bounce 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   Heading Gradient Line — Animated gradient underline
+   ============================================================ */
+.heading-gradient-line {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    #8b5cf6 0%,
+    #06b6d4 30%,
+    #10b981 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: gradient-shift 4s ease infinite;
+  border-radius: 1px;
+}
+
+/* ============================================================
+   Section Divider — Ambient gradient separator
+   ============================================================ */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.2) 25%,
+    rgba(6, 182, 212, 0.18) 50%,
+    rgba(16, 185, 129, 0.12) 75%,
+    transparent 100%
+  );
+}
+
+/* ============================================================
+   Hero Grid Background — Subtle dot grid pattern
+   ============================================================ */
+.hero-grid {
+  background-image: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.08) 1px,
+    transparent 1px
+  );
+  background-size: 32px 32px;
+}
+
+/* ============================================================
+   Mesh Gradient Background — Multi-stop radial gradient
+   ============================================================ */
+.mesh-gradient {
+  background:
+    radial-gradient(
+      at 20% 20%,
+      rgba(139, 92, 246, 0.12) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 80% 20%,
+      rgba(6, 182, 212, 0.1) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 50% 80%,
+      rgba(16, 185, 129, 0.08) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 80% 80%,
+      rgba(139, 92, 246, 0.06) 0px,
+      transparent 50%
+    ),
+    radial-gradient(
+      at 20% 80%,
+      rgba(6, 182, 212, 0.08) 0px,
+      transparent 50%
+    );
+  background-size: 200% 200%;
+  animation: gradient-shift 10s ease infinite;
+}
+
+/* ============================================================
    3D Perspective Utilities
    ============================================================ */
 .perspective-1000 {
@@ -578,31 +1023,10 @@
   transform-style: preserve-3d;
 }
 
-@keyframes rotate-slow {
-  from { transform: rotateY(0deg) rotateX(0deg); }
-  to { transform: rotateY(360deg) rotateX(0deg); }
-}
-
 .rotate-slow-3d {
   animation: rotate-slow 20s linear infinite;
 }
 
-/* ============================================================
-   Mesh Gradient Background
-   ============================================================ */
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.mesh-gradient {
-  background:
-    radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
-    radial-gradient(at 80% 20%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
-    radial-gradient(at 50% 80%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
-    radial-gradient(at 80% 80%, rgba(139, 92, 246, 0.06) 0px, transparent 50%),
-    radial-gradient(at 20% 80%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
-  background-size: 200% 200%;
-  animation: gradient-shift 10s ease infinite;
+.spin-slow {
+  animation: spin-slow 20s linear infinite;
 }

@@ -1,316 +1,320 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { Briefcase, Calendar, MapPin, Cpu, GraduationCap } from "lucide-react";
-import SectionHeading from "./SectionHeading";
-import { siteConfig, experience, education } from "@/lib/data";
-import TiltCard from "./TiltCard";
+import React from 'react';
+import { motion, useInView } from 'framer-motion';
+import { GraduationCap, Briefcase, MapPin, Award, Calendar, ExternalLink } from 'lucide-react';
+import { siteConfig, education, experience } from '@/lib/data';
 
-const springSlideLeft = {
-  initial: { opacity: 0, x: -40 },
-  whileInView: { opacity: 1, x: 0 },
-  viewport: { once: true, margin: "-80px" } as const,
-  transition: { type: "spring", stiffness: 100, damping: 18 },
+// ---------------------------------------------------------------------------
+// Animation variants
+// ---------------------------------------------------------------------------
+
+const sectionContainer = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.12, delayChildren: 0.15 },
+  },
 };
 
-const springSlideRight = {
-  initial: { opacity: 0, x: 40 },
-  whileInView: { opacity: 1, x: 0 },
-  viewport: { once: true, margin: "-80px" } as const,
-  transition: { type: "spring", stiffness: 100, damping: 18, delay: 0.1 },
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
-export default function AboutSection() {
+const slideLeft = {
+  hidden: { opacity: 0, x: -40 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+const cardStagger = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.65,
+      delay: 0.2 + i * 0.15,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  }),
+};
+
+// ---------------------------------------------------------------------------
+// Section heading component
+// ---------------------------------------------------------------------------
+
+function SectionHeading() {
   return (
-    <section id="about" className="py-20 md:py-28 relative overflow-hidden">
-      {/* Background: purple gradient orb on left */}
-      <div
-        className="pointer-events-none absolute -top-32 -left-48 w-[500px] h-[500px] rounded-full opacity-[0.07] blur-[120px]"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(168,85,247,0.6) 0%, rgba(34,211,238,0.2) 60%, transparent 100%)",
-        }}
-      />
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-100px' }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      className="mb-14 text-center"
+    >
+      <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-cyan-400/70">
+        My Journey
+      </p>
+      <h2 className="mb-4 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl md:text-5xl">
+        About <span className="gradient-text">Me</span>
+      </h2>
+      <div className="heading-gradient-line mx-auto mt-2 w-24 sm:w-32" />
+    </motion.div>
+  );
+}
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <SectionHeading
-          title="About"
-          subtitle="Research-driven engineer building ML systems and AI pipelines"
+// ---------------------------------------------------------------------------
+// Quick stat badge
+// ---------------------------------------------------------------------------
+
+interface QuickStatProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}
+
+function QuickStat({ icon, label, value }: QuickStatProps) {
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-3.5 py-2 backdrop-blur-sm">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-400">
+        {icon}
+      </span>
+      <div className="flex flex-col">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-secondary)]">
+          {label}
+        </span>
+        <span className="text-xs font-semibold text-[var(--text-primary)] leading-tight">
+          {value}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// About text column
+// ---------------------------------------------------------------------------
+
+function AboutText() {
+  return (
+    <motion.div
+      variants={slideLeft}
+      className="flex flex-col gap-6"
+    >
+      {/* Bio paragraphs */}
+      <div className="flex flex-col gap-4">
+        <p className="text-sm leading-relaxed text-[var(--text-secondary)] sm:text-[0.938rem] sm:leading-7">
+          I&apos;m <span className="font-semibold text-[var(--text-primary)]">Farhan Akhtar Makandar</span>, a
+          Machine Learning Systems Engineer specializing in building intelligent systems that bridge the
+          gap between cutting-edge AI research and real-world applications.
+        </p>
+        <p className="text-sm leading-relaxed text-[var(--text-secondary)] sm:text-[0.938rem] sm:leading-7">
+          Currently pursuing my B.E. in Artificial Intelligence &amp; Machine Learning at{' '}
+          <span className="font-medium text-cyan-400/80">Yenepoya Institute of Technology</span>, I&apos;ve
+          worked on research projects at{' '}
+          <span className="font-medium text-cyan-400/80">NIT Calicut</span> focusing on transformer
+          architectures for time-series prediction.
+        </p>
+        <p className="text-sm leading-relaxed text-[var(--text-secondary)] sm:text-[0.938rem] sm:leading-7">
+          My expertise spans deep learning with PyTorch and TensorFlow, agentic AI workflows with RAG
+          pipelines, and building production-ready ML systems. I&apos;m passionate about leveraging
+          transformer models, LLMs, and retrieval-augmented generation to solve complex engineering
+          challenges.
+        </p>
+      </div>
+
+      {/* Quick stats badges */}
+      <div className="flex flex-wrap gap-3 pt-2">
+        <QuickStat
+          icon={<MapPin className="h-3.5 w-3.5" />}
+          label="Location"
+          value={siteConfig.location}
         />
+        <QuickStat
+          icon={<GraduationCap className="h-3.5 w-3.5" />}
+          label="Degree"
+          value="B.E. AIML"
+        />
+        <QuickStat
+          icon={<Award className="h-3.5 w-3.5" />}
+          label="Focus"
+          value="ML Systems"
+        />
+      </div>
+    </motion.div>
+  );
+}
 
-        <div className="grid md:grid-cols-5 gap-8 lg:gap-12 items-start">
-          {/* ── Bio (left) ── */}
-          <motion.div
-            initial={springSlideLeft.initial}
-            whileInView={springSlideLeft.whileInView}
-            viewport={springSlideLeft.viewport}
-            transition={springSlideLeft.transition}
-            className="md:col-span-3 space-y-6"
-          >
-            {/* Decorative gradient line + bio text */}
-            <div className="relative pl-5 border-l-2 border-transparent">
-              {/* Gradient left border */}
-              <div
-                className="absolute left-0 top-0 bottom-0 w-[2px] rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(to bottom, rgba(168,85,247,0.8), rgba(34,211,238,0.8), transparent)",
-                }}
-              />
-              <div className="space-y-5">
-                <p className="text-gray-300 text-lg leading-relaxed">
-                  I&apos;m an{" "}
-                  <span className="text-white font-semibold">ML Systems Engineer</span> and{" "}
-                  <span className="text-white font-semibold">
-                    LLM &amp; Agentic AI Developer
-                  </span>{" "}
-                  focused on building production-grade AI systems — from transformer-based
-                  predictive models to retrieval-augmented generation pipelines.
-                </p>
-                <p className="text-gray-400 text-lg leading-relaxed">
-                  At{" "}
-                  <span className="text-purple-400 font-medium">NIT Calicut</span>, I developed
-                  deep learning applications for engineering problems — specifically building a
-                  Temporal Fusion Transformer that achieved{" "}
-                  <span className="text-white font-medium">22% improvement</span> over XGBoost
-                  and KNN baselines for seismic response prediction. My work spans PyTorch model
-                  development, systematic hyperparameter tuning, and rigorous validation.
-                </p>
-                <p className="text-gray-400 text-lg leading-relaxed">
-                  I design agentic AI workflows that combine LLM reasoning with retrieval systems,
-                  and build attention-based architectures for both time-series and tabular data.
-                  Every project follows a disciplined approach: define the problem, validate against
-                  baselines, and deliver measurable results.
-                </p>
-              </div>
-            </div>
+// ---------------------------------------------------------------------------
+// Education card
+// ---------------------------------------------------------------------------
 
-            {/* ── Education ── */}
-            <div className="pt-2">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-cyan-400" />
+interface EducationCardProps {
+  institution: string;
+  degree: string;
+  period: string;
+  details?: string;
+  index: number;
+}
+
+function EducationCard({ institution, degree, period, details, index }: EducationCardProps) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
+
+  return (
+    <motion.div
+      ref={ref}
+      custom={index}
+      variants={cardStagger}
+      initial="hidden"
+      animate={isInView ? 'visible' : 'hidden'}
+      className="glass-card group flex gap-4"
+    >
+      {/* Icon */}
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 transition-colors duration-300 group-hover:bg-purple-500/15">
+        <GraduationCap className="h-5 w-5" />
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col gap-1.5 min-w-0">
+        <h3 className="text-sm font-semibold leading-snug text-[var(--text-primary)]">
+          {institution}
+        </h3>
+        <p className="text-xs font-medium text-cyan-400/70">{degree}</p>
+        <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
+          <Calendar className="h-3 w-3" />
+          <span>{period}</span>
+        </div>
+        {details && (
+          <p className="mt-1 text-[11px] leading-relaxed text-[var(--text-secondary)]/80 line-clamp-2">
+            {details}
+          </p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Experience card
+// ---------------------------------------------------------------------------
+
+function ExperienceCard() {
+  const exp = experience[0];
+  const ref = React.useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
+
+  if (!exp) return null;
+
+  return (
+    <motion.div
+      ref={ref}
+      custom={education.length}
+      variants={cardStagger}
+      initial="hidden"
+      animate={isInView ? 'visible' : 'hidden'}
+      className="glass-card group relative overflow-hidden"
+    >
+      {/* Subtle gradient accent at top */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+
+      {/* Header */}
+      <div className="flex items-start gap-4 mb-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400 transition-colors duration-300 group-hover:bg-cyan-500/15 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+          <Briefcase className="h-5 w-5" />
+        </div>
+        <div className="flex flex-col gap-1 min-w-0">
+          <h3 className="text-sm font-semibold leading-snug text-[var(--text-primary)]">
+            {exp.role}
+          </h3>
+          <p className="text-xs font-medium text-cyan-400/70">{exp.company}</p>
+          <div className="flex items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
+            <Calendar className="h-3 w-3" />
+            <span>{exp.period}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Responsibilities */}
+      <ul className="flex flex-col gap-2.5 pl-0">
+        {exp.responsibilities.map((item, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-[11px] leading-relaxed text-[var(--text-secondary)]">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400/60" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// AboutSection — main exported component
+// ---------------------------------------------------------------------------
+
+function AboutSection() {
+  return (
+    <section id="about" className="relative z-10 section-padding">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-40 top-1/3 h-80 w-80 rounded-full bg-purple-600/[0.05] blur-[120px]" />
+        <div className="absolute -right-40 bottom-1/3 h-72 w-72 rounded-full bg-cyan-500/[0.04] blur-[120px]" />
+      </div>
+
+      <div className="container-custom relative">
+        <SectionHeading />
+
+        <motion.div
+          variants={sectionContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-100px' }}
+          className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-14 lg:gap-16"
+        >
+          {/* ---- Left column: About text ---- */}
+          <AboutText />
+
+          {/* ---- Right column: Education & Experience ---- */}
+          <motion.div variants={fadeUp} className="flex flex-col gap-5">
+            {/* Education cards */}
+            <div className="flex flex-col gap-4">
+              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
+                <GraduationCap className="h-3.5 w-3.5 text-purple-400" />
                 Education
               </h3>
-              <div className="space-y-4">
-                {education.map((edu, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 120,
-                      damping: 20,
-                      delay: i * 0.15,
-                    }}
-                  >
-                    <TiltCard tiltAmount={6} glareOpacity={0.08}>
-                      <div className="relative overflow-hidden rounded-xl glass-card p-5">
-                        {/* Subtle gradient top border */}
-                        <div
-                          className="absolute top-0 left-0 right-0 h-[2px]"
-                          style={{
-                            background:
-                              "linear-gradient(to right, rgba(168,85,247,0.7), rgba(34,211,238,0.5), transparent)",
-                          }}
-                        />
-                        <div className="flex items-start justify-between gap-3 mb-1">
-                          <span className="text-sm font-semibold text-white">
-                            {edu.degree}
-                          </span>
-                          <span className="text-xs text-purple-400 font-medium whitespace-nowrap">
-                            {edu.period}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-400">{edu.institution}</p>
-                        {edu.details && (
-                          <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
-                            {edu.details}
-                          </p>
-                        )}
-                      </div>
-                    </TiltCard>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            {/* ── Quick info pills ── */}
-            <div className="flex flex-wrap gap-3 pt-2">
-              {[
-                {
-                  icon: <MapPin className="h-3.5 w-3.5 text-purple-400" />,
-                  label: siteConfig.location,
-                },
-                {
-                  icon: <Cpu className="h-3.5 w-3.5 text-cyan-400" />,
-                  label: "ML Systems Engineer",
-                },
-                {
-                  icon: <Briefcase className="h-3.5 w-3.5 text-purple-400" />,
-                  label: "Research @ NIT Calicut",
-                },
-              ].map((pill, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 140,
-                    damping: 20,
-                    delay: i * 0.1,
-                  }}
-                  whileHover={{
-                    y: -3,
-                    transition: { type: "spring", stiffness: 300, damping: 20 },
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-gray-400 cursor-default"
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    backdropFilter: "blur(12px)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    boxShadow:
-                      "inset 0 1px 0 rgba(255,255,255,0.04), 0 1px 2px rgba(0,0,0,0.2)",
-                  }}
-                >
-                  {pill.icon}
-                  {pill.label}
-                </motion.span>
+              {education.map((edu, i) => (
+                <EducationCard
+                  key={edu.institution}
+                  institution={edu.institution}
+                  degree={edu.degree}
+                  period={edu.period}
+                  details={edu.details}
+                  index={i}
+                />
               ))}
             </div>
-          </motion.div>
 
-          {/* ── Experience Card (right) ── */}
-          <motion.div
-            initial={springSlideRight.initial}
-            whileInView={springSlideRight.whileInView}
-            viewport={springSlideRight.viewport}
-            transition={springSlideRight.transition}
-            className="md:col-span-2"
-          >
-            <div className="sticky top-24">
-              <TiltCard tiltAmount={8} glareOpacity={0.1}>
-                <div className="relative overflow-hidden rounded-xl glass-card glow-hover sticky top-24">
-                  {/* Animated background mesh pattern */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <svg
-                      className="absolute inset-0 w-full h-full opacity-[0.03]"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <defs>
-                        <pattern
-                          id="about-mesh"
-                          x="0"
-                          y="0"
-                          width="40"
-                          height="40"
-                          patternUnits="userSpaceOnUse"
-                        >
-                          <path
-                            d="M 40 0 L 0 0 0 40"
-                            fill="none"
-                            stroke="white"
-                            strokeWidth="0.5"
-                          />
-                        </pattern>
-                      </defs>
-                      <rect width="100%" height="100%" fill="url(#about-mesh)" />
-                    </svg>
-                    <motion.div
-                      className="absolute -top-24 -right-24 w-48 h-48 rounded-full"
-                      style={{
-                        background:
-                          "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 70%)",
-                      }}
-                      animate={{
-                        scale: [1, 1.15, 1],
-                        opacity: [0.4, 0.7, 0.4],
-                      }}
-                      transition={{
-                        duration: 6,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                    />
-                    <motion.div
-                      className="absolute -bottom-16 -left-16 w-36 h-36 rounded-full"
-                      style={{
-                        background:
-                          "radial-gradient(circle, rgba(34,211,238,0.1) 0%, transparent 70%)",
-                      }}
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.6, 0.3],
-                      }}
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 1,
-                      }}
-                    />
-                  </div>
-
-                  {/* Gradient left border (purple to cyan) */}
-                  <div
-                    className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
-                    style={{
-                      background:
-                        "linear-gradient(to bottom, rgba(168,85,247,0.9), rgba(34,211,238,0.9))",
-                    }}
-                  />
-
-                  {/* Content */}
-                  <div className="relative z-10 p-6">
-                    <h3 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
-                      <Briefcase className="h-5 w-5 text-purple-400" />
-                      Experience
-                    </h3>
-                    <div className="heading-gradient-line w-12 mb-6" />
-
-                    {experience.map((exp) => (
-                      <div key={exp.id}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold text-white">
-                            {exp.role}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-sm text-purple-400 font-medium">
-                            {exp.company}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
-                            <Calendar className="h-3 w-3" />
-                            {exp.period}
-                          </span>
-                        </div>
-                        <ul className="space-y-2.5">
-                          {exp.responsibilities.map((item, i) => (
-                            <motion.li
-                              key={i}
-                              initial={{ opacity: 0, x: 10 }}
-                              whileInView={{ opacity: 1, x: 0 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: i * 0.08 }}
-                              className="flex items-start gap-2.5 text-sm text-gray-400"
-                            >
-                              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple-500/60 flex-shrink-0" />
-                              {item}
-                            </motion.li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </TiltCard>
+            {/* Experience card */}
+            <div className="flex flex-col gap-4 pt-2">
+              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
+                <Briefcase className="h-3.5 w-3.5 text-cyan-400" />
+                Experience
+              </h3>
+              <ExperienceCard />
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
 }
+
+export default AboutSection;

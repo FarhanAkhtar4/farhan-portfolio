@@ -1,378 +1,349 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Menu, Github, Download, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { navLinks, siteConfig } from "@/lib/data";
-import ScrollProgress from "./ScrollProgress";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Menu, X, Download, ChevronDown } from 'lucide-react';
+import { navLinks, siteConfig } from '@/lib/data';
 
-const resumeOptions = [
-  { label: "General Resume", description: "Agentic AI + ML focused", file: "/resume.pdf", accent: false },
-  { label: "separator", file: "" },
-  { label: "ML Engineer", description: "Deep Learning, PyTorch, Transformers", file: "/resumes/Farhan_Akhtar_ML_Engineer.pdf", accent: false },
-  { label: "Agentic AI Engineer", description: "RAG, LLMs, Vector DBs, LangChain", file: "/resumes/Farhan_Akhtar_Agentic_AI_Engineer.pdf", accent: true },
-  { label: "Generative AI Engineer", description: "GenAI, Fine-Tuning, Prompt Engineering", file: "/resumes/Farhan_Akhtar_GenAI_Engineer.pdf", accent: false },
-  { label: "AI Engineer", description: "Full-stack AI/ML coverage", file: "/resumes/Farhan_Akhtar_AI_Engineer.pdf", accent: false },
-];
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
 
-function HuggingFaceIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.41 14.59c-.23.34-.53.12-.93.38-.41-.5.86-1.54 1.17-2.47 1.15-.7-.02-1.23-.26-1.23-.92v-3.15c0-2.09-1.72-3.4-3.59-3.4-1.57 0-2.58 1.04-2.58 2.6 0 .55.24 1.04.61 1.34l2.41 1.77c.7.51 1.57.34 2.49-.42 3.47z" />
-    </svg>
+const SCROLL_THRESHOLD = 50;
+const INTERSECTION_THRESHOLD = 0.35;
+const INTERSECTION_ROOT_MARGIN = '-10% 0px -60% 0px';
+
+// ---------------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------------
+
+const Navigation: React.FC = () => {
+  const [isScrolled, setIsScrolled] = useState(() =>
+    typeof window !== 'undefined' && window.scrollY > SCROLL_THRESHOLD,
   );
-}
-
-function ResumeDropdownContent({ onSelect }: { onSelect?: () => void }) {
-  return (
-    <DropdownMenuContent
-      align="end"
-      className="w-64 bg-[#12121a] border-white/[0.08] backdrop-blur-xl"
-    >
-      {resumeOptions.map((opt) => {
-        if (opt.label === "separator") {
-          return <DropdownMenuSeparator key="sep" className="bg-white/[0.06]" />;
-        }
-        return (
-          <DropdownMenuItem
-            key={opt.label}
-            onClick={() => {
-              window.open(opt.file, "_blank");
-              onSelect?.();
-            }}
-            className="flex items-start gap-2.5 px-3 py-2 text-gray-300 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] cursor-pointer"
-          >
-            <FileText className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${opt.accent ? "text-yellow-400" : "text-gray-500"}`} />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium flex items-center gap-1.5">
-                {opt.label}
-                {opt.accent && (
-                  <span className="text-[8px] px-1 py-0.5 rounded bg-yellow-500/15 text-yellow-300 font-semibold">
-                    Hot
-                  </span>
-                )}
-              </div>
-              {opt.description && (
-                <div className="text-[10px] text-gray-500 mt-0.5">{opt.description}</div>
-              )}
-            </div>
-          </DropdownMenuItem>
-        );
-      })}
-    </DropdownMenuContent>
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>(
+    navLinks[0]?.href.replace('#', '') ?? 'home',
   );
-}
 
-export default function Navigation() {
-  const [activeSection, setActiveSection] = useState("home");
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  // Ref for Intersection Observer
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // ---- Scroll listener (passive) ----
+  const handleScroll = useCallback(() => {
+    setIsScrolled(window.scrollY > SCROLL_THRESHOLD);
+  }, []);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
-      const sections = navLinks.map((link) => link.href.replace("#", ""));
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = document.getElementById(sections[i]);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 120) {
-            setActiveSection(sections[i]);
+  // ---- Smooth scroll handler ----
+  const scrollToSection = useCallback((href: string) => {
+    const id = href.replace('#', '');
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  // ---- Intersection Observer for active section highlighting ----
+  useEffect(() => {
+    // Collect all section ids from nav links
+    const sectionIds = navLinks.map((link) => link.href.replace('#', ''));
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+
+    if (sections.length === 0) return;
+
+    // Track last scroll position for throttling intersection checks
+    let ticking = false;
+    let lastActive = navLinks[0]?.href.replace('#', '') ?? 'home';
+
+    const onIntersect = (entries: IntersectionObserverEntry[]) => {
+      if (ticking) return;
+      ticking = true;
+
+      requestAnimationFrame(() => {
+        // Find the most recent intersecting entry
+        for (let i = entries.length - 1; i >= 0; i--) {
+          if (entries[i].isIntersecting) {
+            const id = entries[i].target.id;
+            if (id !== lastActive) {
+              lastActive = id;
+              setActiveSection(id);
+            }
             break;
           }
         }
-      }
+        ticking = false;
+      });
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const observer = new IntersectionObserver(onIntersect, {
+      root: null,
+      rootMargin: INTERSECTION_ROOT_MARGIN,
+      threshold: INTERSECTION_THRESHOLD,
+    });
+
+    sections.forEach((section) => observer.observe(section));
+    observerRef.current = observer;
+
+    return () => {
+      observer.disconnect();
+      observerRef.current = null;
+    };
   }, []);
 
-  const scrollToSection = (href: string) => {
-    setOpen(false);
-    const id = href.replace("#", "");
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+  // ---- Lock body scroll when mobile menu is open ----
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
-  };
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // ---- Mobile nav link click handler ----
+  const handleMobileLinkClick = useCallback(
+    (href: string) => {
+      scrollToSection(href);
+      setMobileOpen(false);
+    },
+    [scrollToSection],
+  );
+
+  // ---- Memoize nav links rendering ----
+  const desktopLinks = useMemo(
+    () =>
+      navLinks.map((link) => {
+        const sectionId = link.href.replace('#', '');
+        const isActive = activeSection === sectionId;
+
+        return (
+          <a
+            key={link.href}
+            href={link.href}
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToSection(link.href);
+            }}
+            className={`
+              relative px-3 py-2 text-sm font-medium transition-colors duration-200
+              ${
+                isActive
+                  ? 'text-cyan-400'
+                  : 'text-white/60 hover:text-white/90'
+              }
+            `}
+          >
+            {link.label}
+            {/* Active indicator dot */}
+            {isActive && (
+              <motion.span
+                layoutId="nav-active-indicator"
+                className="absolute -bottom-0.5 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-cyan-400"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+          </a>
+        );
+      }),
+    [activeSection, scrollToSection],
+  );
+
+  const mobileLinks = useMemo(
+    () =>
+      navLinks.map((link, index) => {
+        const sectionId = link.href.replace('#', '');
+        const isActive = activeSection === sectionId;
+
+        return (
+          <motion.a
+            key={link.href}
+            href={link.href}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.05 * index, duration: 0.25 }}
+            onClick={(e) => {
+              e.preventDefault();
+              handleMobileLinkClick(link.href);
+            }}
+            className={`
+              flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium
+              transition-colors duration-200
+              ${
+                isActive
+                  ? 'bg-white/10 text-cyan-400'
+                  : 'text-white/70 hover:bg-white/5 hover:text-white'
+              }
+            `}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                isActive ? 'bg-cyan-400' : 'bg-white/30'
+              }`}
+            />
+            {link.label}
+          </motion.a>
+        );
+      }),
+    [activeSection, handleMobileLinkClick],
+  );
 
   return (
     <>
-      <ScrollProgress />
-
       <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled ? "glass-nav shadow-lg shadow-black/20" : ""
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${
+          isScrolled
+            ? 'backdrop-blur-xl bg-white/5 border-b border-white/10 shadow-lg shadow-black/5'
+            : 'bg-transparent border-b border-transparent'
         }`}
       >
-        {/* Gradient bottom border on scroll */}
-        {scrolled && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="absolute bottom-0 left-0 right-0 h-[1px]"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent 0%, #8b5cf6 25%, #06b6d4 75%, transparent 100%)",
-              opacity: 0.6,
-            }}
-          />
-        )}
-
-        <nav className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo — clicking scrolls to top */}
-          <motion.button
-            onClick={scrollToTop}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="flex items-center gap-2 text-white font-bold text-lg focus:outline-none"
+        <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* ---- Logo / Name ---- */}
+          <button
+            type="button"
+            onClick={() => scrollToSection('#home')}
+            className="flex flex-col gap-0 leading-none"
           >
-            <span className="gradient-text text-xl font-extrabold tracking-tight select-none">
-              {siteConfig.name.split(" ").map((n) => n[0]).join("")}
+            <span className="text-lg font-bold tracking-widest bg-gradient-to-r from-cyan-400 to-teal-300 bg-clip-text text-transparent">
+              {siteConfig.firstName.toUpperCase()}
             </span>
-          </motion.button>
+            <span className="text-[10px] font-medium tracking-wider text-white/40 uppercase">
+              {siteConfig.roleShort.split('·')[0]?.trim()}
+            </span>
+          </button>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => {
-              const isActive = activeSection === link.href.replace("#", "");
-              return (
-                <button
-                  key={link.href}
-                  onClick={() => scrollToSection(link.href)}
-                  className={`relative px-3 py-2 text-sm font-medium transition-colors rounded-md ${
-                    isActive
-                      ? "text-white"
-                      : "text-gray-400 hover:text-gray-200"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active"
-                      className="absolute inset-0 rounded-md bg-white/[0.08]"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <span
-                    className={`relative z-10 ${isActive ? "[text-shadow:0_0_8px_rgba(139,92,246,0.4),0_0_16px_rgba(6,182,212,0.2)]" : ""}`}
-                  >
-                    {link.label}
-                  </span>
-                </button>
-              );
-            })}
+          {/* ---- Desktop Nav Links ---- */}
+          <div className="hidden items-center gap-1 md:flex">
+            {desktopLinks}
           </div>
 
-          {/* Desktop Right Actions */}
-          <div className="hidden md:flex items-center gap-1">
-            {/* GitHub with tooltip */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={siteConfig.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-md hover:bg-white/[0.04]"
-                >
-                  <Github className="h-4 w-4" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent
-                sideOffset={8}
-                className="bg-[#1a1a2e] border-white/[0.08] text-gray-300 text-xs"
-              >
-                {siteConfig.github}
-              </TooltipContent>
-            </Tooltip>
+          {/* ---- Right side: Resume + Hamburger ---- */}
+          <div className="flex items-center gap-3">
+            {/* Resume Download Button */}
+            <a
+              href="#"
+              className={`
+                hidden sm:inline-flex items-center gap-2 rounded-lg px-4 py-2
+                text-sm font-medium transition-all duration-300
+                ${
+                  isScrolled
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 hover:border-cyan-400/40'
+                    : 'bg-white/10 text-white/80 border border-white/10 hover:bg-white/15 hover:text-white'
+                }
+              `}
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>Resume</span>
+            </a>
 
-            {/* HuggingFace with tooltip */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <a
-                  href={siteConfig.huggingface}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-400 hover:text-yellow-400 transition-colors rounded-md hover:bg-white/[0.04]"
-                >
-                  <HuggingFaceIcon className="h-4 w-4" />
-                </a>
-              </TooltipTrigger>
-              <TooltipContent
-                sideOffset={8}
-                className="bg-[#1a1a2e] border-white/[0.08] text-gray-300 text-xs"
-              >
-                {siteConfig.huggingface}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Resumes Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5 hover:border-purple-500/50 text-xs"
-                >
-                  <Download className="mr-1.5 h-3 w-3" />
-                  Resumes
-                </Button>
-              </DropdownMenuTrigger>
-              <ResumeDropdownContent />
-            </DropdownMenu>
-          </div>
-
-          {/* Mobile Menu */}
-          <div className="md:hidden">
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent
-                side="right"
-                className="bg-[#0a0a0f]/95 backdrop-blur-2xl border-white/[0.06] w-72 overflow-hidden"
-              >
-                {/* Gradient top border */}
-                <div
-                  className="absolute top-0 left-0 right-0 h-[2px]"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, #8b5cf6, #06b6d4, #8b5cf6)",
-                  }}
-                />
-
-                <SheetTitle className="text-white sr-only">Navigation Menu</SheetTitle>
-                <div className="flex flex-col gap-1.5 mt-8">
-                  {navLinks.map((link, i) => {
-                    const isActive = activeSection === link.href.replace("#", "");
-                    return (
-                      <motion.button
-                        key={link.href}
-                        initial={{ opacity: 0, x: 24 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                          delay: 0.08 + i * 0.06,
-                          type: "spring",
-                          stiffness: 260,
-                          damping: 24,
-                        }}
-                        onClick={() => scrollToSection(link.href)}
-                        className={`text-left px-4 py-3 rounded-lg text-base font-medium transition-colors ${
-                          isActive
-                            ? "text-white bg-white/[0.08]"
-                            : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
-                        }`}
-                      >
-                        {link.label}
-                      </motion.button>
-                    );
-                  })}
-
-                  {/* Mobile actions section */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.08 + navLinks.length * 0.06 + 0.05 }}
-                    className="mt-4 pt-4 border-t border-white/[0.06] px-4 space-y-1.5"
+            {/* Mobile Hamburger */}
+            <button
+              type="button"
+              onClick={() => setMobileOpen((prev) => !prev)}
+              className={`
+                relative flex h-10 w-10 items-center justify-center rounded-lg
+                transition-colors duration-200 md:hidden
+                ${
+                  isScrolled
+                    ? 'bg-white/10 text-white/80 hover:bg-white/15'
+                    : 'bg-white/5 text-white/60 hover:bg-white/10'
+                }
+              `}
+              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileOpen}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {mobileOpen ? (
+                  <motion.span
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <a
-                          href={siteConfig.github}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.04] text-sm transition-colors"
-                        >
-                          <Github className="h-4 w-4" />
-                          GitHub
-                        </a>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="left"
-                        sideOffset={8}
-                        className="bg-[#1a1a2e] border-white/[0.08] text-gray-300 text-xs"
-                      >
-                        {siteConfig.github}
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <a
-                          href={siteConfig.huggingface}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg text-gray-400 hover:text-yellow-400 hover:bg-white/[0.04] text-sm transition-colors"
-                        >
-                          <HuggingFaceIcon className="h-4 w-4" />
-                          Hugging Face
-                        </a>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="left"
-                        sideOffset={8}
-                        className="bg-[#1a1a2e] border-white/[0.08] text-gray-300 text-xs"
-                      >
-                        {siteConfig.huggingface}
-                      </TooltipContent>
-                    </Tooltip>
-
-                    {/* Mobile resume links */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full border-white/10 text-gray-300 hover:text-white hover:bg-white/5 text-sm mt-1"
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download Resume
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <ResumeDropdownContent onSelect={() => setOpen(false)} />
-                    </DropdownMenu>
-                  </motion.div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                    <X className="h-5 w-5" />
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="h-5 w-5" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
           </div>
         </nav>
       </motion.header>
+
+      {/* ---- Mobile Menu Overlay ---- */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: -20, scaleY: 0.95 }}
+              animate={{ opacity: 1, y: 0, scaleY: 1 }}
+              exit={{ opacity: 0, y: -10, scaleY: 0.95 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute top-16 left-0 right-0 origin-top overflow-hidden border-b border-white/10 bg-black/80 backdrop-blur-xl"
+            >
+              <div className="mx-auto max-w-6xl px-4 py-4">
+                {/* Nav Links */}
+                <div className="flex flex-col gap-1">
+                  {mobileLinks}
+                </div>
+
+                {/* Divider */}
+                <div className="my-3 h-px bg-white/10" />
+
+                {/* Resume Button (mobile) */}
+                <motion.a
+                  href="#"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.25 }}
+                  className="flex items-center gap-3 rounded-lg bg-cyan-500/20 px-4 py-3 text-sm font-medium text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors duration-200"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download Resume</span>
+                  <ChevronDown className="ml-auto h-3.5 w-3.5 rotate-[-90deg]" />
+                </motion.a>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
-}
+};
+
+export default Navigation;
