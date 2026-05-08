@@ -9,7 +9,34 @@ export interface ResumeOption {
   external?: boolean;
 }
 
-export const resumeOptions: ResumeOption[] = [
+export const resumeDownloads: ResumeOption[] = [
+  {
+    label: "ML Engineer Resume",
+    description: "Download PDF",
+    href: "/resumes/Farhan_Akhtar_ML_Engineer.pdf",
+    icon: "FileText",
+  },
+  {
+    label: "AI Engineer Resume",
+    description: "Download PDF",
+    href: "/resumes/Farhan_Akhtar_AI_Engineer.pdf",
+    icon: "FileText",
+  },
+  {
+    label: "Agentic AI Engineer Resume",
+    description: "Download PDF",
+    href: "/resumes/Farhan_Akhtar_Agentic_AI_Engineer.pdf",
+    icon: "FileText",
+  },
+  {
+    label: "GenAI Engineer Resume",
+    description: "Download PDF",
+    href: "/resumes/Farhan_Akhtar_GenAI_Engineer.pdf",
+    icon: "FileText",
+  },
+];
+
+export const profileLinks: ResumeOption[] = [
   {
     label: "LinkedIn Profile",
     description: "View my professional profile",
@@ -32,3 +59,6 @@ export const resumeOptions: ResumeOption[] = [
     external: true,
   },
 ];
+
+// Combined for backwards compatibility
+export const resumeOptions: ResumeOption[] = [...resumeDownloads, ...profileLinks];

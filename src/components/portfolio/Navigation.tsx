@@ -8,9 +8,9 @@ import React, {
   useMemo,
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Download, ChevronDown, Linkedin, Github, Globe } from 'lucide-react';
+import { Menu, X, Download, ChevronDown, Linkedin, Github, Globe, FileText, ExternalLink } from 'lucide-react';
 import { navLinks, siteConfig } from '@/lib/data';
-import { resumeOptions } from '@/lib/resume-data';
+import { resumeDownloads, profileLinks } from '@/lib/resume-data';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -269,7 +269,7 @@ const Navigation: React.FC = () => {
                 `}
               >
                 <Download className="h-3.5 w-3.5" />
-                <span>Profiles</span>
+                <span>Resumes</span>
                 <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${resumeOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -284,24 +284,56 @@ const Navigation: React.FC = () => {
                     className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-[#0f1629]/95 backdrop-blur-xl shadow-2xl shadow-black/40"
                   >
                     <div className="p-1.5">
-                      {resumeOptions.map((option) => {
+                      {/* Resumes section */}
+                      <p className="px-3 pt-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-cyan-400/60">
+                        Download Resume
+                      </p>
+                      {resumeDownloads.map((option) => (
+                        <a
+                          key={option.label}
+                          href={option.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150 hover:bg-white/[0.06] group"
+                          onClick={() => setResumeOpen(false)}
+                        >
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.05] text-white/50 group-hover:bg-cyan-500/15 group-hover:text-cyan-400 transition-colors duration-150">
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-white/90">{option.label}</p>
+                            <p className="text-xs text-white/40">{option.description}</p>
+                          </div>
+                          <ExternalLink className="h-3 w-3 text-white/20 group-hover:text-cyan-400/50 transition-colors" />
+                        </a>
+                      ))}
+
+                      {/* Divider */}
+                      <div className="my-1.5 h-px bg-white/[0.06]" />
+
+                      {/* Profiles section */}
+                      <p className="px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-cyan-400/60">
+                        Connect
+                      </p>
+                      {profileLinks.map((option) => {
                         const Icon = option.icon === 'Linkedin' ? Linkedin : option.icon === 'Github' ? Github : Globe;
                         return (
                           <a
                             key={option.label}
                             href={option.href}
-                            target={option.external ? '_blank' : undefined}
-                            rel={option.external ? 'noopener noreferrer' : undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150 hover:bg-white/[0.06] group"
                             onClick={() => setResumeOpen(false)}
                           >
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.05] text-white/50 group-hover:bg-cyan-500/15 group-hover:text-cyan-400 transition-colors duration-150">
                               <Icon className="h-4 w-4" />
                             </div>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium text-white/90">{option.label}</p>
                               <p className="text-xs text-white/40">{option.description}</p>
                             </div>
+                            <ExternalLink className="h-3 w-3 text-white/20 group-hover:text-cyan-400/50 transition-colors" />
                           </a>
                         );
                       })}
@@ -383,21 +415,44 @@ const Navigation: React.FC = () => {
                 {/* Divider */}
                 <div className="my-3 h-px bg-white/10" />
 
-                {/* Profile Links (mobile) */}
+                {/* Resumes (mobile) */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.25 }}
                   className="flex flex-col gap-1"
                 >
-                  {resumeOptions.map((option) => {
+                  <p className="px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-cyan-400/50">
+                    Download Resume
+                  </p>
+                  {resumeDownloads.map((option) => (
+                    <a
+                      key={option.label}
+                      href={option.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-3 rounded-lg bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors duration-200"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>{option.label}</span>
+                    </a>
+                  ))}
+
+                  <div className="my-2 h-px bg-white/[0.06]" />
+
+                  {/* Profiles (mobile) */}
+                  <p className="px-4 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-cyan-400/50">
+                    Connect
+                  </p>
+                  {profileLinks.map((option) => {
                     const Icon = option.icon === 'Linkedin' ? Linkedin : option.icon === 'Github' ? Github : Globe;
                     return (
                       <a
                         key={option.label}
                         href={option.href}
-                        target={option.external ? '_blank' : undefined}
-                        rel={option.external ? 'noopener noreferrer' : undefined}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         onClick={() => setMobileOpen(false)}
                         className="flex items-center gap-3 rounded-lg bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors duration-200"
                       >
