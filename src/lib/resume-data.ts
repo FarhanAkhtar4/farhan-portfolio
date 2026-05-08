@@ -12,26 +12,38 @@ export interface ResumeOption {
 export const resumeDownloads: ResumeOption[] = [
   {
     label: "ML Engineer Resume",
-    description: "Download PDF",
+    description: "PyTorch, TensorFlow, scikit-learn, XGBoost",
     href: "/resumes/Farhan_Akhtar_ML_Engineer.pdf",
     icon: "FileText",
   },
   {
     label: "AI Engineer Resume",
-    description: "Download PDF",
+    description: "Full-stack AI: ML, DL, LLMs, RAG",
     href: "/resumes/Farhan_Akhtar_AI_Engineer.pdf",
     icon: "FileText",
   },
   {
+    label: "GenAI Engineer Resume",
+    description: "LLMs, Fine-Tuning, Prompt Engineering, RAG",
+    href: "/resumes/Farhan_Akhtar_GenAI_Engineer.pdf",
+    icon: "FileText",
+  },
+  {
     label: "Agentic AI Engineer Resume",
-    description: "Download PDF",
+    description: "Multi-Agent Systems, LangChain, RAG Agents",
     href: "/resumes/Farhan_Akhtar_Agentic_AI_Engineer.pdf",
     icon: "FileText",
   },
   {
-    label: "GenAI Engineer Resume",
-    description: "Download PDF",
-    href: "/resumes/Farhan_Akhtar_GenAI_Engineer.pdf",
+    label: "Vibe Coder Resume",
+    description: "AI-Powered Full-Stack, Cursor, Copilot",
+    href: "/resumes/Farhan_Akhtar_Vibe_Coder.pdf",
+    icon: "FileText",
+  },
+  {
+    label: "AI General Resume",
+    description: "All-round AI, ML, GenAI & Agentic AI",
+    href: "/resumes/Farhan_Akhtar_AI_General.pdf",
     icon: "FileText",
   },
 ];
