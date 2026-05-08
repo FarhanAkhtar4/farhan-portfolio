@@ -152,7 +152,7 @@ function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 py-6 sm:flex-row">
           {/* Left: Copyright */}
           <p className="text-center text-xs text-[var(--text-secondary)] sm:text-left">
-            &copy; 2024 Farhan Akhtar Makandar. Built with Next.js &amp; Three.js
+            &copy; 2025 Farhan Akhtar Makandar. Built with Next.js &amp; Three.js
           </p>
 
           {/* Right: Made with + Back to top */}
