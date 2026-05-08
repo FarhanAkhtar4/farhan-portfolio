@@ -8,8 +8,9 @@ import React, {
   useMemo,
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Download, ChevronDown } from 'lucide-react';
+import { Menu, X, Download, ChevronDown, Linkedin, Github, Globe } from 'lucide-react';
 import { navLinks, siteConfig } from '@/lib/data';
+import { resumeOptions } from '@/lib/resume-data';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -28,6 +29,20 @@ const Navigation: React.FC = () => {
     typeof window !== 'undefined' && window.scrollY > SCROLL_THRESHOLD,
   );
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [resumeOpen, setResumeOpen] = useState(false);
+
+  // Close resume dropdown when clicking outside
+  const resumeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (resumeRef.current && !resumeRef.current.contains(e.target as Node)) {
+        setResumeOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   const [activeSection, setActiveSection] = useState<string>(
     navLinks[0]?.href.replace('#', '') ?? 'home',
   );
@@ -234,24 +249,67 @@ const Navigation: React.FC = () => {
             {desktopLinks}
           </div>
 
-          {/* ---- Right side: Resume + Hamburger ---- */}
+          {/* ---- Right side: Resumes Dropdown + Hamburger ---- */}
           <div className="flex items-center gap-3">
-            {/* Resume Download Button */}
-            <a
-              href="#"
-              className={`
-                hidden sm:inline-flex items-center gap-2 rounded-lg px-4 py-2
-                text-sm font-medium transition-all duration-300
-                ${
-                  isScrolled
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 hover:border-cyan-400/40'
-                    : 'bg-white/10 text-white/80 border border-white/10 hover:bg-white/15 hover:text-white'
-                }
-              `}
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>Resume</span>
-            </a>
+            {/* Resumes Dropdown (desktop) */}
+            <div ref={resumeRef} className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => setResumeOpen((prev) => !prev)}
+                aria-expanded={resumeOpen}
+                aria-haspopup="true"
+                className={`
+                  inline-flex items-center gap-2 rounded-lg px-4 py-2
+                  text-sm font-medium transition-all duration-300
+                  ${
+                    isScrolled
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 hover:border-cyan-400/40'
+                      : 'bg-white/10 text-white/80 border border-white/10 hover:bg-white/15 hover:text-white'
+                  }
+                `}
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Profiles</span>
+                <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${resumeOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {resumeOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+                    className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-[#0f1629]/95 backdrop-blur-xl shadow-2xl shadow-black/40"
+                  >
+                    <div className="p-1.5">
+                      {resumeOptions.map((option) => {
+                        const Icon = option.icon === 'Linkedin' ? Linkedin : option.icon === 'Github' ? Github : Globe;
+                        return (
+                          <a
+                            key={option.label}
+                            href={option.href}
+                            target={option.external ? '_blank' : undefined}
+                            rel={option.external ? 'noopener noreferrer' : undefined}
+                            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-150 hover:bg-white/[0.06] group"
+                            onClick={() => setResumeOpen(false)}
+                          >
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.05] text-white/50 group-hover:bg-cyan-500/15 group-hover:text-cyan-400 transition-colors duration-150">
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-white/90">{option.label}</p>
+                              <p className="text-xs text-white/40">{option.description}</p>
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* Mobile Hamburger */}
             <button
@@ -325,18 +383,30 @@ const Navigation: React.FC = () => {
                 {/* Divider */}
                 <div className="my-3 h-px bg-white/10" />
 
-                {/* Resume Button (mobile) */}
-                <motion.a
-                  href="#"
+                {/* Profile Links (mobile) */}
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.25 }}
-                  className="flex items-center gap-3 rounded-lg bg-cyan-500/20 px-4 py-3 text-sm font-medium text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-colors duration-200"
+                  className="flex flex-col gap-1"
                 >
-                  <Download className="h-4 w-4" />
-                  <span>Download Resume</span>
-                  <ChevronDown className="ml-auto h-3.5 w-3.5 rotate-[-90deg]" />
-                </motion.a>
+                  {resumeOptions.map((option) => {
+                    const Icon = option.icon === 'Linkedin' ? Linkedin : option.icon === 'Github' ? Github : Globe;
+                    return (
+                      <a
+                        key={option.label}
+                        href={option.href}
+                        target={option.external ? '_blank' : undefined}
+                        rel={option.external ? 'noopener noreferrer' : undefined}
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-3 rounded-lg bg-cyan-500/10 px-4 py-3 text-sm font-medium text-cyan-300 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors duration-200"
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{option.label}</span>
+                      </a>
+                    );
+                  })}
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>
