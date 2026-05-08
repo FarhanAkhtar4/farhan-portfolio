@@ -2,23 +2,16 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Code, Database, Cloud, Cpu, Sparkles } from 'lucide-react';
+import { Brain, Code, Cloud, Cpu, Sparkles } from 'lucide-react';
 import { skillCategories } from '@/lib/data';
+import { easeSmooth, transitionSmooth } from '@/lib/animations';
+import type { Variants } from 'framer-motion';
 
 // ---------------------------------------------------------------------------
 // Animation variants
 // ---------------------------------------------------------------------------
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const cardStagger = {
+const cardStagger: Variants = {
   hidden: { opacity: 0, y: 24, scale: 0.97 },
   visible: (i: number) => ({
     opacity: 1,
@@ -27,7 +20,7 @@ const cardStagger = {
     transition: {
       duration: 0.6,
       delay: i * 0.1,
-      ease: [0.16, 1, 0.3, 1],
+      ease: easeSmooth,
     },
   }),
 };
@@ -54,7 +47,7 @@ function SectionHeading() {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      transition={transitionSmooth}
       className="mb-14 text-center"
     >
       <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-cyan-400/70">
@@ -135,7 +128,7 @@ function HeroCard({ category }: { category: typeof skillCategories[number] }) {
               transition={{
                 duration: 0.4,
                 delay: 0.3 + i * 0.06,
-                ease: [0.16, 1, 0.3, 1],
+                ease: easeSmooth,
               }}
               whileHover={{ scale: 1.08 }}
               className="inline-flex items-center rounded-full border border-purple-500/20 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-purple-200 shadow-[0_0_12px_rgba(168,85,247,0.08)] backdrop-blur-sm transition-colors hover:bg-purple-500/10 hover:border-purple-500/30 hover:text-purple-100"
@@ -192,7 +185,7 @@ function StandardCard({ category, index }: StandardCardProps) {
             transition={{
               duration: 0.35,
               delay: 0.2 + i * 0.04,
-              ease: [0.16, 1, 0.3, 1],
+              ease: easeSmooth,
             }}
             whileHover={{ scale: 1.08 }}
             className="inline-flex items-center rounded-md bg-gradient-to-br from-purple-500/10 to-cyan-500/10 px-2.5 py-1 text-[11px] font-medium text-cyan-300/80 border border-white/[0.04] transition-colors hover:bg-cyan-500/10 hover:text-cyan-200"

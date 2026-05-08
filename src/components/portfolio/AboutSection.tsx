@@ -2,50 +2,15 @@
 
 import React from 'react';
 import { motion, useInView } from 'framer-motion';
-import { GraduationCap, Briefcase, MapPin, Award, Calendar, ExternalLink } from 'lucide-react';
+import { GraduationCap, Briefcase, MapPin, Award, Calendar } from 'lucide-react';
 import { siteConfig, education, experience } from '@/lib/data';
-
-// ---------------------------------------------------------------------------
-// Animation variants
-// ---------------------------------------------------------------------------
-
-const sectionContainer = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.12, delayChildren: 0.15 },
-  },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const slideLeft = {
-  hidden: { opacity: 0, x: -40 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const cardStagger = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.65,
-      delay: 0.2 + i * 0.15,
-      ease: [0.16, 1, 0.3, 1],
-    },
-  }),
-};
+import {
+  staggerContainer,
+  fadeUpSlow,
+  slideLeft,
+  cardStagger,
+  transitionSmooth,
+} from '@/lib/animations';
 
 // ---------------------------------------------------------------------------
 // Section heading component
@@ -57,7 +22,7 @@ function SectionHeading() {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      transition={transitionSmooth}
       className="mb-14 text-center"
     >
       <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-cyan-400/70">
@@ -273,7 +238,7 @@ function AboutSection() {
         <SectionHeading />
 
         <motion.div
-          variants={sectionContainer}
+          variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-100px' }}
@@ -283,7 +248,7 @@ function AboutSection() {
           <AboutText />
 
           {/* ---- Right column: Education & Experience ---- */}
-          <motion.div variants={fadeUp} className="flex flex-col gap-5">
+          <motion.div variants={fadeUpSlow} className="flex flex-col gap-5">
             {/* Education cards */}
             <div className="flex flex-col gap-4">
               <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-[var(--text-secondary)]">

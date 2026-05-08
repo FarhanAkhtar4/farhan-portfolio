@@ -9,21 +9,14 @@ import {
   categoryDots,
   type Certification,
 } from '@/lib/data';
+import { fadeUpSlow, easeSmooth, easeOut, transitionSmooth } from '@/lib/animations';
+import type { Variants } from 'framer-motion';
 
 // ---------------------------------------------------------------------------
 // Animation variants
 // ---------------------------------------------------------------------------
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const filterTabVariant = {
+const filterTabVariant: Variants = {
   hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({
     opacity: 1,
@@ -31,12 +24,12 @@ const filterTabVariant = {
     transition: {
       duration: 0.5,
       delay: 0.15 + i * 0.08,
-      ease: [0.16, 1, 0.3, 1],
+      ease: easeSmooth,
     },
   }),
 };
 
-const cardVariant = {
+const cardVariant: Variants = {
   hidden: { opacity: 0, y: 24, scale: 0.97 },
   visible: (i: number) => ({
     opacity: 1,
@@ -45,14 +38,14 @@ const cardVariant = {
     transition: {
       duration: 0.6,
       delay: i * 0.1,
-      ease: [0.16, 1, 0.3, 1],
+      ease: easeSmooth,
     },
   }),
   exit: {
     opacity: 0,
     scale: 0.95,
     y: 12,
-    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
+    transition: { duration: 0.3, ease: easeOut },
   },
 };
 
@@ -84,7 +77,7 @@ function SectionHeading() {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      transition={transitionSmooth}
       className="mb-14 text-center"
     >
       <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-cyan-400/70">

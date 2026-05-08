@@ -15,44 +15,25 @@ import {
   Loader2,
 } from 'lucide-react';
 import { siteConfig } from '@/lib/data';
+import {
+  fadeUpSlow,
+  slideLeft,
+  slideRight,
+  easeSmooth,
+  transitionSmooth,
+} from '@/lib/animations';
+import type { Variants } from 'framer-motion';
 
 // ---------------------------------------------------------------------------
 // Animation variants
 // ---------------------------------------------------------------------------
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const slideLeft = {
-  hidden: { opacity: 0, x: -40 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const slideRight = {
-  hidden: { opacity: 0, x: 40 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
-const scaleIn = {
+const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.9 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.5, ease: easeSmooth },
   },
 };
 
@@ -112,7 +93,7 @@ function SectionHeading() {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      transition={transitionSmooth}
       className="mb-14 text-center"
     >
       <p className="mb-2 text-sm font-medium uppercase tracking-[0.2em] text-cyan-400/70">
@@ -153,7 +134,7 @@ function ContactCard({ icon, label, value, href, delay = 0 }: ContactCardProps) 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.5, delay, ease: easeSmooth }}
       whileHover={{ y: -3, transition: { duration: 0.25 } }}
     >
       <Wrapper

@@ -4,17 +4,19 @@ import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Github, Linkedin, Mail, Heart, ArrowUp } from 'lucide-react';
 import { siteConfig, navLinks } from '@/lib/data';
+import { easeSmooth } from '@/lib/animations';
+import type { Variants } from 'framer-motion';
 
 // ---------------------------------------------------------------------------
 // Animation variants
 // ---------------------------------------------------------------------------
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.7, ease: easeSmooth },
   },
 };
 
@@ -164,7 +166,7 @@ function Footer() {
               type="button"
               onClick={scrollToTop}
               aria-label="Back to top"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-[var(--text-secondary)] backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 hover:shadow-[0_0_16px_rgba(6,182,212,0.12)]"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] text-[var(--text-secondary)] backdrop-blur-sm transition-all duration-300 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-400 hover:shadow-[0_0_16px_rgba(6,182,212,0.12)]"
             >
               <motion.div
                 whileHover={{ scale: 1.15, y: -1 }}

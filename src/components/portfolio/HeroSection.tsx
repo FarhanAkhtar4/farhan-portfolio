@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ArrowDown, Github, Linkedin, Mail, MapPin } from 'lucide-react';
 import { siteConfig, heroTaglines } from '@/lib/data';
+import { staggerContainerSlow, fadeUp, easeSmooth } from '@/lib/animations';
 
 // ---------------------------------------------------------------------------
 // Typewriter hook — cycles through taglines character by character
@@ -115,7 +116,7 @@ function StatCard({ value, suffix, label, delay }: StatCardProps) {
       ref={ref}
       initial={{ opacity: 0, x: 30 }}
       animate={isInView ? { opacity: 1, x: 0 } : {}}
-      transition={{ duration: 0.6, delay: delay / 1000, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.6, delay: delay / 1000, ease: easeSmooth }}
       className="glass-card flex flex-col items-center justify-center p-5 text-center"
     >
       <span className="gradient-text text-3xl font-bold tracking-tight md:text-4xl">
@@ -184,22 +185,6 @@ function SocialLink({ href, 'aria-label': ariaLabel, children }: SocialLinkProps
 // HeroSection — main exported component
 // ---------------------------------------------------------------------------
 
-const sectionVariants = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.12, delayChildren: 0.2 },
-  },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
-  },
-};
-
 function HeroSection() {
   const typedText = useTypewriter(heroTaglines);
   const [showCursor, setShowCursor] = useState(true);
@@ -232,7 +217,7 @@ function HeroSection() {
       </div>
 
       <motion.div
-        variants={sectionVariants}
+        variants={staggerContainerSlow}
         initial="hidden"
         animate="visible"
         className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-12 md:flex-row md:items-center md:gap-16 lg:gap-20"
