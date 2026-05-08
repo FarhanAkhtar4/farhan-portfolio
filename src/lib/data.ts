@@ -83,7 +83,7 @@ export const siteConfig: SiteConfig = {
   phone: "+91 7349123558",
   location: "Karnataka, India",
   github: "https://github.com/FarhanAkhtar4",
-  linkedin: "#",
+  linkedin: "https://www.linkedin.com/in/farhan-akhtar-ba942126a",
   huggingface: "https://huggingface.co/FarhanAkhtar11",
   portfolioUrl: "https://portfolio-rust-xi-38.vercel.app/",
 };
