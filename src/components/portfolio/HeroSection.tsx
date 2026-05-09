@@ -133,7 +133,7 @@ function StatCard({ value, suffix, label, delay }: StatCardProps) {
 // ---------------------------------------------------------------------------
 
 const stats: { value: number; suffix: string; label: string }[] = [
-  { value: 12, suffix: '+', label: 'Projects' },
+  { value: 14, suffix: '+', label: 'Projects' },
   { value: 11, suffix: '', label: 'Certifications' },
   { value: 1, suffix: '+', label: 'Year Experience' },
   { value: 5, suffix: '+', label: 'Skills Categories' },

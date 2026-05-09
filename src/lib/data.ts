@@ -262,6 +262,7 @@ export const projects: Project[] = [
     oneLiner: "AI-powered medical exam simulation with smart proctoring",
     tags: ["Python", "AI", "Education", "Proctoring", "Analytics"],
     github: "https://github.com/FarhanAkhtar4/neet-prep-ai",
+    deployedUrl: "https://neet-prep-ai.vercel.app",
     category: "AI & LLM",
     isFlagship: false,
     highlights: [
@@ -357,6 +358,7 @@ export const projects: Project[] = [
     oneLiner: "AI converts resumes into recruiter-optimized portfolios",
     tags: ["TypeScript", "AI", "Resume", "Portfolio Generator", "Next.js"],
     github: "https://github.com/FarhanAkhtar4/placement-portfolio-engine",
+    deployedUrl: "https://placement-portfolio-engine.vercel.app",
     category: "SaaS & Full-Stack",
     isFlagship: false,
     highlights: [
@@ -382,6 +384,50 @@ export const projects: Project[] = [
       "Candidate skill assessment pipeline",
       "Streamlit-based interactive interface",
     ],
+  },
+  {
+    id: "gitdeploy-ai-app",
+    title: "GitDeploy AI App",
+    description:
+      "Deployed application frontend for GitDeploy AI — a full-stack Next.js application providing the user interface for AI-powered project generation and one-click GitHub deployment.",
+    oneLiner: "Deployed frontend for AI project builder",
+    tags: ["TypeScript", "Next.js", "Cloudflare", "Full-Stack", "UI/UX"],
+    github: "https://github.com/FarhanAkhtar4/gitdeploy-ai-app",
+    category: "SaaS & Full-Stack",
+    isFlagship: false,
+    highlights: [
+      "Full-stack Next.js application frontend",
+      "AI project generation interface",
+      "Cloudflare Workers/Pages deployment",
+      "Modern responsive UI with real-time status",
+    ],
+  },
+  {
+    id: "farhan-portfolio",
+    title: "Farhan's 3D Portfolio",
+    description:
+      "Immersive 3D portfolio website built with Next.js, React Three Fiber, and Framer Motion featuring neural network visualizations, glassmorphism UI, and interactive particle effects.",
+    oneLiner: "Immersive 3D portfolio with neural network visuals",
+    tags: ["TypeScript", "Next.js", "Three.js", "React Three Fiber", "Framer Motion"],
+    github: "https://github.com/FarhanAkhtar4/farhan-portfolio",
+    deployedUrl: "https://farhan-portfolio-gilt.vercel.app",
+    category: "SaaS & Full-Stack",
+    isFlagship: true,
+    highlights: [
+      "Interactive 3D neural network visualization",
+      "React Three Fiber with custom GLSL shaders",
+      "Glassmorphism UI with Framer Motion animations",
+      "Bloom post-processing and parallax camera system",
+    ],
+    architecture: {
+      title: "3D Portfolio Architecture",
+      layers: [
+        { label: "Next.js", sublabel: "App Router", icon: "Layers" },
+        { label: "R3F", sublabel: "3D Engine", icon: "Zap" },
+        { label: "GLSL", sublabel: "Shaders", icon: "Sparkles" },
+        { label: "Bloom", sublabel: "Post-FX", icon: "TrendingUp" },
+      ],
+    },
   },
 ];
 
