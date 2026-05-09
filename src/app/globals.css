@@ -1030,3 +1030,177 @@
 .spin-slow {
   animation: spin-slow 20s linear infinite;
 }
+
+/* ============================================================
+   Tilt Card — 3D perspective transform utility
+   ============================================================ */
+.tilt-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.2s ease-out;
+}
+
+/* ============================================================
+   Glass Card Premium — Enhanced glassmorphism with inner glow
+   ============================================================ */
+.glass-card-premium {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.8) 0%,
+    rgba(15, 23, 42, 0.5) 50%,
+    rgba(20, 28, 50, 0.6) 100%
+  );
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.2),
+    0 4px 24px -4px rgba(0, 0, 0, 0.4),
+    0 0 60px -20px rgba(6, 182, 212, 0.06);
+}
+
+.glass-card-premium:hover {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.2),
+    0 8px 40px -8px rgba(6, 182, 212, 0.12),
+    0 0 80px -20px rgba(139, 92, 246, 0.08);
+}
+
+/* ============================================================
+   Animated Gradient Border — Rotating conic gradient border
+   ============================================================ */
+@property --gradient-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.gradient-border-animated {
+  --gradient-angle: 0deg;
+  animation: rotate-gradient-border 4s linear infinite;
+}
+
+.gradient-border-animated::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--gradient-angle),
+    transparent 0%,
+    rgba(6, 182, 212, 0.4) 10%,
+    rgba(139, 92, 246, 0.3) 30%,
+    rgba(16, 185, 129, 0.2) 50%,
+    rgba(245, 158, 11, 0.3) 70%,
+    transparent 90%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes rotate-gradient-border {
+  from { --gradient-angle: 0deg; }
+  to { --gradient-angle: 360deg; }
+}
+
+/* ============================================================
+   Text Shimmer — Animated text shimmer effect
+   ============================================================ */
+.text-shimmer {
+  background: linear-gradient(
+    110deg,
+    var(--text-primary) 0%,
+    var(--text-primary) 35%,
+    rgba(6, 182, 212, 0.9) 45%,
+    rgba(139, 92, 246, 0.8) 50%,
+    rgba(6, 182, 212, 0.9) 55%,
+    var(--text-primary) 65%,
+    var(--text-primary) 100%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: text-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes text-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ============================================================
+   Float 3D — Subtle 3D floating animation with translateZ
+   ============================================================ */
+.float-3d {
+  animation: float-3d 6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+@keyframes float-3d {
+  0%, 100% {
+    transform: translateY(0) translateZ(0) rotateX(0deg) rotateY(0deg);
+  }
+  25% {
+    transform: translateY(-8px) translateZ(20px) rotateX(2deg) rotateY(-1deg);
+  }
+  50% {
+    transform: translateY(-4px) translateZ(10px) rotateX(-1deg) rotateY(1deg);
+  }
+  75% {
+    transform: translateY(-12px) translateZ(15px) rotateX(1deg) rotateY(-0.5deg);
+  }
+}
+
+.float-3d-slow {
+  animation: float-3d 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  animation-delay: -3s;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+/* ============================================================
+   Enhanced Scrollbar — Premium thin scrollbar
+   ============================================================ */
+
+/* Webkit scrollbar (enhanced) */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.35),
+    rgba(6, 182, 212, 0.25)
+  );
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(139, 92, 246, 0.55),
+    rgba(6, 182, 212, 0.45)
+  );
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}

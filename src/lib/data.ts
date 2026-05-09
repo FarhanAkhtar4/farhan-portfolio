@@ -40,7 +40,8 @@ export interface Project {
   tags: string[];
   github: string;
   huggingface?: string;
-  category: "Deep Learning" | "Agentic AI" | "Analytics";
+  deployedUrl?: string;
+  category: "Deep Learning" | "Agentic AI" | "Analytics" | "AI & LLM" | "SaaS & Full-Stack";
   isFlagship: boolean;
   metrics?: {
     label: string;
@@ -133,6 +134,7 @@ export const experience: Experience[] = [
 ];
 
 export const projects: Project[] = [
+  // ---- Existing Projects (kept) ----
   {
     id: "seismic-response-prediction",
     title: "Seismic Response Prediction",
@@ -223,6 +225,164 @@ export const projects: Project[] = [
       "Interactive dashboards for stakeholder reporting",
     ],
   },
+
+  // ---- New Projects ----
+  {
+    id: "agentos-multi-agent-saas",
+    title: "AgentOS Multi-Agent SaaS",
+    description:
+      "Production-ready multi-agent AI orchestration platform where 5 specialized agents collaborate on complex tasks including research, code generation, analysis, planning, and execution.",
+    oneLiner: "5 specialized AI agents collaborating on complex tasks",
+    tags: ["Python", "Multi-Agent", "LangChain", "SaaS", "AI Orchestration"],
+    github: "https://github.com/FarhanAkhtar4/agentos-multi-agent-saas",
+    category: "Agentic AI",
+    isFlagship: true,
+    highlights: [
+      "5 specialized AI agents with distinct roles",
+      "Multi-agent collaboration and task orchestration",
+      "Production-ready SaaS architecture",
+      "Complex task decomposition and execution",
+    ],
+    architecture: {
+      title: "Multi-Agent Orchestration Architecture",
+      layers: [
+        { label: "User", sublabel: "Query Input", icon: "MessageSquare" },
+        { label: "Orchestrator", sublabel: "Agent Router", icon: "Brain" },
+        { label: "Research", sublabel: "Agent 1", icon: "Zap" },
+        { label: "Code", sublabel: "Agent 2", icon: "Sparkles" },
+        { label: "Execute", sublabel: "Response", icon: "TrendingUp" },
+      ],
+    },
+  },
+  {
+    id: "neet-prep-ai",
+    title: "NEET Prep AI",
+    description:
+      "AI-Powered NEET Exam Simulation Platform featuring 180 questions, anti-cheat mechanisms, real-time proctoring, and smart analytics dashboards for medical aspirants.",
+    oneLiner: "AI-powered medical exam simulation with smart proctoring",
+    tags: ["Python", "AI", "Education", "Proctoring", "Analytics"],
+    github: "https://github.com/FarhanAkhtar4/neet-prep-ai",
+    category: "AI & LLM",
+    isFlagship: false,
+    highlights: [
+      "180-question AI-powered exam simulation",
+      "Real-time anti-cheat and proctoring system",
+      "Smart analytics dashboard for performance tracking",
+      "Adaptive difficulty based on student performance",
+    ],
+  },
+  {
+    id: "gitdeploy-ai",
+    title: "GitDeploy AI",
+    description:
+      "AI-powered project builder that generates full-stack applications from natural language descriptions and deploys them directly to GitHub with CI/CD pipeline configuration.",
+    oneLiner: "AI-powered project builder and GitHub deployment agent",
+    tags: ["TypeScript", "AI", "CI/CD", "GitHub API", "Cloudflare"],
+    github: "https://github.com/FarhanAkhtar4/gitdeploy-ai",
+    huggingface: "https://huggingface.co/spaces/FarhanAkhtar11/gitdeploy-ai",
+    category: "SaaS & Full-Stack",
+    isFlagship: true,
+    highlights: [
+      "Natural language to full-stack application generation",
+      "Automated GitHub repository creation and deployment",
+      "CI/CD pipeline auto-configuration",
+      "Cloudflare Workers/Pages deployment support",
+    ],
+    architecture: {
+      title: "AI Deployment Pipeline",
+      layers: [
+        { label: "Prompt", sublabel: "NL Input", icon: "MessageSquare" },
+        { label: "Generate", sublabel: "LLM Core", icon: "Brain" },
+        { label: "Build", sublabel: "Compiler", icon: "Zap" },
+        { label: "Deploy", sublabel: "Cloudflare", icon: "Globe" },
+      ],
+    },
+  },
+  {
+    id: "runway-report",
+    title: "Runway Report",
+    description:
+      "Runway Report is a fractional CFO AI agent that helps bootstrapped founders with financial runway calculations, burn rate analysis, revenue forecasting, and strategic financial planning.",
+    oneLiner: "Fractional CFO AI Agent for bootstrapped founders",
+    tags: ["Python", "AI Agent", "Finance", "SaaS", "Analytics"],
+    github: "https://github.com/FarhanAkhtar4/runway-report",
+    category: "AI & LLM",
+    isFlagship: false,
+    highlights: [
+      "AI-powered financial runway calculations",
+      "Burn rate analysis and revenue forecasting",
+      "Strategic financial planning for founders",
+      "Automated financial report generation",
+    ],
+  },
+  {
+    id: "account-tally-pro",
+    title: "Account Tally Pro",
+    description:
+      "Professional SaaS application for account data tallying with automated reconciliation, audit trails, and comprehensive financial reporting dashboards.",
+    oneLiner: "Professional account data tallying SaaS application",
+    tags: ["TypeScript", "SaaS", "Finance", "Dashboard", "Cloudflare"],
+    github: "https://github.com/FarhanAkhtar4/account-tally-pro",
+    category: "SaaS & Full-Stack",
+    isFlagship: false,
+    highlights: [
+      "Automated account data reconciliation",
+      "Comprehensive audit trail system",
+      "Financial reporting dashboards",
+      "Cloudflare-deployed SaaS platform",
+    ],
+  },
+  {
+    id: "wedplan-pro",
+    title: "WedPlan Pro",
+    description:
+      "Smart wedding planning platform for professionals featuring vendor management, budget tracking, guest list management, timeline planning, and AI-powered recommendation engine.",
+    oneLiner: "Smart wedding planning platform for professionals",
+    tags: ["Python", "SaaS", "AI", "Planning", "Platform"],
+    github: "https://github.com/FarhanAkhtar4/wedplan-pro",
+    category: "SaaS & Full-Stack",
+    isFlagship: false,
+    highlights: [
+      "Vendor management and discovery system",
+      "Smart budget tracking and analytics",
+      "AI-powered vendor recommendations",
+      "Timeline and task planning tools",
+    ],
+  },
+  {
+    id: "placement-portfolio-engine",
+    title: "Placement Portfolio Engine",
+    description:
+      "AI-powered tool that converts resumes into recruiter-optimized portfolio websites with automatic section generation, skill visualization, and ATS-friendly formatting.",
+    oneLiner: "AI converts resumes into recruiter-optimized portfolios",
+    tags: ["TypeScript", "AI", "Resume", "Portfolio Generator", "Next.js"],
+    github: "https://github.com/FarhanAkhtar4/placement-portfolio-engine",
+    category: "SaaS & Full-Stack",
+    isFlagship: false,
+    highlights: [
+      "AI-powered resume parsing and portfolio generation",
+      "ATS-friendly output formatting",
+      "Skill visualization and project showcase",
+      "One-click deployment to custom domains",
+    ],
+  },
+  {
+    id: "talent-scout-hiring-assistant",
+    title: "TalentScout AI",
+    description:
+      "Intelligent AI chatbot that automates initial technical screening for technology positions by collecting candidate details and generating tailored interview questions based on role requirements.",
+    oneLiner: "AI chatbot automating initial technical screening",
+    tags: ["Python", "AI", "Streamlit", "NLP", "Hiring"],
+    github: "https://github.com/FarhanAkhtar4/talent-scout-hiring-assistant",
+    category: "AI & LLM",
+    isFlagship: false,
+    highlights: [
+      "Automated technical screening chatbot",
+      "Tailored interview question generation",
+      "Candidate skill assessment pipeline",
+      "Streamlit-based interactive interface",
+    ],
+  },
 ];
 
 export const skillCategories: SkillCategory[] = [
@@ -306,7 +466,9 @@ export const categoryDots: Record<Certification["category"], string> = {
 
 export const projectCategories = [
   "All",
-  "Deep Learning",
   "Agentic AI",
+  "AI & LLM",
+  "Deep Learning",
+  "SaaS & Full-Stack",
   "Analytics",
 ] as const;
