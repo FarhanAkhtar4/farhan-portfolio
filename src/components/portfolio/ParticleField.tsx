@@ -3,8 +3,7 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
-import { BlendFunction } from 'postprocessing';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 
 // ============================================================
 // CONFIGURATION — Brain Anatomy & Neural System
@@ -1262,23 +1261,12 @@ const Scene = React.memo(function Scene() {
       </group>
 
       {/* Post-Processing */}
-      <EffectComposer multisampling={0}>
+      <EffectComposer>
         <Bloom
-          luminanceThreshold={0.05}
+          luminanceThreshold={0.1}
           luminanceSmoothing={0.9}
-          intensity={2.0}
+          intensity={1.8}
           mipmapBlur
-        />
-        <ChromaticAberration
-          blendFunction={BlendFunction.NORMAL}
-          offset={new THREE.Vector2(0.0005, 0.0005)}
-          radialModulation={true}
-          modulationOffset={0.5}
-        />
-        <Vignette
-          eskil={false}
-          offset={0.1}
-          darkness={0.8}
         />
       </EffectComposer>
     </>
@@ -1291,26 +1279,32 @@ const Scene = React.memo(function Scene() {
 
 const ParticleField = React.memo(function ParticleField() {
   const [mounted, setMounted] = useState(false);
+  const [hasError, setHasError] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  if (hasError) return null;
 
   return (
     <div className="fixed inset-0 z-0" style={{ pointerEvents: 'none' }} aria-hidden="true">
       {mounted && (
-        <Canvas
-          camera={{ position: [0, 1, 7.5], fov: 50 }}
-          dpr={[1, 1.5]}
-          gl={{
-            antialias: false,
-            alpha: true,
-            powerPreference: 'high-performance',
-            stencil: false,
-          }}
-          style={{ background: 'transparent' }}
-          frameloop="always"
-        >
-          <InputTracker />
-          <Scene />
-        </Canvas>
+        <React.Suspense fallback={null}>
+          <Canvas
+            camera={{ position: [0, 1, 7.5], fov: 50 }}
+            dpr={[1, 1.5]}
+            gl={{
+              antialias: false,
+              alpha: true,
+              powerPreference: 'high-performance',
+              stencil: false,
+            }}
+            style={{ background: 'transparent' }}
+            frameloop="always"
+            onError={() => setHasError(true)}
+          >
+            <InputTracker />
+            <Scene />
+          </Canvas>
+        </React.Suspense>
       )}
     </div>
   );
