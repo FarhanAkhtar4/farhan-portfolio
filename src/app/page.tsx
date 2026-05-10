@@ -6,13 +6,13 @@ import SkillsSection from "@/components/portfolio/SkillsSection";
 import CertificationsSection from "@/components/portfolio/CertificationsSection";
 import ContactSection from "@/components/portfolio/ContactSection";
 import Footer from "@/components/portfolio/Footer";
-import SceneWrapper from "@/components/portfolio/SceneWrapper";
+import ParticleField from "@/components/portfolio/ParticleField";
 
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* 3D Particle Background - fixed behind all content */}
-      <SceneWrapper />
+      <ParticleField />
 
       {/* Scrollable content layer */}
       <div className="relative z-10 noise-overlay">
