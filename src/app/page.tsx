@@ -1,6 +1,3 @@
-'use client';
-
-import React, { Component, type ReactNode } from 'react';
 import Navigation from "@/components/portfolio/Navigation";
 import HeroSection from "@/components/portfolio/HeroSection";
 import AboutSection from "@/components/portfolio/AboutSection";
@@ -9,24 +6,13 @@ import SkillsSection from "@/components/portfolio/SkillsSection";
 import CertificationsSection from "@/components/portfolio/CertificationsSection";
 import ContactSection from "@/components/portfolio/ContactSection";
 import Footer from "@/components/portfolio/Footer";
-import ParticleField from "@/components/portfolio/ParticleField";
-
-class ThreeErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  state = { hasError: false };
-  static getDerivedStateFromError() { return { hasError: true }; }
-  render() {
-    if (this.state.hasError) return null;
-    return this.props.children;
-  }
-}
+import SceneWrapper from "@/components/portfolio/SceneWrapper";
 
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* 3D Particle Background - fixed behind all content */}
-      <ThreeErrorBoundary>
-        <ParticleField />
-      </ThreeErrorBoundary>
+      <SceneWrapper />
 
       {/* Scrollable content layer */}
       <div className="relative z-10 noise-overlay">
