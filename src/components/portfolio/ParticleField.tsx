@@ -1,105 +1,151 @@
 'use client';
 
-import React, { useRef, useMemo, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 
 // ============================================================
-// CONFIGURATION
+// CONFIGURATION — Brain Anatomy & Neural System
 // ============================================================
 
-const BRAIN_RADIUS = 1.7;
-const BG_PARTICLE_COUNT = 120;
-const MAX_BRAIN_SIGNALS = 50;
-const MAX_NEURON_SIGNALS = 40;
-const NEURON_LAYERS = [
-  { count: 5, xPos: -6.5 },
-  { count: 7, xPos: -2.2 },
-  { count: 6, xPos: 2.2 },
-  { count: 4, xPos: 6.5 },
+const BRAIN_RADIUS = 1.8;
+const BRAIN_WARP = [1.0, 0.88, 0.78] as [number, number, number];
+const BG_PARTICLES = 200;
+const MAX_PATHWAY_SIGNALS = 80;
+const MAX_DISCHARGES = 12;
+
+// Brain regions — anatomically inspired positions on the brain surface
+const BRAIN_REGIONS = [
+  { name: 'prefrontal', pos: [0.9, 0.5, 0.2], color: 0x22d3ee, size: 0.28 },
+  { name: 'motor_cortex', pos: [0.7, 0.8, 0.3], color: 0x06b6d4, size: 0.22 },
+  { name: 'somatosensory', pos: [0.3, 0.85, 0.55], color: 0x34d399, size: 0.24 },
+  { name: 'parietal', pos: [-0.1, 0.8, 0.7], color: 0x10b981, size: 0.25 },
+  { name: 'temporal', pos: [0.7, -0.1, 0.65], color: 0xa855f7, size: 0.26 },
+  { name: 'occipital', pos: [-0.5, 0.2, 0.85], color: 0x8b5cf6, size: 0.24 },
+  { name: 'cerebellum', pos: [-0.7, -0.5, 0.4], color: 0x6366f1, size: 0.3 },
+  { name: 'brainstem', pos: [-0.3, -0.7, 0.1], color: 0x818cf8, size: 0.18 },
+  { name: 'limbic', pos: [0.35, 0.15, 0.45], color: 0xf472b6, size: 0.2 },
+  { name: 'basal_ganglia', pos: [0.5, -0.1, 0.3], color: 0xfb923c, size: 0.18 },
+  // Right hemisphere mirror
+  { name: 'prefrontal_r', pos: [-0.9, 0.5, -0.2], color: 0x22d3ee, size: 0.28 },
+  { name: 'motor_r', pos: [-0.7, 0.8, -0.3], color: 0x06b6d4, size: 0.22 },
+  { name: 'temporal_r', pos: [-0.7, -0.1, -0.65], color: 0xa855f7, size: 0.26 },
+  { name: 'occipital_r', pos: [0.5, 0.2, -0.85], color: 0x8b5cf6, size: 0.24 },
+  { name: 'parietal_r', pos: [0.1, 0.8, -0.7], color: 0x10b981, size: 0.25 },
+  { name: 'cerebellum_r', pos: [0.7, -0.5, -0.4], color: 0x6366f1, size: 0.3 },
+].map((r) => ({
+  ...r,
+  pos: new THREE.Vector3(...r.pos).multiplyScalar(BRAIN_RADIUS),
+  color: new THREE.Color(r.color),
+  activation: 0,
+  lastFireTime: -10,
+}));
+
+// Neural pathway connections between regions
+const PATHWAY_CONNECTIONS: [number, number][] = [
+  [0, 1], [1, 2], [2, 3], [3, 5], [0, 4], [4, 6], [6, 7], [0, 8], [8, 9],
+  [9, 4], [5, 6], [3, 8], [1, 8], [0, 10], [10, 11], [11, 14], [14, 13],
+  [13, 15], [10, 12], [12, 15], [8, 9], [0, 3], [5, 13], [3, 14], [4, 12],
+  [7, 6], [7, 15], [0, 5], [2, 8], [11, 8],
 ];
-const NEURON_COLORS = [0x22d3ee, 0xa855f7, 0x8b5cf6, 0x34d399];
-const NEURON_SPREAD_Y = 5.0;
-const CONNECTION_PROB = 0.4;
 
 // ============================================================
 // MOUSE STATE
 // ============================================================
 
-const mousePos = { x: 0, y: 0 };
+const mouse = { x: 0, y: 0, ndcX: 0, ndcY: 0, ray: new THREE.Vector3(), active: false };
 
-function useMouseTracker() {
+function useInputTracker() {
+  const { camera } = useThree();
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      mousePos.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mousePos.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const onMove = (e: MouseEvent) => {
+      mouse.x = e.clientX / window.innerWidth;
+      mouse.y = e.clientY / window.innerHeight;
+      mouse.ndcX = mouse.x * 2 - 1;
+      mouse.ndcY = -(mouse.y * 2 - 1);
+      mouse.ray.set(mouse.ndcX, mouse.ndcY, 0.5).unproject(camera);
+      mouse.ray.sub(camera.position).normalize();
+      mouse.active = true;
     };
-    window.addEventListener('mousemove', handler, { passive: true });
-    return () => window.removeEventListener('mousemove', handler);
-  }, []);
-}
-
-// ============================================================
-// BRAIN DATA GENERATION
-// ============================================================
-
-interface PathwayCurve {
-  curve: THREE.CatmullRomCurve3;
-  color: THREE.Color;
-}
-
-function generateBrainData(): PathwayCurve[] {
-  const regions = [
-    [0.85, 0.45, 0.35], [0.65, 0.15, 0.65], [0.25, 0.75, 0.5],
-    [-0.2, 0.7, 0.55], [0.45, -0.35, 0.7], [-0.75, 0.15, 0.45],
-    [-0.5, -0.55, -0.15], [-0.25, -0.75, 0.1],
-    [-0.85, 0.45, -0.35], [-0.65, 0.15, -0.65], [-0.25, 0.75, -0.5],
-    [0.2, 0.7, -0.55], [-0.45, -0.35, -0.7], [0.75, 0.15, -0.45],
-  ].map(([x, y, z]) => new THREE.Vector3(x, y, z).multiplyScalar(BRAIN_RADIUS));
-
-  const pairs: [number, number][] = [
-    [0, 2], [0, 1], [1, 4], [2, 3], [3, 5], [4, 6], [6, 7],
-    [0, 8], [2, 10], [3, 11], [4, 12], [8, 10], [9, 12],
-    [10, 11], [11, 13], [5, 13], [0, 3], [8, 11], [7, 6],
-  ];
-
-  const palette = [
-    new THREE.Color(0x22d3ee), new THREE.Color(0xa855f7),
-    new THREE.Color(0x34d399), new THREE.Color(0x8b5cf6),
-    new THREE.Color(0x06b6d4),
-  ];
-
-  return pairs.map(([a, b], i) => {
-    const from = regions[a];
-    const to = regions[b];
-    const mid = from.clone().add(to).multiplyScalar(0.5);
-    mid.normalize().multiplyScalar(BRAIN_RADIUS * 1.4);
-    mid.x += (Math.sin(i * 2.3) * 0.35);
-    mid.y += (Math.cos(i * 1.7) * 0.35);
-    mid.z += (Math.sin(i * 3.1) * 0.3);
-
-    const cp1 = from.clone().lerp(mid, 0.4);
-    cp1.normalize().multiplyScalar(from.length() * 1.2);
-    const cp2 = to.clone().lerp(mid, 0.4);
-    cp2.normalize().multiplyScalar(to.length() * 1.2);
-
-    return {
-      curve: new THREE.CatmullRomCurve3([from, cp1, mid, cp2, to]),
-      color: palette[i % palette.length],
+    const onClick = () => { triggerBrainCascade(); };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    window.addEventListener('click', onClick, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('click', onClick);
     };
-  });
+  }, [camera]);
 }
 
 // ============================================================
-// BRAIN SURFACE — Displaced icosahedron with Fresnel glow
+// BRAIN CASCADE SYSTEM — Global neural cascade manager
+// ============================================================
+
+let cascadeRegions = [...BRAIN_REGIONS];
+let cascadeTriggerTime = -100;
+let cascadeOriginRegion = -1;
+
+function triggerBrainCascade() {
+  cascadeTriggerTime = performance.now() / 1000;
+  cascadeOriginRegion = Math.floor(Math.random() * cascadeRegions.length);
+  cascadeRegions[cascadeOriginRegion].activation = 1.0;
+  cascadeRegions[cascadeOriginRegion].lastFireTime = cascadeTriggerTime;
+}
+
+function updateCascadeSystem(elapsedTime: number, delta: number) {
+  const regions = cascadeRegions;
+
+  // Decay all activations
+  for (let i = 0; i < regions.length; i++) {
+    if (regions[i].activation > 0) {
+      regions[i].activation *= Math.pow(0.92, delta * 60);
+      if (regions[i].activation < 0.01) regions[i].activation = 0;
+    }
+  }
+
+  // Propagate signals along pathways
+  for (const [a, b] of PATHWAY_CONNECTIONS) {
+    const rA = regions[a];
+    const rB = regions[b];
+    if (rA.activation > 0.3 && rB.lastFireTime < rA.lastFireTime) {
+      const dist = rA.pos.distanceTo(rB.pos);
+      const delay = dist * 0.25;
+      const timeSinceFire = elapsedTime - rA.lastFireTime;
+      if (timeSinceFire > delay && timeSinceFire < delay + 0.15) {
+        rB.activation = Math.min(1.0, rA.activation * 0.85);
+        rB.lastFireTime = elapsedTime;
+      }
+    }
+  }
+
+  // Mouse proximity activation
+  if (mouse.active) {
+    const rayOrigin = new THREE.Vector3(0, 0, 8);
+    for (let i = 0; i < regions.length; i++) {
+      const toRegion = regions[i].pos.clone().sub(rayOrigin);
+      const proj = toRegion.dot(mouse.ray);
+      if (proj < 0) continue;
+      const closest = mouse.ray.clone().multiplyScalar(proj).add(rayOrigin);
+      const dist = closest.distanceTo(regions[i].pos);
+      if (dist < 1.2) {
+        regions[i].activation = Math.min(1.0, regions[i].activation + delta * (1.2 - dist) * 0.8);
+      }
+    }
+  }
+}
+
+// ============================================================
+// BRAIN SURFACE — Detailed brain mesh with cortical folds
 // ============================================================
 
 const BrainSurface = React.memo(function BrainSurface() {
   const meshRef = useRef<THREE.Mesh>(null);
+  const regions = cascadeRegions;
 
   const { geometry, material } = useMemo(() => {
-    const geo = new THREE.IcosahedronGeometry(BRAIN_RADIUS, 4);
+    const geo = new THREE.IcosahedronGeometry(BRAIN_RADIUS, 5);
 
     const mat = new THREE.ShaderMaterial({
       transparent: true,
@@ -108,36 +154,70 @@ const BrainSurface = React.memo(function BrainSurface() {
       blending: THREE.AdditiveBlending,
       uniforms: {
         uTime: { value: 0 },
-        uColor: { value: new THREE.Color(0x3388dd) },
+        uActivationMap: { value: new Float32Array(32) },
+        uRegionPositions: { value: new Float32Array(32 * 3) },
+        uRegionCount: { value: regions.length },
       },
       vertexShader: `
         uniform float uTime;
+        uniform float uActivationMap[16];
+        uniform vec3 uRegionPositions[16];
+        uniform float uRegionCount;
         varying vec3 vNormal;
         varying vec3 vWorldPosition;
+        varying float vActivation;
         varying float vDisp;
 
-        float brainDisp(vec3 p) {
+        // Cortical fold noise
+        float foldNoise(vec3 p) {
           float d = 0.0;
-          d += sin(p.x * 4.0 + p.y * 3.5 + 0.5) * 0.07;
-          d += cos(p.y * 5.0 + p.z * 4.5 + 1.2) * 0.06;
-          d += sin(p.z * 3.0 + p.x * 5.0 + 2.1) * 0.05;
-          d += sin(p.x * 8.0 + p.y * 7.0 + p.z * 6.0 + 0.7) * 0.03;
-          d += cos(p.x * 11.0 + p.y * 10.0 + p.z * 9.0 + 1.5) * 0.018;
-          d += sin(p.x * 16.0 + p.y * 14.0 + p.z * 13.0) * 0.008;
+          // Large sulci
+          d += sin(p.x * 3.5 + p.y * 2.8 + 0.3) * 0.09;
+          d += cos(p.y * 4.2 + p.z * 3.6 + 1.1) * 0.08;
+          d += sin(p.z * 2.8 + p.x * 4.5 + 2.0) * 0.07;
+          // Medium gyri
+          d += sin(p.x * 7.0 + p.y * 6.5 + p.z * 5.5 + 0.5) * 0.04;
+          d += cos(p.x * 9.0 + p.y * 8.5 + p.z * 7.5 + 1.2) * 0.025;
+          // Fine texture
+          d += sin(p.x * 14.0 + p.y * 12.0 + p.z * 11.0 + 0.7) * 0.012;
+          d += cos(p.x * 20.0 + p.y * 18.0 + p.z * 16.0) * 0.006;
           return d;
+        }
+
+        // Central sulcus (longitudinal fissure)
+        float fissureEffect(vec3 p) {
+          float fissure = smoothstep(0.0, 0.15, abs(p.x));
+          p.x += sign(p.x) * (1.0 - fissure) * 0.05;
+          float lateral = smoothstep(0.0, 0.1, abs(p.z));
+          p.z += sign(p.z) * (1.0 - lateral) * 0.02;
+          return fissure * lateral;
         }
 
         void main() {
           vec3 pos = position;
-          float disp = brainDisp(pos * 1.8);
+          float disp = foldNoise(pos * 1.6);
           vDisp = disp;
+
+          float fissure = fissureEffect(pos);
           pos += normal * disp;
+          pos *= fissure > 0.5 ? 1.0 : (0.96 + fissure * 0.04);
 
-          float fissure = smoothstep(0.0, 0.12, abs(pos.x));
-          pos.x += sign(pos.x) * (1.0 - fissure) * 0.04;
-
-          float breathe = 1.0 + sin(uTime * 0.35) * 0.012;
+          // Breathing
+          float breathe = 1.0 + sin(uTime * 0.3) * 0.01;
           pos *= breathe;
+
+          // Compute local activation from nearby regions
+          vActivation = 0.0;
+          for (int i = 0; i < 16; i++) {
+            if (float(i) >= uRegionCount) break;
+            float dist = distance(pos, uRegionPositions[i]);
+            float influence = uActivationMap[i] / (1.0 + dist * dist * 2.0);
+            vActivation = max(vActivation, influence);
+          }
+          vActivation = clamp(vActivation, 0.0, 1.0);
+
+          // Activation pulse displacement
+          pos += normal * vActivation * 0.06;
 
           vNormal = normalize(normalMatrix * normal);
           vWorldPosition = (modelMatrix * vec4(pos, 1.0)).xyz;
@@ -146,31 +226,48 @@ const BrainSurface = React.memo(function BrainSurface() {
       `,
       fragmentShader: `
         uniform float uTime;
-        uniform vec3 uColor;
         varying vec3 vNormal;
         varying vec3 vWorldPosition;
+        varying float vActivation;
         varying float vDisp;
 
         void main() {
           vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-          float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 2.8);
+          float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 3.0);
 
-          vec3 baseColor = uColor * 0.5;
-          vec3 ridgeColor = uColor * 1.5;
-          vec3 surfaceColor = mix(baseColor, ridgeColor, smoothstep(0.01, 0.07, abs(vDisp)));
+          // Base brain color
+          vec3 baseColor = vec3(0.12, 0.22, 0.45);
+          vec3 ridgeColor = vec3(0.18, 0.35, 0.65);
+          vec3 surfaceColor = mix(baseColor, ridgeColor, smoothstep(0.01, 0.06, abs(vDisp)));
 
-          vec3 rimColor = mix(vec3(0.3, 0.7, 1.0), vec3(0.6, 0.4, 1.0), fresnel);
-          vec3 finalColor = mix(surfaceColor, rimColor, fresnel * 0.85);
+          // Activation glow (neural response)
+          vec3 activeColor = mix(
+            vec3(0.1, 0.7, 1.0),
+            vec3(0.8, 0.3, 1.0),
+            sin(vActivation * 3.14159 + uTime * 2.0) * 0.5 + 0.5
+          );
+          surfaceColor = mix(surfaceColor, activeColor * 1.8, vActivation * 0.7);
 
+          // Rim/edge glow
+          vec3 rimColor = mix(vec3(0.3, 0.6, 1.0), vec3(0.6, 0.3, 1.0), fresnel);
+          vec3 finalColor = mix(surfaceColor, rimColor, fresnel * 0.9);
+
+          // Hemisphere lighting
           vec3 lightDir = normalize(vec3(0.5, 1.0, 0.8));
-          float diff = max(dot(vNormal, lightDir), 0.0) * 0.25;
+          float diff = max(dot(vNormal, lightDir), 0.0) * 0.2;
           finalColor += diff * vec3(0.2, 0.4, 0.8);
 
-          float pulse = 0.92 + 0.08 * sin(uTime * 0.5);
+          // Activation pulse brightness
+          finalColor += vec3(0.3, 0.5, 1.0) * vActivation * 0.5;
+
+          // Global pulse
+          float pulse = 0.93 + 0.07 * sin(uTime * 0.4);
           finalColor *= pulse;
 
-          float alpha = 0.06 + fresnel * 0.5;
-          alpha += smoothstep(0.015, 0.08, abs(vDisp)) * 0.06;
+          // Alpha
+          float alpha = 0.05 + fresnel * 0.55;
+          alpha += smoothstep(0.01, 0.07, abs(vDisp)) * 0.05;
+          alpha += vActivation * 0.3;
 
           gl_FragColor = vec4(finalColor, alpha);
         }
@@ -181,36 +278,45 @@ const BrainSurface = React.memo(function BrainSurface() {
   }, []);
 
   useFrame(({ clock }) => {
-    material.uniforms.uTime.value = clock.getElapsedTime();
+    const t = clock.getElapsedTime();
+    material.uniforms.uTime.value = t;
+
+    // Update activation data
+    const actMap = material.uniforms.uActivationMap.value as Float32Array;
+    const posMap = material.uniforms.uRegionPositions.value as Float32Array;
+    for (let i = 0; i < regions.length; i++) {
+      actMap[i] = regions[i].activation;
+      posMap[i * 3] = regions[i].pos.x;
+      posMap[i * 3 + 1] = regions[i].pos.y;
+      posMap[i * 3 + 2] = regions[i].pos.z;
+    }
+
     if (meshRef.current) {
-      meshRef.current.rotation.y = clock.getElapsedTime() * 0.06;
-      meshRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.12) * 0.08;
-      meshRef.current.rotation.z = Math.cos(clock.getElapsedTime() * 0.09) * 0.04;
+      meshRef.current.rotation.y = t * 0.05;
+      meshRef.current.rotation.x = Math.sin(t * 0.1) * 0.06;
+      meshRef.current.rotation.z = Math.cos(t * 0.07) * 0.03;
     }
   });
 
   useEffect(() => { return () => { geometry.dispose(); material.dispose(); }; }, [geometry, material]);
 
-  return (
-    <mesh ref={meshRef} scale={[1.0, 0.92, 0.82]} geometry={geometry} material={material} />
-  );
+  return <mesh ref={meshRef} scale={BRAIN_WARP} geometry={geometry} material={material} />;
 });
 
 // ============================================================
-// BRAIN GLOW — Inner radial glow
+// BRAIN CORE GLOW — Pulsing inner energy core
 // ============================================================
 
-const BrainGlow = React.memo(function BrainGlow() {
+const BrainCoreGlow = React.memo(function BrainCoreGlow() {
   const meshRef = useRef<THREE.Mesh>(null);
 
   const { geometry, material } = useMemo(() => {
-    const geo = new THREE.IcosahedronGeometry(BRAIN_RADIUS * 0.65, 3);
+    const geo = new THREE.IcosahedronGeometry(BRAIN_RADIUS * 0.55, 3);
     const mat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
+      transparent: true, depthWrite: false,
       blending: THREE.AdditiveBlending,
       side: THREE.FrontSide,
-      uniforms: { uTime: { value: 0 } },
+      uniforms: { uTime: { value: 0 }, uActivation: { value: 0 } },
       vertexShader: `
         varying vec3 vNormal;
         varying vec3 vWorldPosition;
@@ -222,15 +328,24 @@ const BrainGlow = React.memo(function BrainGlow() {
       `,
       fragmentShader: `
         uniform float uTime;
+        uniform float uActivation;
         varying vec3 vNormal;
         varying vec3 vWorldPosition;
         void main() {
           vec3 viewDir = normalize(cameraPosition - vWorldPosition);
-          float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 1.6);
-          vec3 glowColor = mix(vec3(0.12, 0.35, 0.85), vec3(0.3, 0.6, 1.0), fresnel);
-          float intensity = (1.0 - fresnel) * 0.4;
-          float pulse = 0.85 + 0.15 * sin(uTime * 0.7);
-          intensity *= pulse;
+          float fresnel = pow(1.0 - max(dot(vNormal, viewDir), 0.0), 1.5);
+
+          vec3 glowA = vec3(0.08, 0.25, 0.75);
+          vec3 glowB = vec3(0.3, 0.15, 0.9);
+          vec3 glowActive = vec3(0.4, 0.7, 1.0);
+
+          float base = (1.0 - fresnel) * 0.5;
+          float pulse = 0.85 + 0.15 * sin(uTime * 0.6);
+
+          vec3 glowColor = mix(glowA, glowB, fresnel);
+          glowColor = mix(glowColor, glowActive, uActivation * 0.6);
+
+          float intensity = base * pulse + uActivation * 0.3;
           gl_FragColor = vec4(glowColor, intensity);
         }
       `,
@@ -239,132 +354,238 @@ const BrainGlow = React.memo(function BrainGlow() {
   }, []);
 
   useFrame(({ clock }) => {
-    material.uniforms.uTime.value = clock.getElapsedTime();
+    const t = clock.getElapsedTime();
+    material.uniforms.uTime.value = t;
+
+    // Average activation of all regions
+    let avg = 0;
+    for (let i = 0; i < cascadeRegions.length; i++) avg += cascadeRegions[i].activation;
+    avg /= cascadeRegions.length;
+    material.uniforms.uActivation.value = avg;
+
     if (meshRef.current) {
-      meshRef.current.scale.setScalar(1.0 + Math.sin(clock.getElapsedTime() * 0.4) * 0.06);
+      const s = 1.0 + Math.sin(t * 0.35) * 0.05 + avg * 0.15;
+      meshRef.current.scale.set(s * BRAIN_WARP[0], s * BRAIN_WARP[1], s * BRAIN_WARP[2]);
     }
   });
 
   useEffect(() => { return () => { geometry.dispose(); material.dispose(); }; }, [geometry, material]);
 
-  return (
-    <mesh ref={meshRef} scale={[1.0, 0.92, 0.82]} geometry={geometry} material={material} />
-  );
+  return <mesh ref={meshRef} geometry={geometry} material={material} />;
 });
 
 // ============================================================
-// BRAIN CORTEX SHELL — Wireframe shell for cortical surface
+// CORTICAL WIREFRAME — Brain surface wireframe shell
 // ============================================================
 
-const BrainCortexShell = React.memo(function BrainCortexShell() {
+const CorticalWireframe = React.memo(function CorticalWireframe() {
   const meshRef = useRef<THREE.Mesh>(null);
 
-  const geometry = useMemo(() => new THREE.IcosahedronGeometry(BRAIN_RADIUS * 1.02, 2), []);
-  const material = useMemo(() => new THREE.MeshBasicMaterial({
+  const geometry = useMemo(() => new THREE.IcosahedronGeometry(BRAIN_RADIUS * 1.015, 3), []);
+  const material = useMemo(() => new THREE.ShaderMaterial({
     color: 0x4488cc,
     wireframe: true,
     transparent: true,
-    opacity: 0.035,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
+    uniforms: { uTime: { value: 0 }, uActivation: { value: 0 } },
+    vertexShader: `
+      uniform float uTime;
+      varying float vY;
+      void main() {
+        vY = position.y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform float uActivation;
+      varying float vY;
+      void main() {
+        float wave = sin(vY * 3.0 + uTime * 1.5) * 0.5 + 0.5;
+        float alpha = 0.025 + wave * 0.015 + uActivation * 0.04;
+        vec3 color = mix(vec3(0.25, 0.5, 0.9), vec3(0.6, 0.4, 1.0), uActivation);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
   }), []);
 
   useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    material.uniforms.uTime.value = t;
+    let avg = 0;
+    for (let i = 0; i < cascadeRegions.length; i++) avg += cascadeRegions[i].activation;
+    material.uniforms.uActivation.value = avg / cascadeRegions.length;
+
     if (meshRef.current) {
-      meshRef.current.rotation.y = clock.getElapsedTime() * 0.06;
-      meshRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.12) * 0.08;
+      meshRef.current.rotation.y = t * 0.05;
+      meshRef.current.rotation.x = Math.sin(t * 0.1) * 0.06;
     }
   });
 
   useEffect(() => { return () => { geometry.dispose(); material.dispose(); }; }, [geometry, material]);
 
-  return (
-    <mesh ref={meshRef} scale={[1.0, 0.92, 0.82]} geometry={geometry} material={material} />
-  );
+  return <mesh ref={meshRef} scale={BRAIN_WARP} geometry={geometry} material={material} />;
 });
 
 // ============================================================
-// BRAIN PATHWAYS — Lines connecting brain regions
+// NEURAL PATHWAYS — Curved connections between regions
 // ============================================================
 
-const BrainPathways = React.memo(function BrainPathways() {
-  const pathways = useMemo(() => generateBrainData(), []);
+interface PathwayData {
+  curve: THREE.CatmullRomCurve3;
+  color: THREE.Color;
+  fromIdx: number;
+  toIdx: number;
+  length: number;
+}
+
+function generatePathways(): PathwayData[] {
+  return PATHWAY_CONNECTIONS.map(([a, b]) => {
+    const from = cascadeRegions[a].pos;
+    const to = cascadeRegions[b].pos;
+    const mid = from.clone().add(to).multiplyScalar(0.5);
+    mid.normalize().multiplyScalar(BRAIN_RADIUS * 1.35);
+    mid.x += (Math.random() - 0.5) * 0.3;
+    mid.y += (Math.random() - 0.5) * 0.3;
+    mid.z += (Math.random() - 0.5) * 0.3;
+
+    const cp1 = from.clone().lerp(mid, 0.5);
+    cp1.normalize().multiplyScalar(from.length() * 1.25);
+    const cp2 = to.clone().lerp(mid, 0.5);
+    cp2.normalize().multiplyScalar(to.length() * 1.25);
+
+    const curve = new THREE.CatmullRomCurve3([from, cp1, mid, cp2, to]);
+    const color = cascadeRegions[a].color.clone().lerp(cascadeRegions[b].color, 0.5);
+
+    return { curve, color, fromIdx: a, toIdx: b, length: from.distanceTo(to) };
+  });
+}
+
+const NeuralPathways = React.memo(function NeuralPathways() {
+  const pathways = useMemo(() => generatePathways(), []);
+  const groupRef = useRef<THREE.Group>(null);
 
   const lineObjects = useMemo(() => {
     return pathways.map((pw) => {
-      const pts = pw.curve.getPoints(32);
+      const pts = pw.curve.getPoints(40);
       const geo = new THREE.BufferGeometry().setFromPoints(pts);
-      const mat = new THREE.LineBasicMaterial({
-        color: pw.color,
+      const mat = new THREE.ShaderMaterial({
         transparent: true,
-        opacity: 0.12,
-        blending: THREE.AdditiveBlending,
         depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        uniforms: {
+          uColor: { value: pw.color },
+          uActivation: { value: 0 },
+          uTime: { value: 0 },
+        },
+        vertexShader: `
+          varying vec2 vUvCoord;
+          void main() {
+            vUvCoord = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uColor;
+          uniform float uActivation;
+          uniform float uTime;
+          varying vec2 vUvCoord;
+          void main() {
+            float flow = fract(vUvCoord.x * 3.0 - uTime * 0.5);
+            float pulse = smoothstep(0.0, 0.3, flow) * smoothstep(1.0, 0.7, flow);
+            float alpha = 0.06 + pulse * 0.04 + uActivation * 0.15;
+            vec3 color = mix(uColor, vec3(1.0), uActivation * 0.5);
+            gl_FragColor = vec4(color, alpha);
+          }
+        `,
       });
-      return new THREE.Line(geo, mat);
+
+      // Since ShaderMaterial doesn't compute UVs automatically, add them
+      const uvs = new Float32Array(pts.length * 2);
+      for (let i = 0; i < pts.length; i++) {
+        uvs[i * 2] = i / (pts.length - 1);
+        uvs[i * 2 + 1] = 0;
+      }
+      geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+
+      return { line: new THREE.Line(geo, mat), fromIdx: pw.fromIdx, toIdx: pw.toIdx };
     });
   }, [pathways]);
 
+  useFrame(({ clock }) => {
+    if (!groupRef.current) return;
+    const t = clock.getElapsedTime();
+    for (let i = 0; i < lineObjects.length; i++) {
+      const obj = lineObjects[i];
+      const mat = obj.line.material as THREE.ShaderMaterial;
+      mat.uniforms.uTime.value = t;
+      const fromAct = cascadeRegions[obj.fromIdx].activation;
+      const toAct = cascadeRegions[obj.toIdx].activation;
+      mat.uniforms.uActivation.value = Math.max(fromAct, toAct);
+    }
+  });
+
   useEffect(() => {
-    return () => lineObjects.forEach((o) => { o.geometry.dispose(); (o.material as THREE.Material).dispose(); });
+    return () => lineObjects.forEach((o) => {
+      o.line.geometry.dispose();
+      (o.line.material as THREE.Material).dispose();
+    });
   }, [lineObjects]);
 
   return (
-    <group rotation={[0, 0, 0]}>
-      {lineObjects.map((obj, i) => (
-        <primitive key={i} object={obj} />
-      ))}
+    <group ref={groupRef}>
+      {lineObjects.map((o, i) => <primitive key={i} object={o.line} />)}
     </group>
   );
 });
 
 // ============================================================
-// BRAIN SIGNALS — Glowing pulses traveling along pathways
+// PATHWAY SIGNALS — Neural impulses traveling along pathways
 // ============================================================
 
-interface BrainSignal {
+interface PathSignal {
   pathwayIdx: number;
   progress: number;
   speed: number;
   active: boolean;
+  intensity: number;
 }
 
-const BrainSignals = React.memo(function BrainSignals() {
+const PathwaySignals = React.memo(function PathwaySignals() {
   const pointsRef = useRef<THREE.Points>(null);
-  const pathways = useMemo(() => generateBrainData(), []);
+  const trailRef = useRef<THREE.Points>(null);
+  const pathways = useMemo(() => generatePathways(), []);
 
-  const signalPool = useRef<BrainSignal[]>([]);
+  const signalPool = useRef<PathSignal[]>([]);
   const spawnTimer = useRef(0);
 
   useEffect(() => {
-    const pool: BrainSignal[] = [];
-    for (let i = 0; i < MAX_BRAIN_SIGNALS; i++) {
-      pool.push({ pathwayIdx: 0, progress: 0, speed: 0, active: false });
+    const pool: PathSignal[] = [];
+    for (let i = 0; i < MAX_PATHWAY_SIGNALS; i++) {
+      pool.push({ pathwayIdx: 0, progress: 0, speed: 0, active: false, intensity: 0 });
     }
     signalPool.current = pool;
   }, []);
 
-  const { geometry, material } = useMemo(() => {
+  // Main signal points
+  const { geometry: sigGeo, material: sigMat } = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(MAX_BRAIN_SIGNALS * 3);
-    const colors = new Float32Array(MAX_BRAIN_SIGNALS * 3);
-    const sizes = new Float32Array(MAX_BRAIN_SIGNALS);
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
-    geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_PATHWAY_SIGNALS * 3), 3));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(MAX_PATHWAY_SIGNALS * 3), 3));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(MAX_PATHWAY_SIGNALS), 1));
     const mat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { uScale: { value: Math.min(window.devicePixelRatio, 1.5) } },
+      uniforms: { uPR: { value: Math.min(window.devicePixelRatio, 1.5) } },
       vertexShader: `
         attribute vec3 aColor;
         attribute float aSize;
         varying vec3 vColor;
-        uniform float uScale;
+        uniform float uPR;
         void main() {
           vColor = aColor;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = aSize * uScale * (200.0 / -gl_Position.z);
+          gl_PointSize = aSize * uPR * (220.0 / -gl_Position.z);
         }
       `,
       fragmentShader: `
@@ -372,49 +593,109 @@ const BrainSignals = React.memo(function BrainSignals() {
         void main() {
           float dist = length(gl_PointCoord - vec2(0.5));
           if (dist > 0.5) discard;
-          float core = pow(smoothstep(0.5, 0.0, dist), 2.0);
-          float glow = smoothstep(0.5, 0.1, dist) * 0.6;
-          vec3 color = mix(vColor, vec3(1.0), core * 0.9);
-          gl_FragColor = vec4(color * 2.5, core * 0.95 + glow * 0.5);
+          float core = pow(smoothstep(0.5, 0.0, dist), 2.5);
+          float glow = smoothstep(0.5, 0.08, dist) * 0.5;
+          vec3 color = mix(vColor, vec3(1.0), core * 0.95);
+          gl_FragColor = vec4(color * 3.0, core * 0.95 + glow * 0.4);
         }
       `,
     });
-    return { geometry: geo, material: mat };
+    return { geometry: sigGeo, material: sigMat };
+  }, []);
+
+  // Trail points (secondary, dimmer)
+  const TRAIL_COUNT = MAX_PATHWAY_SIGNALS * 4;
+  const { geometry: trailGeo, material: trailMat } = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_COUNT * 3), 3));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(TRAIL_COUNT * 3), 3));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(TRAIL_COUNT), 1));
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { uPR: { value: Math.min(window.devicePixelRatio, 1.5) } },
+      vertexShader: `
+        attribute vec3 aColor;
+        attribute float aSize;
+        varying vec3 vColor;
+        uniform float uPR;
+        void main() {
+          vColor = aColor;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = aSize * uPR * (180.0 / -gl_Position.z);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor;
+        void main() {
+          float dist = length(gl_PointCoord - vec2(0.5));
+          if (dist > 0.5) discard;
+          float core = pow(smoothstep(0.5, 0.0, dist), 1.5);
+          gl_FragColor = vec4(vColor * 1.5, core * 0.6);
+        }
+      `,
+    });
+    return { geometry: trailGeo, material: trailMat };
   }, []);
 
   useFrame(({ clock }, delta) => {
-    if (!pointsRef.current) return;
+    if (!pointsRef.current || !trailRef.current) return;
     const t = clock.getElapsedTime();
-    const posAttr = pointsRef.current.geometry.getAttribute('position');
-    const colAttr = pointsRef.current.geometry.getAttribute('aColor');
-    const sizeAttr = pointsRef.current.geometry.getAttribute('aSize');
-    if (!posAttr || !colAttr || !sizeAttr) return;
 
-    const posArr = posAttr.array as Float32Array;
-    const colArr = colAttr.array as Float32Array;
-    const sizeArr = sizeAttr.array as Float32Array;
-    posArr.fill(0); colArr.fill(0); sizeArr.fill(0);
+    // Spawn signals — higher rate when cascading
+    let globalAct = 0;
+    for (let i = 0; i < cascadeRegions.length; i++) globalAct += cascadeRegions[i].activation;
+    globalAct /= cascadeRegions.length;
 
-    // Spawn signals
     spawnTimer.current += delta;
-    if (spawnTimer.current > 0.15) {
+    const spawnInterval = Math.max(0.04, 0.2 - globalAct * 0.16);
+    if (spawnTimer.current > spawnInterval) {
       spawnTimer.current = 0;
-      if (Math.random() < 0.5) {
+      const spawnChance = 0.4 + globalAct * 0.5;
+      if (Math.random() < spawnChance) {
         const slot = signalPool.current.find(s => !s.active);
         if (slot) {
+          // Prefer activated pathways
+          let pwIdx = Math.floor(Math.random() * pathways.length);
+          if (globalAct > 0.1) {
+            const activated = pathways
+              .map((p, i) => ({ i, act: Math.max(cascadeRegions[p.fromIdx].activation, cascadeRegions[p.toIdx].activation) }))
+              .filter(p => p.act > 0.15)
+              .sort((a, b) => b.act - a.act);
+            if (activated.length > 0) {
+              pwIdx = activated[Math.floor(Math.random() * Math.min(5, activated.length))].i;
+            }
+          }
           slot.active = true;
-          slot.pathwayIdx = Math.floor(Math.random() * pathways.length);
+          slot.pathwayIdx = pwIdx;
           slot.progress = 0;
-          slot.speed = 0.25 + Math.random() * 0.4;
+          slot.speed = 0.2 + Math.random() * 0.5 + globalAct * 0.3;
+          slot.intensity = 0.5 + Math.random() * 0.5;
         }
       }
     }
 
     // Update signals
     const signals = signalPool.current;
-    let drawIdx = 0;
+    const posAttr = pointsRef.current.geometry.getAttribute('position')!;
+    const colAttr = pointsRef.current.geometry.getAttribute('aColor')!;
+    const sizeAttr = pointsRef.current.geometry.getAttribute('aSize')!;
+    const posArr = posAttr.array as Float32Array;
+    const colArr = colAttr.array as Float32Array;
+    const sizeArr = sizeAttr.array as Float32Array;
+    posArr.fill(0); colArr.fill(0); sizeArr.fill(0);
 
-    for (let i = 0; i < signals.length && drawIdx < MAX_BRAIN_SIGNALS; i++) {
+    const tPosAttr = trailRef.current.geometry.getAttribute('position')!;
+    const tColAttr = trailRef.current.geometry.getAttribute('aColor')!;
+    const tSizeAttr = trailRef.current.geometry.getAttribute('aSize')!;
+    const tPosArr = tPosAttr.array as Float32Array;
+    const tColArr = tColAttr.array as Float32Array;
+    const tSizeArr = tSizeAttr.array as Float32Array;
+    tPosArr.fill(0); tColArr.fill(0); tSizeArr.fill(0);
+
+    let drawIdx = 0;
+    let trailIdx = 0;
+
+    for (let i = 0; i < signals.length && drawIdx < MAX_PATHWAY_SIGNALS; i++) {
       const sig = signals[i];
       if (!sig.active) continue;
 
@@ -427,38 +708,130 @@ const BrainSignals = React.memo(function BrainSignals() {
       const pw = pathways[sig.pathwayIdx];
       const pt = pw.curve.getPointAt(sig.progress);
       const idx = drawIdx * 3;
-      posArr[idx] = pt.x;
-      posArr[idx + 1] = pt.y;
-      posArr[idx + 2] = pt.z;
+      posArr[idx] = pt.x; posArr[idx + 1] = pt.y; posArr[idx + 2] = pt.z;
 
-      // Color blend along pathway
-      colArr[idx] = pw.color.r * (0.8 + 0.2 * Math.sin(t * 3 + sig.progress * 6));
-      colArr[idx + 1] = pw.color.g * (0.8 + 0.2 * Math.cos(t * 3 + sig.progress * 6));
-      colArr[idx + 2] = pw.color.b;
+      // Color with activation-based intensity
+      const r = pw.color.r * (0.8 + 0.2 * Math.sin(t * 4 + sig.progress * 8));
+      const g = pw.color.g * (0.8 + 0.2 * Math.cos(t * 4 + sig.progress * 8));
+      const b = pw.color.b;
+      colArr[idx] = r; colArr[idx + 1] = g; colArr[idx + 2] = b;
 
-      // Size: larger at midpoint
+      // Size: bigger at midpoint
       const sizeFactor = Math.sin(sig.progress * Math.PI);
-      sizeArr[drawIdx] = 6.0 + sizeFactor * 10.0;
+      sizeArr[drawIdx] = (5.0 + sizeFactor * 12.0) * sig.intensity;
 
-      // Draw a trail point slightly behind
-      if (drawIdx + 1 < MAX_BRAIN_SIGNALS && sig.progress > 0.05) {
-        const trailPt = pw.curve.getPointAt(Math.max(0, sig.progress - 0.04));
-        const ti = (drawIdx + 1) * 3;
-        posArr[ti] = trailPt.x;
-        posArr[ti + 1] = trailPt.y;
-        posArr[ti + 2] = trailPt.z;
-        colArr[ti] = pw.color.r * 0.5;
-        colArr[ti + 1] = pw.color.g * 0.5;
-        colArr[ti + 2] = pw.color.b * 0.5;
-        sizeArr[drawIdx + 1] = 3.0 + sizeFactor * 4.0;
-        drawIdx += 2;
-      } else {
-        drawIdx++;
+      // Draw trail particles
+      const trailCount = 6;
+      for (let ti = 1; ti <= trailCount && trailIdx < TRAIL_COUNT; ti++) {
+        const trailProg = Math.max(0, sig.progress - ti * 0.025);
+        const trailPt = pw.curve.getPointAt(trailProg);
+        const tIdx = trailIdx * 3;
+        tPosArr[tIdx] = trailPt.x; tPosArr[tIdx + 1] = trailPt.y; tPosArr[tIdx + 2] = trailPt.z;
+        const fade = 1 - ti / (trailCount + 1);
+        tColArr[tIdx] = r * fade * 0.6; tColArr[tIdx + 1] = g * fade * 0.6; tColArr[tIdx + 2] = b * fade * 0.6;
+        tSizeArr[trailIdx] = (2.0 + sizeFactor * 5.0) * fade * sig.intensity;
+        trailIdx++;
       }
+
+      drawIdx++;
+    }
+
+    posAttr.needsUpdate = true; colAttr.needsUpdate = true; sizeAttr.needsUpdate = true;
+    tPosAttr.needsUpdate = true; tColAttr.needsUpdate = true; tSizeAttr.needsUpdate = true;
+  });
+
+  useEffect(() => {
+    return () => {
+      sigGeo.dispose(); sigMat.dispose();
+      trailGeo.dispose(); trailMat.dispose();
+    };
+  }, [sigGeo, sigMat, trailGeo, trailMat]);
+
+  return (
+    <>
+      <points ref={trailRef} geometry={trailGeo} material={trailMat} />
+      <points ref={pointsRef} geometry={sigGeo} material={sigMat} />
+    </>
+  );
+});
+
+// ============================================================
+// REGION NODES — Glowing nodes at brain regions
+// ============================================================
+
+const RegionNodes = React.memo(function RegionNodes() {
+  const pointsRef = useRef<THREE.Points>(null);
+  const regions = cascadeRegions;
+
+  const { geometry, material } = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const n = regions.length;
+    const pos = new Float32Array(n * 3);
+    const col = new Float32Array(n * 3);
+    const baseSize = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      pos[i * 3] = regions[i].pos.x;
+      pos[i * 3 + 1] = regions[i].pos.y;
+      pos[i * 3 + 2] = regions[i].pos.z;
+      col[i * 3] = regions[i].color.r;
+      col[i * 3 + 1] = regions[i].color.g;
+      col[i * 3 + 2] = regions[i].color.b;
+      baseSize[i] = regions[i].size;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('aBaseSize', new THREE.BufferAttribute(baseSize, 1));
+
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { uPR: { value: Math.min(window.devicePixelRatio, 1.5) } },
+      vertexShader: `
+        attribute vec3 aColor;
+        attribute float aBaseSize;
+        varying vec3 vColor;
+        uniform float uPR;
+        void main() {
+          vColor = aColor;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = aBaseSize * uPR * (250.0 / -gl_Position.z);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor;
+        void main() {
+          float dist = length(gl_PointCoord - vec2(0.5));
+          if (dist > 0.5) discard;
+          float core = pow(smoothstep(0.5, 0.0, dist), 2.0);
+          float glow = smoothstep(0.5, 0.1, dist) * 0.4;
+          float halo = smoothstep(0.5, 0.3, dist) * 0.15;
+          vec3 color = mix(vColor, vec3(1.0), core * 0.85);
+          gl_FragColor = vec4(color * 2.0, core * 0.9 + glow + halo);
+        }
+      `,
+    });
+    return { geometry: geo, material: mat };
+  }, []);
+
+  useFrame(({ clock }) => {
+    if (!pointsRef.current) return;
+    const t = clock.getElapsedTime();
+    const posAttr = pointsRef.current.geometry.getAttribute('position')!;
+    const sizeAttr = pointsRef.current.geometry.getAttribute('aBaseSize')!;
+    const posArr = posAttr.array as Float32Array;
+    const sizeArr = sizeAttr.array as Float32Array;
+
+    for (let i = 0; i < regions.length; i++) {
+      const r = regions[i];
+      // Slight breathing movement
+      posArr[i * 3] = r.pos.x + Math.sin(t * 0.4 + i * 1.3) * 0.02;
+      posArr[i * 3 + 1] = r.pos.y + Math.cos(t * 0.35 + i * 0.9) * 0.03;
+      posArr[i * 3 + 2] = r.pos.z + Math.sin(t * 0.3 + i * 1.7) * 0.02;
+
+      // Size pulses with activation
+      sizeArr[i] = r.size * (1.0 + r.activation * 1.5 + Math.sin(t * 2 + i) * 0.1);
     }
 
     posAttr.needsUpdate = true;
-    colAttr.needsUpdate = true;
     sizeAttr.needsUpdate = true;
   });
 
@@ -468,24 +841,170 @@ const BrainSignals = React.memo(function BrainSignals() {
 });
 
 // ============================================================
-// ORBITAL RINGS — Sci-fi rings orbiting the brain
+// ELECTRICAL DISCHARGES — Lightning arcs between active regions
 // ============================================================
 
-const ORBITAL_RINGS = [
-  { radius: 2.8, tube: 0.006, tilt: [0.3, 0, 0.1], speed: 0.12, color: 0x22d3ee, opacity: 0.1 },
-  { radius: 3.3, tube: 0.005, tilt: [1.3, 0.4, 0.2], speed: -0.08, color: 0xa855f7, opacity: 0.08 },
-  { radius: 2.4, tube: 0.008, tilt: [0.7, 0, 0.8], speed: 0.06, color: 0x34d399, opacity: 0.06 },
+interface Discharge {
+  fromIdx: number;
+  toIdx: number;
+  life: number;
+  maxLife: number;
+  points: Float32Array;
+}
+
+const ElectricalDischarges = React.memo(function ElectricalDischarges() {
+  const groupRef = useRef<THREE.Group>(null);
+  const discharges = useRef<Discharge[]>([]);
+  const spawnTimer = useRef(0);
+  const lineRefs = useRef<(THREE.Line | null)[]>([]);
+
+  useEffect(() => { return () => { discharges.current = []; }; }, []);
+
+  useFrame(({ clock }, delta) => {
+    if (!groupRef.current) return;
+    const t = clock.getElapsedTime();
+
+    // Spawn discharges between highly activated regions
+    spawnTimer.current += delta;
+    if (spawnTimer.current > 0.3) {
+      spawnTimer.current = 0;
+      for (let i = 0; i < cascadeRegions.length; i++) {
+        if (cascadeRegions[i].activation < 0.4) continue;
+        for (let j = i + 1; j < cascadeRegions.length; j++) {
+          if (cascadeRegions[j].activation < 0.3) continue;
+          if (Math.random() > 0.3) continue;
+          const existing = discharges.current.find(
+            d => d.life > 0 && ((d.fromIdx === i && d.toIdx === j) || (d.fromIdx === j && d.toIdx === i))
+          );
+          if (existing) continue;
+          if (discharges.current.filter(d => d.life > 0).length >= MAX_DISCHARGES) continue;
+
+          // Generate jagged lightning points
+          const from = cascadeRegions[i].pos;
+          const to = cascadeRegions[j].pos;
+          const segments = 8 + Math.floor(Math.random() * 6);
+          const pts = new Float32Array((segments + 1) * 3);
+          for (let s = 0; s <= segments; s++) {
+            const frac = s / segments;
+            pts[s * 3] = THREE.MathUtils.lerp(from.x, to.x, frac) + (s > 0 && s < segments ? (Math.random() - 0.5) * 0.3 : 0);
+            pts[s * 3 + 1] = THREE.MathUtils.lerp(from.y, to.y, frac) + (s > 0 && s < segments ? (Math.random() - 0.5) * 0.3 : 0);
+            pts[s * 3 + 2] = THREE.MathUtils.lerp(from.z, to.z, frac) + (s > 0 && s < segments ? (Math.random() - 0.5) * 0.3 : 0);
+          }
+
+          discharges.current.push({
+            fromIdx: i, toIdx: j,
+            life: 0.2 + Math.random() * 0.3,
+            maxLife: 0.2 + Math.random() * 0.3,
+            points: pts,
+          });
+          break;
+        }
+      }
+    }
+
+    // Update discharges - manage line objects
+    const activeDischarges = discharges.current.filter(d => d.life > 0);
+
+    // Remove excess line objects
+    while (groupRef.current.children.length > activeDischarges.length) {
+      const child = groupRef.current.children[groupRef.current.children.length - 1];
+      groupRef.current.remove(child);
+      if (child instanceof THREE.Line) {
+        child.geometry.dispose();
+        (child.material as THREE.Material).dispose();
+      }
+    }
+
+    // Create/update line objects
+    for (let i = 0; i < activeDischarges.length; i++) {
+      const d = activeDischarges[i];
+      d.life -= delta;
+
+      // Regenerate jagged points for flickering effect
+      const from = cascadeRegions[d.fromIdx].pos;
+      const to = cascadeRegions[d.toIdx].pos;
+      const segments = (d.points.length / 3) - 1;
+      for (let s = 1; s < segments; s++) {
+        const frac = s / segments;
+        d.points[s * 3] = THREE.MathUtils.lerp(from.x, to.x, frac) + (Math.random() - 0.5) * 0.25;
+        d.points[s * 3 + 1] = THREE.MathUtils.lerp(from.y, to.y, frac) + (Math.random() - 0.5) * 0.25;
+        d.points[s * 3 + 2] = THREE.MathUtils.lerp(from.z, to.z, frac) + (Math.random() - 0.5) * 0.25;
+      }
+
+      const lifeRatio = d.life / d.maxLife;
+      const color = cascadeRegions[d.fromIdx].color.clone().lerp(cascadeRegions[d.toIdx].color, 0.5);
+
+      if (i >= groupRef.current.children.length) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(d.points, 3));
+        const mat = new THREE.LineBasicMaterial({
+          color: color,
+          transparent: true,
+          opacity: lifeRatio * 0.8,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+        const line = new THREE.Line(geo, mat);
+        groupRef.current.add(line);
+      } else {
+        const child = groupRef.current.children[i] as THREE.Line;
+        const posAttr = child.geometry.getAttribute('position');
+        if (posAttr) {
+          (posAttr.array as Float32Array).set(d.points);
+          posAttr.needsUpdate = true;
+        }
+        (child.material as THREE.LineBasicMaterial).opacity = lifeRatio * 0.8;
+        (child.material as THREE.LineBasicMaterial).color.copy(color);
+      }
+    }
+
+    // Cleanup expired discharges
+    discharges.current = discharges.current.filter(d => d.life > 0);
+  });
+
+  return <group ref={groupRef} />;
+});
+
+// ============================================================
+// ORBITAL RINGS — Sci-fi rings around brain
+// ============================================================
+
+const RING_CONFIGS = [
+  { radius: 2.9, tube: 0.005, tilt: [0.3, 0, 0.1], speed: 0.1, color: 0x22d3ee, opacity: 0.08, segments: 6 },
+  { radius: 3.4, tube: 0.004, tilt: [1.3, 0.4, 0.2], speed: -0.07, color: 0xa855f7, opacity: 0.06, segments: 8 },
+  { radius: 2.5, tube: 0.006, tilt: [0.7, 0, 0.8], speed: 0.05, color: 0x34d399, opacity: 0.05, segments: 5 },
+  { radius: 3.8, tube: 0.003, tilt: [2.0, 0.6, 0.3], speed: -0.04, color: 0x6366f1, opacity: 0.04, segments: 10 },
 ];
 
 const OrbitalRings = React.memo(function OrbitalRings() {
   const groupRef = useRef<THREE.Group>(null);
 
   const rings = useMemo(() => {
-    return ORBITAL_RINGS.map((r) => ({
-      geometry: new THREE.TorusGeometry(r.radius, r.tube, 16, 100),
-      material: new THREE.MeshBasicMaterial({
-        color: r.color, transparent: true, opacity: r.opacity,
-        blending: THREE.AdditiveBlending, depthWrite: false,
+    return RING_CONFIGS.map((r) => ({
+      geometry: new THREE.TorusGeometry(r.radius, r.tube, 16, 120),
+      material: new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        uniforms: { uColor: { value: new THREE.Color(r.color) }, uOpacity: { value: r.opacity }, uTime: { value: 0 }, uSegments: { value: r.segments } },
+        vertexShader: `
+          varying vec2 vUvCoord;
+          void main() {
+            vUvCoord = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uColor;
+          uniform float uOpacity;
+          uniform float uTime;
+          uniform float uSegments;
+          varying vec2 vUvCoord;
+          void main() {
+            float seg = fract(vUvCoord.x * uSegments - uTime * 0.3);
+            float pulse = smoothstep(0.0, 0.15, seg) * smoothstep(0.5, 0.35, seg);
+            float alpha = uOpacity + pulse * 0.06;
+            gl_FragColor = vec4(uColor, alpha);
+          }
+        `,
       }),
       tilt: r.tilt as [number, number, number],
       speed: r.speed,
@@ -500,6 +1019,7 @@ const OrbitalRings = React.memo(function OrbitalRings() {
       child.rotation.x = ring.tilt[0] + t * ring.speed * 0.3;
       child.rotation.y = t * ring.speed;
       child.rotation.z = ring.tilt[2] + t * ring.speed * 0.15;
+      (child.material as THREE.ShaderMaterial).uniforms.uTime.value = t;
     });
   });
 
@@ -508,355 +1028,14 @@ const OrbitalRings = React.memo(function OrbitalRings() {
   }, [rings]);
 
   return (
-    <group ref={groupRef} scale={[1, 0.92, 0.82]}>
-      {rings.map((r, i) => (
-        <mesh key={i} geometry={r.geometry} material={r.material} rotation={r.tilt} />
-      ))}
+    <group ref={groupRef} scale={BRAIN_WARP}>
+      {rings.map((r, i) => <mesh key={i} geometry={r.geometry} material={r.material} rotation={r.tilt} />)}
     </group>
   );
 });
 
 // ============================================================
-// BACKGROUND NEURAL NETWORK — Subtle depth network
-// ============================================================
-
-interface NeuronInfo {
-  position: THREE.Vector3;
-  layerIdx: number;
-  color: THREE.Color;
-  phase: number;
-}
-interface SynapseInfo { from: number; to: number; }
-interface NeuronSignal { synIdx: number; progress: number; speed: number; active: boolean; }
-
-function generateNetwork() {
-  const neurons: NeuronInfo[] = [];
-  const synapses: SynapseInfo[] = [];
-  let gIdx = 0;
-
-  NEURON_LAYERS.forEach((layer, li) => {
-    for (let i = 0; i < layer.count; i++) {
-      const t = layer.count === 1 ? 0.5 : i / (layer.count - 1);
-      neurons.push({
-        position: new THREE.Vector3(
-          layer.xPos, (t - 0.5) * NEURON_SPREAD_Y, (Math.random() - 0.5) * 1.5
-        ),
-        layerIdx: li,
-        color: new THREE.Color(NEURON_COLORS[li]),
-        phase: Math.random() * Math.PI * 2,
-      });
-      gIdx++;
-    }
-  });
-
-  for (let li = 0; li < NEURON_LAYERS.length - 1; li++) {
-    const sA = NEURON_LAYERS.slice(0, li).reduce((s, l) => s + l.count, 0);
-    const sB = sA + NEURON_LAYERS[li].count;
-    for (let a = sA; a < sB; a++) {
-      for (let b = sB; b < sB + NEURON_LAYERS[li + 1].count; b++) {
-        if (Math.random() < CONNECTION_PROB) synapses.push({ from: a, to: b });
-      }
-    }
-  }
-
-  return { neurons, synapses };
-}
-
-const NetworkNeurons = React.memo(function NetworkNeurons({
-  neurons, activationRef,
-}: { neurons: NeuronInfo[]; activationRef: React.MutableRefObject<Float32Array> }) {
-  const pointsRef = useRef<THREE.Points>(null);
-
-  const { geometry, material } = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
-    const n = neurons.length;
-    const pos = new Float32Array(n * 3);
-    const col = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      pos[i * 3] = neurons[i].position.x; pos[i * 3 + 1] = neurons[i].position.y; pos[i * 3 + 2] = neurons[i].position.z;
-      col[i * 3] = neurons[i].color.r; col[i * 3 + 1] = neurons[i].color.g; col[i * 3 + 2] = neurons[i].color.b;
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
-
-    const mat = new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { uSize: { value: 10.0 * Math.min(window.devicePixelRatio, 1.2) } },
-      vertexShader: `
-        attribute vec3 aColor;
-        varying vec3 vColor;
-        uniform float uSize;
-        void main() {
-          vColor = aColor;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = uSize * (180.0 / -gl_Position.z);
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        void main() {
-          float dist = length(gl_PointCoord - vec2(0.5));
-          if (dist > 0.5) discard;
-          float core = pow(smoothstep(0.5, 0.0, dist), 1.8);
-          float glow = smoothstep(0.5, 0.15, dist) * 0.3;
-          vec3 color = mix(vColor, vec3(1.0), core * 0.5);
-          gl_FragColor = vec4(color * 1.5, core * 0.7 + glow * 0.3);
-        }
-      `,
-    });
-    return { geometry: geo, material: mat };
-  }, [neurons]);
-
-  useFrame(({ clock }) => {
-    if (!pointsRef.current) return;
-    const t = clock.getElapsedTime();
-    const posAttr = pointsRef.current.geometry.getAttribute('position');
-    const arr = posAttr.array as Float32Array;
-    for (let i = 0; i < neurons.length; i++) {
-      const n = neurons[i];
-      arr[i * 3] = n.position.x + Math.sin(t * 0.25 + n.phase) * 0.06;
-      arr[i * 3 + 1] = n.position.y + Math.sin(t * 0.3 + n.phase * 1.3) * 0.09;
-      arr[i * 3 + 2] = n.position.z + Math.cos(t * 0.28 + n.phase * 0.7) * 0.07;
-    }
-    posAttr.needsUpdate = true;
-  });
-
-  useEffect(() => { return () => { geometry.dispose(); material.dispose(); }; }, [geometry, material]);
-
-  return <points ref={pointsRef} geometry={geometry} material={material} />;
-});
-
-const NetworkSynapses = React.memo(function NetworkSynapses({
-  neurons, synapses,
-}: { neurons: NeuronInfo[]; synapses: SynapseInfo[] }) {
-  const { lineObjects } = useMemo(() => {
-    const objs = synapses.map((s) => {
-      const geo = new THREE.BufferGeometry();
-      const pos = new Float32Array(6);
-      const fn = neurons[s.from]; const tn = neurons[s.to];
-      pos[0] = fn.position.x; pos[1] = fn.position.y; pos[2] = fn.position.z;
-      pos[3] = tn.position.x; pos[4] = tn.position.y; pos[5] = tn.position.z;
-      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      const fromC = new THREE.Color(NEURON_COLORS[fn.layerIdx]);
-      const toC = new THREE.Color(NEURON_COLORS[tn.layerIdx]);
-      const mat = new THREE.LineBasicMaterial({
-        color: fromC.lerp(toC, 0.5), transparent: true, opacity: 0.06,
-        blending: THREE.AdditiveBlending, depthWrite: false,
-      });
-      return new THREE.Line(geo, mat);
-    });
-    return { lineObjects: objs };
-  }, [neurons, synapses]);
-
-  useEffect(() => {
-    return () => lineObjects.forEach((o) => { o.geometry.dispose(); (o.material as THREE.Material).dispose(); });
-  }, [lineObjects]);
-
-  return (
-    <group>
-      {lineObjects.map((o, i) => <primitive key={i} object={o} />)}
-    </group>
-  );
-});
-
-const NetworkSignals = React.memo(function NetworkSignals({
-  neurons, synapses, signalRef,
-}: { neurons: NeuronInfo[]; synapses: SynapseInfo[]; signalRef: React.MutableRefObject<NeuronSignal[]> }) {
-  const pointsRef = useRef<THREE.Points>(null);
-
-  const { geometry, material } = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_NEURON_SIGNALS * 3), 3));
-    geo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(MAX_NEURON_SIGNALS * 3), 3));
-    const mat = new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { uSize: { value: 5.0 * Math.min(window.devicePixelRatio, 1.2) } },
-      vertexShader: `
-        attribute vec3 aColor;
-        varying vec3 vColor;
-        uniform float uSize;
-        void main() {
-          vColor = aColor;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = uSize * (150.0 / -gl_Position.z);
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vColor;
-        void main() {
-          float dist = length(gl_PointCoord - vec2(0.5));
-          if (dist > 0.5) discard;
-          float core = pow(smoothstep(0.5, 0.0, dist), 1.5);
-          gl_FragColor = vec4(mix(vColor, vec3(1.0), core * 0.8) * 2.0, core);
-        }
-      `,
-    });
-    return { geometry: geo, material: mat };
-  }, []);
-
-  useFrame(() => {
-    if (!pointsRef.current) return;
-    const posAttr = pointsRef.current.geometry.getAttribute('position');
-    const colAttr = pointsRef.current.geometry.getAttribute('aColor');
-    if (!posAttr || !colAttr) return;
-    const posArr = posAttr.array as Float32Array;
-    const colArr = colAttr.array as Float32Array;
-    posArr.fill(0); colArr.fill(0);
-
-    const signals = signalRef.current;
-    let di = 0;
-    for (let i = 0; i < signals.length && di < MAX_NEURON_SIGNALS; i++) {
-      const sig = signals[i];
-      if (!sig.active) continue;
-      const syn = synapses[sig.synIdx];
-      const fn = neurons[syn.from]; const tn = neurons[syn.to];
-      const idx = di * 3;
-      posArr[idx] = THREE.MathUtils.lerp(fn.position.x, tn.position.x, sig.progress);
-      posArr[idx + 1] = THREE.MathUtils.lerp(fn.position.y, tn.position.y, sig.progress);
-      posArr[idx + 2] = THREE.MathUtils.lerp(fn.position.z, tn.position.z, sig.progress);
-      const fc = new THREE.Color(NEURON_COLORS[fn.layerIdx]);
-      const tc = new THREE.Color(NEURON_COLORS[tn.layerIdx]);
-      colArr[idx] = fc.r * (1 - sig.progress) + tc.r * sig.progress;
-      colArr[idx + 1] = fc.g * (1 - sig.progress) + tc.g * sig.progress;
-      colArr[idx + 2] = fc.b * (1 - sig.progress) + tc.b * sig.progress;
-      di++;
-    }
-    posAttr.needsUpdate = true;
-    colAttr.needsUpdate = true;
-  });
-
-  useEffect(() => { return () => { geometry.dispose(); material.dispose(); }; }, [geometry, material]);
-
-  return <points ref={pointsRef} geometry={geometry} material={material} />;
-});
-
-// ============================================================
-// NEURAL NETWORK ORCHESTRATOR — Wave propagation + signals
-// ============================================================
-
-const NeuralNetwork = React.memo(function NeuralNetwork() {
-  const { neurons, synapses } = useMemo(() => generateNetwork(), []);
-  const nCount = neurons.length;
-  const activationRef = useRef(new Float32Array(nCount));
-  const signalRef = useRef<NeuronSignal[]>([]);
-  const waveTimer = useRef(0);
-  const waveLayer = useRef(-1);
-  const waveActive = useRef(false);
-
-  const layerStarts = useMemo(() => {
-    const s: number[] = []; let a = 0;
-    NEURON_LAYERS.forEach((l) => { s.push(a); a += l.count; });
-    return s;
-  }, []);
-
-  useEffect(() => {
-    const pool: NeuronSignal[] = [];
-    for (let i = 0; i < MAX_NEURON_SIGNALS; i++) pool.push({ synIdx: 0, progress: 0, speed: 0, active: false });
-    signalRef.current = pool;
-  }, []);
-
-  const getOutgoing = useCallback((nIdx: number) => {
-    const r: number[] = [];
-    for (let i = 0; i < synapses.length; i++) { if (synapses[i].from === nIdx) r.push(i); }
-    return r;
-  }, [synapses]);
-
-  useFrame(({ clock }, delta) => {
-    const t = clock.getElapsedTime();
-    const acts = activationRef.current;
-    const sigs = signalRef.current;
-
-    for (let i = 0; i < nCount; i++) { acts[i] *= 0.985; if (acts[i] < 0.01) acts[i] = 0; }
-
-    // Mouse proximity
-    const mx = mousePos.x * 8; const my = mousePos.y * 6;
-    for (let i = 0; i < nCount; i++) {
-      const n = neurons[i];
-      const dx = n.position.x - mx; const dy = n.position.y - my;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 3.5) {
-        acts[i] = Math.min(1.0, acts[i] + (1 - dist / 3.5) * 0.08);
-        if (Math.random() < 0.02) {
-          const out = getOutgoing(i);
-          if (out.length > 0) {
-            const slot = sigs.find(s => !s.active);
-            if (slot) { slot.active = true; slot.synIdx = out[Math.floor(Math.random() * out.length)]; slot.progress = 0; slot.speed = 0.35 + Math.random() * 0.5; }
-          }
-        }
-      }
-    }
-
-    // Wave propagation
-    waveTimer.current += delta;
-    if (!waveActive.current && waveTimer.current >= 4.0) {
-      waveActive.current = true; waveTimer.current = 0; waveLayer.current = 0;
-      const start = layerStarts[0];
-      for (let i = 0; i < NEURON_LAYERS[0].count; i++) acts[start + i] = 0.6 + Math.random() * 0.4;
-    }
-
-    if (waveActive.current) {
-      const lp = waveTimer.current / (1.8 / NEURON_LAYERS.length);
-      if (lp >= 1 && waveLayer.current < NEURON_LAYERS.length - 1) {
-        waveLayer.current++; waveTimer.current = 0;
-        const li = waveLayer.current; const start = layerStarts[li];
-        for (let i = 0; i < NEURON_LAYERS[li].count; i++) acts[start + i] = 0.5 + Math.random() * 0.5;
-        if (li > 0) {
-          const prevStart = layerStarts[li - 1];
-          for (let ni = 0; ni < NEURON_LAYERS[li - 1].count; ni++) {
-            const out = getOutgoing(prevStart + ni);
-            const fire = out.sort(() => Math.random() - 0.5).slice(0, 2);
-            for (const si of fire) {
-              const slot = sigs.find(s => !s.active);
-              if (slot) { slot.active = true; slot.synIdx = si; slot.progress = 0; slot.speed = 0.4 + Math.random() * 0.5; }
-            }
-          }
-        }
-      }
-      if (waveLayer.current >= NEURON_LAYERS.length - 1 && waveTimer.current >= 1.8 / NEURON_LAYERS.length) {
-        waveActive.current = false; waveTimer.current = 0;
-      }
-    }
-
-    // Random ambient signals
-    if (Math.random() < 0.06) {
-      const slot = sigs.find(s => !s.active);
-      if (slot) {
-        const si = Math.floor(Math.random() * synapses.length);
-        slot.active = true; slot.synIdx = si; slot.progress = 0; slot.speed = 0.25 + Math.random() * 0.45;
-        acts[synapses[si].from] = Math.min(1.0, acts[synapses[si].from] + 0.2);
-      }
-    }
-
-    // Update signals
-    for (let i = 0; i < sigs.length; i++) {
-      const sig = sigs[i]; if (!sig.active) continue;
-      sig.progress += sig.speed * delta;
-      if (sig.progress >= 1.0) {
-        sig.active = false; sig.progress = 0;
-        const dest = synapses[sig.synIdx].to;
-        acts[dest] = Math.min(1.0, acts[dest] + 0.3);
-        if (Math.random() < 0.25) {
-          const out = getOutgoing(dest);
-          if (out.length > 0) {
-            const slot = sigs.find(s => !s.active);
-            if (slot) { slot.active = true; slot.synIdx = out[Math.floor(Math.random() * out.length)]; slot.progress = 0; slot.speed = 0.35 + Math.random() * 0.5; }
-          }
-        }
-      }
-    }
-  });
-
-  return (
-    <>
-      <NetworkNeurons neurons={neurons} activationRef={activationRef} />
-      <NetworkSynapses neurons={neurons} synapses={synapses} />
-      <NetworkSignals neurons={neurons} synapses={synapses} signalRef={signalRef} />
-    </>
-  );
-});
-
-// ============================================================
-// BACKGROUND PARTICLES — Ambient depth
+// BACKGROUND PARTICLES — Ambient depth atmosphere
 // ============================================================
 
 const BackgroundParticles = React.memo(function BackgroundParticles() {
@@ -864,34 +1043,38 @@ const BackgroundParticles = React.memo(function BackgroundParticles() {
 
   const { geometry, material, velocities } = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const pos = new Float32Array(BG_PARTICLE_COUNT * 3);
-    const col = new Float32Array(BG_PARTICLE_COUNT * 3);
+    const pos = new Float32Array(BG_PARTICLES * 3);
+    const col = new Float32Array(BG_PARTICLES * 3);
+    const sizes = new Float32Array(BG_PARTICLES);
     const vels: number[] = [];
     const palette = [
       [0.13, 0.83, 0.93], [0.66, 0.33, 0.97], [0.20, 0.83, 0.60],
-      [0.55, 0.36, 0.97], [0.40, 0.60, 0.90],
+      [0.55, 0.36, 0.97], [0.40, 0.60, 0.90], [0.98, 0.45, 0.80],
     ];
-    for (let i = 0; i < BG_PARTICLE_COUNT; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 14;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 12;
+    for (let i = 0; i < BG_PARTICLES; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 25;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 16;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 15 - 2;
       vels.push(Math.random() * Math.PI * 2);
       const c = palette[Math.floor(Math.random() * palette.length)];
       col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
+      sizes[i] = 0.5 + Math.random() * 1.5;
     }
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
     const mat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
       uniforms: { uPR: { value: Math.min(window.devicePixelRatio, 1.2) } },
       vertexShader: `
         attribute vec3 aColor;
+        attribute float aSize;
         varying vec3 vColor;
         uniform float uPR;
         void main() {
           vColor = aColor;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = 2.5 * uPR * (80.0 / -gl_Position.z);
+          gl_PointSize = aSize * uPR * (90.0 / -gl_Position.z);
         }
       `,
       fragmentShader: `
@@ -899,8 +1082,9 @@ const BackgroundParticles = React.memo(function BackgroundParticles() {
         void main() {
           float dist = length(gl_PointCoord - vec2(0.5));
           if (dist > 0.5) discard;
-          float alpha = smoothstep(0.5, 0.0, dist) * 0.2;
-          gl_FragColor = vec4(vColor, alpha);
+          float alpha = smoothstep(0.5, 0.0, dist) * 0.25;
+          float core = pow(smoothstep(0.5, 0.0, dist), 2.0) * 0.3;
+          gl_FragColor = vec4(vColor, alpha + core);
         }
       `,
     });
@@ -910,17 +1094,17 @@ const BackgroundParticles = React.memo(function BackgroundParticles() {
   useFrame(({ clock }) => {
     if (!pointsRef.current) return;
     const t = clock.getElapsedTime();
-    const posAttr = pointsRef.current.geometry.getAttribute('position');
+    const posAttr = pointsRef.current.geometry.getAttribute('position')!;
     const arr = posAttr.array as Float32Array;
-    for (let i = 0; i < BG_PARTICLE_COUNT; i++) {
+    for (let i = 0; i < BG_PARTICLES; i++) {
       const p = velocities[i];
-      arr[i * 3] += Math.sin(t * 0.04 + p) * 0.0015;
-      arr[i * 3 + 1] += Math.cos(t * 0.035 + p) * 0.0015;
-      arr[i * 3 + 2] += Math.sin(t * 0.03 + p * 1.3) * 0.001;
-      if (arr[i * 3] > 10) arr[i * 3] = -10;
-      if (arr[i * 3] < -10) arr[i * 3] = 10;
-      if (arr[i * 3 + 1] > 7) arr[i * 3 + 1] = -7;
-      if (arr[i * 3 + 1] < -7) arr[i * 3 + 1] = 7;
+      arr[i * 3] += Math.sin(t * 0.04 + p) * 0.0012;
+      arr[i * 3 + 1] += Math.cos(t * 0.035 + p) * 0.0012;
+      arr[i * 3 + 2] += Math.sin(t * 0.03 + p * 1.3) * 0.0008;
+      if (arr[i * 3] > 12.5) arr[i * 3] = -12.5;
+      if (arr[i * 3] < -12.5) arr[i * 3] = 12.5;
+      if (arr[i * 3 + 1] > 8) arr[i * 3 + 1] = -8;
+      if (arr[i * 3 + 1] < -8) arr[i * 3 + 1] = 8;
     }
     posAttr.needsUpdate = true;
   });
@@ -931,15 +1115,16 @@ const BackgroundParticles = React.memo(function BackgroundParticles() {
 });
 
 // ============================================================
-// FLOATING WIREFRAMES — Geometric accent shapes
+// FLOATING WIREFRAMES — Geometric accents for depth
 // ============================================================
 
 const WIREFRAME_CONFIGS = [
-  { geo: 'icosahedron' as const, pos: [-8, 3.5, -5] as [number, number, number], rot: [0.012, 0.02, 0.006], s: 1.3, c: '#22d3ee', o: 0.03 },
-  { geo: 'torus' as const, pos: [8, -3, -4] as [number, number, number], rot: [0.008, 0.015, 0.01], s: 1.5, c: '#a855f7', o: 0.025 },
-  { geo: 'octahedron' as const, pos: [0.5, 5, -6] as [number, number, number], rot: [0.015, 0.018, 0.012], s: 1.0, c: '#34d399', o: 0.025 },
-  { geo: 'dodecahedron' as const, pos: [-7, -4, -6] as [number, number, number], rot: [0.01, 0.015, 0.008], s: 0.8, c: '#8b5cf6', o: 0.03 },
-  { geo: 'torusKnot' as const, pos: [6, 4.5, -7] as [number, number, number], rot: [0.006, 0.01, 0.005], s: 0.6, c: '#f59e0b', o: 0.02 },
+  { geo: 'icosahedron' as const, pos: [-9, 4, -6] as [number, number, number], rot: [0.012, 0.02, 0.006], s: 1.4, c: '#22d3ee', o: 0.025 },
+  { geo: 'torus' as const, pos: [9, -3.5, -5] as [number, number, number], rot: [0.008, 0.015, 0.01], s: 1.6, c: '#a855f7', o: 0.02 },
+  { geo: 'octahedron' as const, pos: [0.5, 5.5, -7] as [number, number, number], rot: [0.015, 0.018, 0.012], s: 1.1, c: '#34d399', o: 0.02 },
+  { geo: 'dodecahedron' as const, pos: [-8, -4.5, -7] as [number, number, number], rot: [0.01, 0.015, 0.008], s: 0.9, c: '#8b5cf6', o: 0.025 },
+  { geo: 'torusKnot' as const, pos: [7, 5, -8] as [number, number, number], rot: [0.006, 0.01, 0.005], s: 0.7, c: '#f472b6', o: 0.018 },
+  { geo: 'icosahedron' as const, pos: [-5, -6, -4] as [number, number, number], rot: [-0.01, 0.012, 0.008], s: 0.6, c: '#06b6d4', o: 0.015 },
 ];
 
 const FloatingWireframe = React.memo(function FloatingWireframe({
@@ -966,7 +1151,7 @@ const FloatingWireframe = React.memo(function FloatingWireframe({
     meshRef.current.rotation.x = t * cfg.rot[0];
     meshRef.current.rotation.y = t * cfg.rot[1];
     meshRef.current.rotation.z = t * cfg.rot[2];
-    meshRef.current.position.y = cfg.pos[1] + Math.sin(t * 0.12 + cfg.pos[0]) * 0.5;
+    meshRef.current.position.y = cfg.pos[1] + Math.sin(t * 0.1 + cfg.pos[0]) * 0.5;
   });
 
   useEffect(() => { return () => { geo.dispose(); mat.dispose(); }; }, [geo, mat]);
@@ -975,56 +1160,125 @@ const FloatingWireframe = React.memo(function FloatingWireframe({
 });
 
 // ============================================================
-// CAMERA RIG — Mouse parallax
+// ORBITAL CAMERA — Smooth 360° auto-rotation + mouse parallax
 // ============================================================
 
-const CameraRig = React.memo(function CameraRig() {
+const OrbitalCamera = React.memo(function OrbitalCamera() {
   const { camera } = useThree();
-  useFrame(() => {
-    camera.rotation.y += (mousePos.x * 0.05 - camera.rotation.y) * 0.012;
-    camera.rotation.x += (-mousePos.y * 0.025 - camera.rotation.x) * 0.012;
+  const angle = useRef(0);
+  const targetAngle = useRef(0);
+  const elevation = useRef(0.15);
+  const targetElevation = useRef(0.15);
+
+  useFrame((_, delta) => {
+    // Auto orbit
+    angle.current += delta * 0.15;
+    targetAngle.current = angle.current;
+
+    // Mouse influence on elevation and slight orbit speed change
+    targetElevation.current = 0.15 + mouse.ndcY * 0.2;
+    elevation.current += (targetElevation.current - elevation.current) * 0.02;
+
+    const orbitRadius = 7.5;
+    const x = Math.sin(targetAngle.current + mouse.ndcX * 0.3) * orbitRadius;
+    const y = elevation.current * orbitRadius;
+    const z = Math.cos(targetAngle.current + mouse.ndcX * 0.3) * orbitRadius;
+
+    camera.position.x += (x - camera.position.x) * 0.03;
+    camera.position.y += (y - camera.position.y) * 0.03;
+    camera.position.z += (z - camera.position.z) * 0.03;
+    camera.lookAt(0, 0, 0);
   });
+
   return null;
 });
 
 // ============================================================
-// SCENE — All visual layers + post-processing
+// AMBIENT CASCADE — Auto-trigger cascades periodically
+// ============================================================
+
+const AmbientCascade = React.memo(function AmbientCascade() {
+  const timer = useRef(0);
+
+  useFrame(({ clock }, delta) => {
+    timer.current += delta;
+
+    // Auto-trigger cascade every 3-5 seconds
+    if (timer.current > 3 + Math.sin(clock.getElapsedTime() * 0.3) * 1.5) {
+      timer.current = 0;
+
+      // Check if there's already significant activity
+      let totalAct = 0;
+      for (let i = 0; i < cascadeRegions.length; i++) totalAct += cascadeRegions[i].activation;
+      if (totalAct < 2.0) {
+        // Pick a random region to fire
+        const regionIdx = Math.floor(Math.random() * cascadeRegions.length);
+        const elapsed = clock.getElapsedTime();
+        cascadeRegions[regionIdx].activation = 0.7 + Math.random() * 0.3;
+        cascadeRegions[regionIdx].lastFireTime = elapsed;
+      }
+    }
+
+    // Update global cascade system
+    updateCascadeSystem(clock.getElapsedTime(), delta);
+  });
+
+  return null;
+});
+
+// ============================================================
+// SCENE — All visual layers orchestrated
 // ============================================================
 
 const Scene = React.memo(function Scene() {
   return (
     <>
-      <ambientLight intensity={0.15} />
-      <CameraRig />
+      <ambientLight intensity={0.1} />
 
-      {/* Layer 1: Background Neural Network */}
-      <NeuralNetwork />
+      {/* Camera system */}
+      <OrbitalCamera />
 
-      {/* Layer 2: Background Particles */}
+      {/* Cascade manager */}
+      <AmbientCascade />
+
+      {/* Layer 1: Background atmosphere */}
       <BackgroundParticles />
 
-      {/* Layer 3: Floating Wireframes */}
+      {/* Layer 2: Floating geometric accents */}
       {WIREFRAME_CONFIGS.map((cfg, i) => (
         <FloatingWireframe key={i} cfg={cfg} />
       ))}
 
-      {/* Layer 4: Brain (centerpiece) */}
-      <group position={[0, 0, 0]}>
-        <BrainGlow />
+      {/* Layer 3: Brain core (centerpiece) */}
+      <group>
+        <BrainCoreGlow />
         <BrainSurface />
-        <BrainCortexShell />
-        <BrainPathways />
-        <BrainSignals />
+        <CorticalWireframe />
+        <RegionNodes />
+        <NeuralPathways />
+        <PathwaySignals />
+        <ElectricalDischarges />
         <OrbitalRings />
       </group>
 
       {/* Post-Processing */}
-      <EffectComposer>
+      <EffectComposer multisampling={0}>
         <Bloom
-          luminanceThreshold={0.1}
-          luminanceSmoothing={0.95}
-          intensity={1.8}
+          luminanceThreshold={0.05}
+          luminanceSmoothing={0.9}
+          intensity={2.0}
           mipmapBlur
+        />
+        <ChromaticAberration
+          blendFunction={BlendFunction.NORMAL}
+          offset={new THREE.Vector2(0.0005, 0.0005)}
+          radialModulation={true}
+          modulationOffset={0.5}
+        />
+        <Vignette
+          eskil={false}
+          offset={0.1}
+          darkness={0.8}
         />
       </EffectComposer>
     </>
@@ -1035,11 +1289,6 @@ const Scene = React.memo(function Scene() {
 // PARTICLE FIELD — Main exported component
 // ============================================================
 
-function MouseTracker() {
-  useMouseTracker();
-  return null;
-}
-
 const ParticleField = React.memo(function ParticleField() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -1048,18 +1297,28 @@ const ParticleField = React.memo(function ParticleField() {
     <div className="fixed inset-0 z-0" style={{ pointerEvents: 'none' }} aria-hidden="true">
       {mounted && (
         <Canvas
-          camera={{ position: [0, 0, 8], fov: 50 }}
-          dpr={1}
-          gl={{ antialias: false, alpha: true, powerPreference: 'low-power' }}
+          camera={{ position: [0, 1, 7.5], fov: 50 }}
+          dpr={[1, 1.5]}
+          gl={{
+            antialias: false,
+            alpha: true,
+            powerPreference: 'high-performance',
+            stencil: false,
+          }}
           style={{ background: 'transparent' }}
           frameloop="always"
         >
-          <MouseTracker />
+          <InputTracker />
           <Scene />
         </Canvas>
       )}
     </div>
   );
 });
+
+function InputTracker() {
+  useInputTracker();
+  return null;
+}
 
 export default ParticleField;
