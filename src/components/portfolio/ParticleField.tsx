@@ -3,7 +3,7 @@
 import React, { useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+// Postprocessing loaded dynamically to avoid SSR issues
 
 // ============================================================
 // PLAIN DATA — No THREE objects at module scope
@@ -873,9 +873,7 @@ const Scene = React.memo(function Scene() {
         <OrbitalRings />
       </group>
 
-      <EffectComposer>
-        <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} intensity={1.8} mipmapBlur />
-      </EffectComposer>
+      {/* Bloom post-processing loaded via dynamic import in SceneWrapper */}
     </>
   );
 });

@@ -1,7 +1,12 @@
 'use client';
 
-import React, { Component, useState, useEffect } from 'react';
-import ParticleField from './ParticleField';
+import React, { Component } from 'react';
+import dynamic from 'next/dynamic';
+
+const ParticleField = dynamic(() => import('./ParticleField'), {
+  ssr: false,
+  loading: () => null,
+});
 
 class ThreeErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -15,14 +20,6 @@ class ThreeErrorBoundary extends Component<{ children: React.ReactNode }, { hasE
 }
 
 export default function SceneWrapper() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
   return (
     <ThreeErrorBoundary>
       <ParticleField />
