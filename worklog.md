@@ -157,3 +157,35 @@ Stage Summary:
 - Skills: Cloud & Tools now shows AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel
 - Projects: 13 projects remaining (was 14, removed Sales Analytics Dashboard)
 - Build: SUCCESS (compiled in 8.6s, all 5 pages generated)
+
+---
+Task ID: 2
+Agent: Main Agent + Full-Stack Developer Subagent
+Task: Build FARHAN AI RESEARCH FACILITY — complete portfolio transformation
+
+Work Log:
+- Planned architecture: 11-room scroll-based facility with cinematic navigation
+- Created 13 new components in src/components/facility/
+- Rewrote page.tsx to use FacilityLayout instead of old portfolio sections
+- ParticleBackground: Pure Canvas 2D (no GLSL/R3F) — 120 particles, mouse repulsion, connection lines
+- EntryExperience: Rotating rings, gradient title, "Enter Facility" portal button
+- CommandCenter: Bio, animated counters, education cards
+- SeismicLab: TFT pipeline visualization, architecture layers, metrics, highlights
+- AgenticAICenter: Multi-agent workflow diagram, project cards
+- DeepLearningChamber: SAINT attention mechanism, DL project cards
+- ProjectVault: All 13 projects with category filters, flagship badges
+- CareerObservatory: Interactive timeline (NIT Calicut + education)
+- AISystemsLab: 5 skill categories as tag clouds with accent colors
+- CertificationArchive: 11 certifications with category filters
+- RecruiterCenter: 4 ATS resume cards + keyword coverage matrix
+- ContactTerminal: Contact form + social links
+- FacilityLayout: Scroll-based navigation, side nav dots, top bar, music toggle
+- Build: 0 errors, 0 warnings
+- Pushed to GitHub: main (0aead0c → 8eae1ae)
+
+Stage Summary:
+- Files created: 13 new components in src/components/facility/
+- Files modified: src/app/page.tsx
+- Build: SUCCESS
+- GitHub: PUSHED
+- Vercel: Auto-deployment triggered
