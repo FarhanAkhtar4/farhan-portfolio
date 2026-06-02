@@ -137,3 +137,23 @@ Stage Summary:
 - Fix: Rewrote using raw Three.js (same approach as the working reference HTML)
 - All brain visualization features preserved (GLSL shaders, neural pathways, signals, orbital rings, wave propagation, mouse interaction)
 - Build verified, pushed to GitHub at commit f5d9b91
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Update resume technical skills and projects section
+
+Work Log:
+- Explored project structure, found data source at /home/z/my-project/src/lib/data.ts
+- Removed MongoDB, Power BI, DAX from "Cloud & Tools" skill category; added Cloudflare, Vercel
+- Removed Sales Analytics Dashboard project entirely
+- Removed "Analytics" from projectCategories array and Project type union
+- Removed Analytics color mapping from ProjectsSection.tsx
+- Verified all 13 remaining projects match user's specification exactly
+- Built project: 0 errors, 0 warnings
+
+Stage Summary:
+- Files modified: src/lib/data.ts, src/components/portfolio/ProjectsSection.tsx
+- Skills: Cloud & Tools now shows AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel
+- Projects: 13 projects remaining (was 14, removed Sales Analytics Dashboard)
+- Build: SUCCESS (compiled in 8.6s, all 5 pages generated)

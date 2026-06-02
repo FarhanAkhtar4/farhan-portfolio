@@ -53,7 +53,6 @@ const cardVariant: Variants = {
 const categoryColors: Record<string, { badge: string; dot: string; border: string }> = {
   'Deep Learning': { badge: 'bg-purple-500/15 text-purple-300 border-purple-500/25', dot: 'bg-purple-400', border: 'border-purple-500/20' },
   'Agentic AI': { badge: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/25', dot: 'bg-cyan-400', border: 'border-cyan-500/20' },
-  'Analytics': { badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25', dot: 'bg-emerald-400', border: 'border-emerald-500/20' },
   'AI & LLM': { badge: 'bg-amber-500/15 text-amber-300 border-amber-500/25', dot: 'bg-amber-400', border: 'border-amber-500/20' },
   'SaaS & Full-Stack': { badge: 'bg-rose-500/15 text-rose-300 border-rose-500/25', dot: 'bg-rose-400', border: 'border-rose-500/20' },
 };

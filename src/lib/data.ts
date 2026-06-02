@@ -41,7 +41,7 @@ export interface Project {
   github: string;
   huggingface?: string;
   deployedUrl?: string;
-  category: "Deep Learning" | "Agentic AI" | "Analytics" | "AI & LLM" | "SaaS & Full-Stack";
+  category: "Deep Learning" | "Agentic AI" | "AI & LLM" | "SaaS & Full-Stack";
   isFlagship: boolean;
   metrics?: {
     label: string;
@@ -208,22 +208,6 @@ export const projects: Project[] = [
         { label: "Generate", sublabel: "Response", icon: "Sparkles" },
       ],
     },
-  },
-  {
-    id: "sales-analytics-dashboard",
-    title: "Sales Analytics Dashboard",
-    description:
-      "Power BI dashboard with advanced DAX formulas for real-time sales analysis, KPI tracking, customer segmentation, and business intelligence insights.",
-    oneLiner: "Business intelligence with interactive KPI tracking",
-    tags: ["Power BI", "DAX", "Data Analytics", "Business Intelligence"],
-    github: "https://github.com/FarhanAkhtar4",
-    category: "Analytics",
-    isFlagship: false,
-    highlights: [
-      "Advanced DAX formulas for real-time sales analysis and KPI tracking",
-      "Customer segmentation visualizations for actionable business insights",
-      "Interactive dashboards for stakeholder reporting",
-    ],
   },
 
   // ---- New Projects ----
@@ -472,7 +456,7 @@ export const skillCategories: SkillCategory[] = [
   },
   {
     name: "Cloud & Tools",
-    skills: ["AWS", "Oracle Cloud", "MongoDB", "Git/GitHub", "Power BI", "DAX"],
+    skills: ["AWS", "Oracle Cloud", "Git/GitHub", "Cloudflare", "Vercel"],
   },
 ];
 
@@ -516,5 +500,4 @@ export const projectCategories = [
   "AI & LLM",
   "Deep Learning",
   "SaaS & Full-Stack",
-  "Analytics",
 ] as const;
