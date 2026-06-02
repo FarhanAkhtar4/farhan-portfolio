@@ -120,14 +120,6 @@ for b in [
     story.append(Paragraph(b, bls, bulletText='\u2022'))
 story.append(Spacer(1, 2))
 
-story.append(Paragraph('<b>Interactive Sales Analytics Dashboard with Power BI</b>', bs))
-story.append(Paragraph('Power BI | DAX | Data Analytics | <a href="https://github.com/FarhanAkhtar4" color="#2563eb">GitHub</a>', ParagraphStyle('t4', parent=sm, fontSize=8.5)))
-for b in [
-    'Designed a Power BI dashboard utilizing advanced DAX formulas for real-time sales analysis and KPI tracking.',
-    'Implemented customer segmentation visualizations for actionable business insights.',
-]:
-    story.append(Paragraph(b, bls, bulletText='\u2022'))
-
 # Skills - LLM & Agentic AI first
 story.append(Paragraph('<b>TECHNICAL SKILLS</b>', ss))
 story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#cccccc'), spaceAfter=3))
@@ -135,7 +127,7 @@ for label, vals in [
     ('LLM &amp; Agentic AI', 'RAG Pipelines, Prompt Engineering, LLM Integration, Vector Databases, Agentic Workflows, LangChain, Fine-Tuning, Embeddings'),
     ('ML &amp; Deep Learning', 'PyTorch, TensorFlow, Keras, Scikit-learn, XGBoost, Transformers, CNN, RNN, LSTM, GANs'),
     ('Data Science', 'Pandas, NumPy, Matplotlib, Seaborn, Feature Engineering, Jupyter'),
-    ('Cloud &amp; Tools', 'AWS, Oracle Cloud, MongoDB, Git/GitHub, Power BI, DAX'),
+    ('Cloud &amp; Tools', 'AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel'),
     ('Programming', 'Python, SQL, C, R, HTML/CSS'),
 ]:
     story.append(Paragraph(f'<b>{label}:</b> {vals}', sk))
@@ -153,7 +145,6 @@ for c in [
     'Deep Learning Fundamentals (IBM Cognitive Class)',
     'Accelerating Deep Learning with GPUs (IBM Cognitive Class)',
     'Supervised Machine Learning (Coursera)',
-    'MongoDB Atlas (MongoDB University)',
     'Accenture Data Analytics Simulation (Forage)',
     'HTML Training - Spoken Tutorial Project, IIT Bombay',
 ]:

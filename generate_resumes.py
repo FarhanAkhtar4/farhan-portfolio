@@ -56,7 +56,6 @@ SHARED_CERTS = [
     "AWS Prompt Engineering - AWS",
     "Oracle Cloud Infrastructure 2025 AI Foundations Associate",
     "Accenture Data Analytics Simulation - Forage",
-    "MongoDB Atlas - MongoDB University",
     "HTML Training - IIT Bombay",
 ]
 
@@ -82,7 +81,7 @@ RESUMES = {
             "Deep Learning: CNN, RNN, LSTM, GANs, Transformer Architectures",
             "Data Science: Pandas, NumPy, Matplotlib, Seaborn, Feature Engineering",
             "MLOps: Git/GitHub, Model Validation, Hyperparameter Tuning, Experiment Tracking",
-            "Cloud & Tools: AWS, Oracle Cloud, MongoDB, Power BI, DAX",
+            "Cloud & Tools: AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel",
             "Concepts: Statistical Modeling, Cross-Validation, Ensemble Methods, Time Series Analysis, EDA",
         ],
         "projects": [
@@ -104,15 +103,6 @@ RESUMES = {
                     "through attention-based architecture on structured datasets."
                 ),
                 "tech": "PyTorch, Attention Mechanisms, Tabular Data, Deep Learning",
-            },
-            {
-                "name": "Sales Analytics Dashboard",
-                "desc": (
-                    "Designed Power BI dashboard with advanced DAX formulas for real-time "
-                    "sales analysis, KPI tracking, customer segmentation, and business "
-                    "intelligence insights for stakeholder reporting."
-                ),
-                "tech": "Power BI, DAX, Data Analytics, Business Intelligence",
             },
         ],
         "keywords": [
@@ -140,7 +130,7 @@ RESUMES = {
             "Deep Learning: CNN, RNN, LSTM, GANs, Attention Mechanisms, SAINT",
             "Data Science: Pandas, NumPy, Matplotlib, Seaborn, Jupyter, Feature Engineering",
             "Agentic AI: Vector Databases, Agentic Workflows, LangChain, RAG Pipelines",
-            "Cloud & DevOps: AWS, Oracle Cloud, MongoDB, Git/GitHub, Power BI, DAX",
+            "Cloud & DevOps: AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel",
         ],
         "projects": [
             {
@@ -194,7 +184,7 @@ RESUMES = {
             "ML/DL: PyTorch, TensorFlow, Keras, Transformers, CNN, RNN, LSTM, GANs",
             "Data & Analytics: Pandas, NumPy, Feature Engineering, Jupyter, EDA",
             "Programming: Python, SQL, C, R, HTML/CSS",
-            "Cloud Platforms: AWS (GenAI, Prompt Engineering), Oracle Cloud, MongoDB",
+            "Cloud Platforms: AWS (GenAI, Prompt Engineering), Oracle Cloud, Cloudflare",
             "Certifications: NVIDIA RAG Agents, AWS GenAI Essentials, AWS Prompt Engineering",
         ],
         "projects": [
@@ -253,7 +243,7 @@ RESUMES = {
             "Frameworks: LangChain, LLM Orchestrators, Agent Frameworks, Workflow Engines",
             "ML/DL: PyTorch, TensorFlow, Transformers, CNN, RNN, LSTM, Attention Mechanisms",
             "Data: Pandas, NumPy, Feature Engineering, Embeddings, Similarity Search",
-            "Cloud: AWS, Oracle Cloud, MongoDB, Git/GitHub",
+            "Cloud: AWS, Oracle Cloud, Git/GitHub, Cloudflare",
         ],
         "projects": [
             {
@@ -310,7 +300,7 @@ RESUMES = {
             "Frontend: React, Next.js, TypeScript, Tailwind CSS, Framer Motion, Three.js, HTML/CSS",
             "Backend: Python, FastAPI, Node.js, REST APIs, Serverless Functions",
             "AI/ML: PyTorch, TensorFlow, LangChain, RAG, LLM Integration, Prompt Engineering",
-            "Data: Pandas, NumPy, SQL, MongoDB, Power BI, Data Visualization",
+            "Data: Pandas, NumPy, SQL, Data Visualization",
             "Cloud & DevOps: AWS, Git/GitHub, Vercel, Docker, CI/CD",
             "Specialties: Rapid Prototyping, Vibe Coding, AI-Augmented Development, Full-Stack AI Apps",
         ],
@@ -334,15 +324,6 @@ RESUMES = {
                     "AI-powered backend and interactive frontend."
                 ),
                 "tech": "Python, LangChain, RAG, Vector Database, LLMs, Prompt Engineering",
-            },
-            {
-                "name": "Sales Analytics Dashboard",
-                "desc": (
-                    "Created Power BI dashboard with advanced DAX formulas for real-time "
-                    "KPI tracking, customer segmentation, and business intelligence. "
-                    "Rapidly prototyped using AI-assisted development workflows."
-                ),
-                "tech": "Power BI, DAX, Data Analytics, AI-Assisted Development",
             },
         ],
         "keywords": [
@@ -371,7 +352,7 @@ RESUMES = {
             "Deep Learning: CNN, RNN, LSTM, GANs, Attention Mechanisms, SAINT",
             "Data Science: Pandas, NumPy, Matplotlib, Seaborn, Feature Engineering, Jupyter",
             "Programming: Python, SQL, C, R, HTML/CSS, React, Next.js, TypeScript",
-            "Cloud: AWS, Oracle Cloud, MongoDB, Git/GitHub, Power BI, Vercel",
+            "Cloud: AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel",
         ],
         "projects": [
             {
@@ -392,12 +373,12 @@ RESUMES = {
                 "tech": "LLMs, RAG, Vector Database, LangChain, Prompt Engineering",
             },
             {
-                "name": "SAINT Model & Sales Analytics",
+                "name": "SAINT Model",
                 "desc": (
-                    "Attention-based classification model for tabular data and Power BI "
-                    "dashboard with DAX formulas for real-time business intelligence."
+                    "Attention-based classification model for tabular data using "
+                    "self-attention and intersample attention mechanisms for feature interaction."
                 ),
-                "tech": "PyTorch, Attention Mechanisms, Power BI, DAX",
+                "tech": "PyTorch, Attention Mechanisms, Deep Learning",
             },
             {
                 "name": "3D Portfolio Website",

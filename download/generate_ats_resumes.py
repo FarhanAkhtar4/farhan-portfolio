@@ -104,15 +104,6 @@ ALL_PROJECTS = {
             'Achieved improved feature interaction learning through attention-based architecture optimization.',
         ],
     },
-    'dashboard': {
-        'title': 'Interactive Sales Analytics Dashboard with Power BI',
-        'tags': 'Power BI | DAX | Data Analytics',
-        'demo': f'<a href="{GITHUB_URL}" color="#2563eb">GitHub</a>',
-        'bullets': [
-            'Designed a Power BI dashboard utilizing advanced DAX formulas for real-time sales analysis and KPI tracking.',
-            'Implemented customer segmentation visualizations, enabling actionable business insights for stakeholders.',
-        ],
-    },
 }
 
 ALL_CERTS = [
@@ -125,7 +116,7 @@ ALL_CERTS = [
     'Deep Learning Fundamentals (IBM Cognitive Class)',
     'Accelerating Deep Learning with GPUs (IBM Cognitive Class)',
     'Supervised Machine Learning (Coursera)',
-    'MongoDB Atlas (MongoDB University)',
+    'Supervised Machine Learning (Coursera)',
     'Accenture Data Analytics Simulation (Forage)',
     'HTML Training (IIT Bombay - Spoken Tutorial Project)',
 ]
@@ -151,10 +142,10 @@ RESUMES = {
         'skills': {
             'Programming': 'Python, SQL, C, R, HTML/CSS',
             'ML &amp; Deep Learning': 'PyTorch, TensorFlow, Keras, Scikit-learn, XGBoost, Transformers, CNN, RNN, LSTM, GANs',
-            'Data Science &amp; Analytics': 'Pandas, NumPy, Matplotlib, Seaborn, Feature Engineering, Jupyter, Power BI, DAX',
-            'Cloud &amp; Tools': 'AWS, Oracle Cloud, MongoDB, Git/GitHub, Hugging Face',
+            'Data Science &amp; Analytics': 'Pandas, NumPy, Matplotlib, Seaborn, Feature Engineering, Jupyter',
+            'Cloud &amp; Tools': 'AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel',
         },
-        'projects_order': ['seismic', 'saint', 'agentic', 'dashboard'],
+        'projects_order': ['seismic', 'saint', 'agentic'],
         'certs_order': [
             'Oracle Cloud Infrastructure 2025 AI Foundations Associate (Oracle University)',
             'Python for Data Science (IBM)',
@@ -162,7 +153,6 @@ RESUMES = {
             'Deep Learning Fundamentals (IBM Cognitive Class)',
             'Accelerating Deep Learning with GPUs (IBM Cognitive Class)',
             'Supervised Machine Learning (Coursera)',
-            'MongoDB Atlas (MongoDB University)',
             'Accenture Data Analytics Simulation (Forage)',
         ],
     },
@@ -182,9 +172,9 @@ RESUMES = {
             'Agentic AI &amp; LLMs': 'RAG Pipelines, Prompt Engineering, LLM Integration, Vector Databases, Agentic Workflows, LangChain, Fine-Tuning, Embeddings, AI Agents',
             'Deep Learning': 'PyTorch, Transformers, LSTM, Attention Mechanisms, Neural Networks',
             'Programming': 'Python, SQL, C, R',
-            'Cloud &amp; Tools': 'AWS, Oracle Cloud, MongoDB, Git/GitHub, Hugging Face',
+            'Cloud &amp; Tools': 'AWS, Oracle Cloud, Git/GitHub, Cloudflare',
         },
-        'projects_order': ['agentic', 'seismic', 'saint', 'dashboard'],
+        'projects_order': ['agentic', 'seismic', 'saint'],
         'certs_order': [
             'Building RAG Agents with LLMs (NVIDIA DLI)',
             'Oracle Cloud Infrastructure 2025 AI Foundations Associate (Oracle University)',
@@ -212,9 +202,9 @@ RESUMES = {
             'Generative AI &amp; LLMs': 'RAG Pipelines, Prompt Engineering, LLM Integration, Fine-Tuning, Embeddings, Vector Databases, LangChain, Hugging Face',
             'Deep Learning': 'PyTorch, TensorFlow, Keras, Transformers, CNN, RNN, LSTM, GANs',
             'Programming': 'Python, SQL, C, R, HTML/CSS',
-            'Cloud &amp; Data': 'AWS, Oracle Cloud, MongoDB, Pandas, NumPy, Matplotlib, Power BI',
+            'Cloud &amp; Data': 'AWS, Oracle Cloud, Cloudflare, Pandas, NumPy, Matplotlib',
         },
-        'projects_order': ['agentic', 'seismic', 'saint', 'dashboard'],
+        'projects_order': ['agentic', 'seismic', 'saint'],
         'certs_order': [
             'Building RAG Agents with LLMs (NVIDIA DLI)',
             'Generative AI Essentials (AWS Skill Builder)',
@@ -242,10 +232,10 @@ RESUMES = {
             'AI &amp; ML': 'PyTorch, TensorFlow, Keras, Scikit-learn, XGBoost, Transformers, CNN, RNN, LSTM, GANs',
             'LLM &amp; Agentic AI': 'RAG Pipelines, Prompt Engineering, LLM Integration, Vector Databases, Agentic Workflows, LangChain, Fine-Tuning, Embeddings',
             'Data Science': 'Pandas, NumPy, Matplotlib, Seaborn, Feature Engineering, Jupyter',
-            'Cloud &amp; Tools': 'AWS, Oracle Cloud, MongoDB, Git/GitHub, Power BI, DAX, Hugging Face',
+            'Cloud &amp; Tools': 'AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel',
             'Programming': 'Python, SQL, C, R, HTML/CSS',
         },
-        'projects_order': ['seismic', 'agentic', 'saint', 'dashboard'],
+        'projects_order': ['seismic', 'agentic', 'saint'],
         'certs_order': ALL_CERTS,
     },
 }

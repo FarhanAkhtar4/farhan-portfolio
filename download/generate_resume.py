@@ -253,17 +253,6 @@ for b in p3_bullets:
     story.append(Paragraph(b, bullet_style, bulletText='\u2022'))
 story.append(Spacer(1, 2))
 
-# Project 4
-story.append(Paragraph('<b>Interactive Sales Analytics Dashboard with Power BI</b>', ParagraphStyle('p4h', parent=body_style, fontSize=9.5)))
-story.append(Paragraph('Power BI | DAX | Data Analytics | Business Intelligence | <a href="https://github.com/FarhanAkhtar4" color="#2563eb">GitHub</a>',
-    ParagraphStyle('p4t', parent=body_style, fontSize=8.5, textColor=colors.HexColor('#666666'), spaceAfter=2)))
-p4_bullets = [
-    'Designed a Power BI dashboard utilizing advanced DAX formulas for real-time sales analysis and KPI tracking.',
-    'Implemented customer segmentation visualizations, enabling actionable business insights for stakeholders.',
-]
-for b in p4_bullets:
-    story.append(Paragraph(b, bullet_style, bulletText='\u2022'))
-
 # === TECHNICAL SKILLS ===
 story.append(Paragraph('<b>TECHNICAL SKILLS</b>', section_style))
 story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#cccccc'), spaceAfter=3))
@@ -273,7 +262,7 @@ skills = [
     ('ML &amp; Deep Learning:', 'PyTorch, TensorFlow, Keras, Scikit-learn, XGBoost, Transformers, CNN, RNN, LSTM, GANs'),
     ('LLM &amp; Agentic AI:', 'RAG Pipelines, Prompt Engineering, LLM Integration, Vector Databases, Agentic Workflows, LangChain, Fine-Tuning, Embeddings'),
     ('Data Science:', 'Pandas, NumPy, Matplotlib, Seaborn, Feature Engineering, Jupyter'),
-    ('Cloud &amp; Tools:', 'AWS, Oracle Cloud, MongoDB, Git/GitHub, Power BI, DAX'),
+    ('Cloud &amp; Tools:', 'AWS, Oracle Cloud, Git/GitHub, Cloudflare, Vercel'),
 ]
 for label, values in skills:
     skill_text = f'<b>{label}</b> {values}'
@@ -289,7 +278,6 @@ certs = [
     'NVIDIA DLI: Building RAG Agents with LLMs',
     'IBM: Python for Data Science, Machine Learning with Python, Deep Learning Fundamentals, Accelerating Deep Learning with GPUs',
     'Coursera: Supervised Machine Learning',
-    'MongoDB Atlas (MongoDB University)',
     'Accenture Data Analytics Simulation (Forage)',
     'HTML Training - Spoken Tutorial Project, IIT Bombay',
 ]
