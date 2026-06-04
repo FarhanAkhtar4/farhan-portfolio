@@ -45,7 +45,7 @@ const resumes: ResumeInfo[] = [
   {
     filename: 'Farhan_Akhtar_Agentic_AI_Engineer.pdf',
     title: 'Agentic AI Engineer',
-    keywords: ['Multi-Agent', 'AgentOS', 'RAG Pipeline', 'Orchestration', 'SaaS'],
+    keywords: ['Multi-Agent', 'AgentOS', 'RAG Pipeline', 'Orchestration', 'LLM'],
     icon: <Cpu className="w-5 h-5" />,
     accent: '#f59e0b',
   },

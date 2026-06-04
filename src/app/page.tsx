@@ -1,9 +1,12 @@
-import FacilityLayout from "@/components/facility/FacilityLayout";
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const FacilityExperience = dynamic(
+  () => import('@/components/facility/FacilityExperience'),
+  { ssr: false }
+);
 
 export default function Home() {
-  return (
-    <main className="relative min-h-screen overflow-hidden noise-overlay">
-      <FacilityLayout />
-    </main>
-  );
+  return <FacilityExperience />;
 }

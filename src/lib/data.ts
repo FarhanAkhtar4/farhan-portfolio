@@ -474,7 +474,6 @@ export const certifications: Certification[] = [
   // Cloud & Data (verified from uploaded PDF)
   { title: "Oracle Cloud Infrastructure 2025 AI Foundations Associate", issuer: "Oracle University", category: "Cloud & Data", certFile: "/certs/oracle-ai-foundations-associate.png" },
   { title: "Accenture Data Analytics Simulation", issuer: "Accenture (Forage)", category: "Cloud & Data", certFile: "/certs/accenture-data-analytics.pdf" },
-  { title: "MongoDB Atlas", issuer: "MongoDB University", category: "Cloud & Data" },
   // Other (verified from uploaded PDF)
   { title: "HTML Training", issuer: "IIT Bombay", category: "Other", certFile: "/certs/html-training-iit-bombay.pdf" },
 ];
