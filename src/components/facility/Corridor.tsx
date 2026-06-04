@@ -26,6 +26,10 @@ export default function Corridor() {
     () => new THREE.BoxGeometry(CORRIDOR_LENGTH, 0.05, 0.05),
     []
   );
+  const edgeVerticalGeo = useMemo(
+    () => new THREE.BoxGeometry(0.05, 0.05, CORRIDOR_LENGTH),
+    []
+  );
 
   const lineMaterial = useMemo(
     () =>
@@ -104,13 +108,13 @@ export default function Corridor() {
       />
       {/* Left edge */}
       <mesh
-        geometry={useMemo(() => new THREE.BoxGeometry(0.05, 0.05, CORRIDOR_LENGTH), [])}
+        geometry={edgeVerticalGeo}
         material={lineMaterial}
         position={[-CORRIDOR_WIDTH / 2 + 0.02, 0.02, startY - CORRIDOR_LENGTH / 2]}
       />
       {/* Right edge */}
       <mesh
-        geometry={useMemo(() => new THREE.BoxGeometry(0.05, 0.05, CORRIDOR_LENGTH), [])}
+        geometry={edgeVerticalGeo}
         material={lineMaterial}
         position={[CORRIDOR_WIDTH / 2 - 0.02, 0.02, startY - CORRIDOR_LENGTH / 2]}
       />
