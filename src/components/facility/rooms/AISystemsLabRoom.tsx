@@ -49,8 +49,7 @@ export default function AISystemsLabRoom() {
               </mesh>
 
               {/* Icon */}
-              <mesh>
-                <Geo />
+              <mesh geometry={Geo()}>
                 <meshStandardMaterial
                   color={color}
                   emissive={color}
