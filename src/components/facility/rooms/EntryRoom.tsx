@@ -41,7 +41,7 @@ export default function EntryRoom() {
       <mesh position={[0, 4, 0]}>
         <boxGeometry args={[12, 8, 8]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           roughness={0.7}
           metalness={0.3}
         />
@@ -53,7 +53,7 @@ export default function EntryRoom() {
         <meshStandardMaterial
           color="#0d1b2a"
           emissive="#0e7490"
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.2}
           roughness={0.5}
           metalness={0.4}
         />
@@ -73,7 +73,7 @@ export default function EntryRoom() {
       <mesh position={[0, 2.5, 4]}>
         <boxGeometry args={[3, 5, 0.3]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           emissive="#0e7490"
           emissiveIntensity={0.3}
           roughness={0.6}
@@ -158,8 +158,8 @@ export default function EntryRoom() {
       </mesh>
 
       {/* Side accent lights */}
-      <pointLight position={[-6, 3, 0]} color="#8b5cf6" intensity={0.3} distance={8} />
-      <pointLight position={[6, 3, 0]} color="#8b5cf6" intensity={0.3} distance={8} />
+      <pointLight position={[-6, 3, 0]} color="#8b5cf6" intensity={1.5} distance={8} />
+      <pointLight position={[6, 3, 0]} color="#8b5cf6" intensity={1.5} distance={8} />
 
       {/* Floating data particles */}
       <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>

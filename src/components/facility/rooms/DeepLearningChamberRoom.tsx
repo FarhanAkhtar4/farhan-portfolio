@@ -46,9 +46,9 @@ export default function DeepLearningChamberRoom() {
             <mesh>
               <boxGeometry args={[4, 0.3, 2]} />
               <meshStandardMaterial
-                color="#0a1628"
+                color="#111827"
                 emissive={layer.color}
-                emissiveIntensity={0.25}
+                emissiveIntensity={0.5}
                 transparent
                 opacity={0.8}
                 roughness={0.3}
@@ -68,7 +68,7 @@ export default function DeepLearningChamberRoom() {
           {layers.slice(0, -1).map((_, i) => (
             <mesh key={i} position={[0, layers[i].y + 0.75, 0]}>
               <cylinderGeometry args={[0.02, 0.02, 0.9, 4]} />
-              <meshBasicMaterial color="#8b5cf6" transparent opacity={0.3} />
+              <meshBasicMaterial color="#8b5cf6" transparent opacity={0.45} />
             </mesh>
           ))}
         </group>
@@ -95,9 +95,9 @@ export default function DeepLearningChamberRoom() {
         <mesh>
           <boxGeometry args={[3, 2, 0.1]} />
           <meshStandardMaterial
-            color="#0a1628"
+            color="#111827"
             emissive="#0e7490"
-            emissiveIntensity={0.1}
+            emissiveIntensity={0.2}
           />
         </mesh>
         <Billboard position={[0, 0.8, 0.1]}>
@@ -129,7 +129,7 @@ export default function DeepLearningChamberRoom() {
         </Text>
       </Billboard>
 
-      <pointLight position={[0, 4, 0]} color="#8b5cf6" intensity={0.6} distance={12} />
+      <pointLight position={[0, 4, 0]} color="#8b5cf6" intensity={1.5} distance={12} />
 
       <Billboard position={[0, 8.5, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">

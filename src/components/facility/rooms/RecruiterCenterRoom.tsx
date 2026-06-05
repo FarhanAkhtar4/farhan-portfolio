@@ -52,9 +52,9 @@ export default function RecruiterCenterRoom() {
       <mesh position={[0, 4, -5]}>
         <boxGeometry args={[10, 5, 0.1]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           emissive="#f59e0b"
-          emissiveIntensity={0.08}
+          emissiveIntensity={0.16}
         />
       </mesh>
 
@@ -74,7 +74,7 @@ export default function RecruiterCenterRoom() {
         {/* Table */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[8, 0.15, 4]} />
-          <meshStandardMaterial color="#0a1628" roughness={0.8} metalness={0.2} />
+          <meshStandardMaterial color="#111827" roughness={0.8} metalness={0.2} />
         </mesh>
 
         {/* Resume documents */}
@@ -91,7 +91,7 @@ export default function RecruiterCenterRoom() {
                   <meshStandardMaterial
                     color="#f8fafc"
                     emissive={resume.color}
-                    emissiveIntensity={0.05}
+                    emissiveIntensity={0.1}
                     roughness={0.9}
                   />
                 </mesh>
@@ -113,7 +113,7 @@ export default function RecruiterCenterRoom() {
                 {/* Download indicator */}
                 <mesh position={[0, -0.7, 0.05]}>
                   <planeGeometry args={[0.8, 0.15]} />
-                  <meshBasicMaterial color={resume.color} transparent opacity={0.2} />
+                  <meshBasicMaterial color={resume.color} transparent opacity={0.3} />
                 </mesh>
                 <Billboard position={[0, -0.7, 0.06]}>
                   <Text fontSize={0.06} color={resume.color} anchorX="center" anchorY="middle">
@@ -141,7 +141,7 @@ export default function RecruiterCenterRoom() {
             <Float key={kw} speed={0.5 + i * 0.05} rotationIntensity={0.05} floatIntensity={0.1}>
               <mesh position={[-2.5 + col * 1, -0.3 - row * 0.4, 0]}>
                 <planeGeometry args={[0.9, 0.2]} />
-                <meshBasicMaterial color="#10b981" transparent opacity={0.1} />
+                <meshBasicMaterial color="#10b981" transparent opacity={0.15} />
               </mesh>
               <Billboard position={[-2.5 + col * 1, -0.3 - row * 0.4, 0.01]}>
                 <Text fontSize={0.06} color="#10b981" anchorX="center" anchorY="middle">
@@ -153,8 +153,8 @@ export default function RecruiterCenterRoom() {
         })}
       </group>
 
-      <pointLight position={[0, 5, -3]} color="#f59e0b" intensity={0.4} distance={12} />
-      <pointLight position={[0, 2, 0]} color="#06b6d4" intensity={0.3} distance={8} />
+      <pointLight position={[0, 5, -3]} color="#f59e0b" intensity={1.5} />
+      <pointLight position={[0, 2, 0]} color="#06b6d4" intensity={1.5} />
 
       <Billboard position={[0, 7.5, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">

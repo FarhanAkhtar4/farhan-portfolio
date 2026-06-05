@@ -28,7 +28,7 @@ export default function CareerObservatoryRoom() {
         {/* Main path line */}
         <mesh position={[0, 3, -4]} rotation={[0, 0, -0.1]}>
           <boxGeometry args={[0.06, 0.06, 16]} />
-          <meshBasicMaterial color="#06b6d4" transparent opacity={0.4} />
+          <meshBasicMaterial color="#06b6d4" transparent opacity={0.6} />
         </mesh>
 
         {/* Milestone markers */}
@@ -51,9 +51,9 @@ export default function CareerObservatoryRoom() {
                 <mesh position={[2, 0.5, 0]}>
                   <boxGeometry args={[3, 1.2, 0.05]} />
                   <meshStandardMaterial
-                    color="#0a1628"
+                    color="#111827"
                     emissive={ms.color}
-                    emissiveIntensity={0.1}
+                    emissiveIntensity={0.2}
                     transparent
                     opacity={0.8}
                   />
@@ -78,7 +78,7 @@ export default function CareerObservatoryRoom() {
                 {/* Connection line to path */}
                 <mesh position={[0.9, 0.25, 0]} rotation={[0, 0, Math.PI / 2]}>
                   <boxGeometry args={[0.02, 0.02, 1.1]} />
-                  <meshBasicMaterial color={ms.color} transparent opacity={0.3} />
+                  <meshBasicMaterial color={ms.color} transparent opacity={0.45} />
                 </mesh>
               </group>
             </Float>
@@ -93,7 +93,7 @@ export default function CareerObservatoryRoom() {
         </Text>
       </Billboard>
 
-      <pointLight position={[0, 4, 0]} color="#06b6d4" intensity={0.5} distance={12} />
+      <pointLight position={[0, 4, 0]} color="#06b6d4" intensity={1.5} distance={12} />
 
       <Billboard position={[0, 7.5, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">

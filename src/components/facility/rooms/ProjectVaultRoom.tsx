@@ -34,9 +34,9 @@ function ProjectDetailPanel({ project, onClose, position }: {
       <mesh onClick={onClose}>
         <boxGeometry args={[6, 5, 0.1]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           emissive="#06b6d4"
-          emissiveIntensity={0.2}
+          emissiveIntensity={0.4}
           transparent
           opacity={0.9 * panelOpacity}
           roughness={0.2}
@@ -47,7 +47,7 @@ function ProjectDetailPanel({ project, onClose, position }: {
       {/* Border glow */}
       <mesh position={[0, 0, -0.02]}>
         <boxGeometry args={[6.1, 5.1, 0.02]} />
-        <meshBasicMaterial color="#06b6d4" transparent opacity={0.15 * panelOpacity} />
+        <meshBasicMaterial color="#06b6d4" transparent opacity={0.25 * panelOpacity} />
       </mesh>
 
       {/* Title */}
@@ -155,9 +155,9 @@ export default function ProjectVaultRoom() {
                 <mesh>
                   <boxGeometry args={[2.5, 3, 0.08]} />
                   <meshStandardMaterial
-                    color="#0a1628"
+                    color="#111827"
                     emissive={isSelected ? '#06b6d4' : (isFlagship ? '#06b6d4' : '#1e293b')}
-                    emissiveIntensity={isSelected ? 0.3 : (isFlagship ? 0.15 : 0.05)}
+                    emissiveIntensity={isSelected ? 0.3 : (isFlagship ? 0.3 : 0.1)}
                     transparent
                     opacity={0.85}
                     roughness={0.2}
@@ -169,7 +169,7 @@ export default function ProjectVaultRoom() {
                 {isFlagship && (
                   <mesh position={[0, 0, 0.01]}>
                     <boxGeometry args={[2.6, 3.1, 0.02]} />
-                    <meshBasicMaterial color="#06b6d4" transparent opacity={isSelected ? 0.25 : 0.1} />
+                    <meshBasicMaterial color="#06b6d4" transparent opacity={isSelected ? 0.38 : 0.15} />
                   </mesh>
                 )}
 
@@ -262,7 +262,7 @@ export default function ProjectVaultRoom() {
         </Text>
       </Billboard>
 
-      <pointLight position={[0, 4, 0]} color="#f59e0b" intensity={0.4} distance={12} />
+      <pointLight position={[0, 4, 0]} color="#f59e0b" intensity={1.5} />
 
       <Billboard position={[0, 7.5, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">

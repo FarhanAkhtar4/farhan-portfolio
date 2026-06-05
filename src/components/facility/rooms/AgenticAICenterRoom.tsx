@@ -100,9 +100,9 @@ export default function AgenticAICenterRoom() {
       <mesh position={[0, 1, 0]}>
         <cylinderGeometry args={[1.5, 1.8, 0.2, 8]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           emissive="#8b5cf6"
-          emissiveIntensity={0.15}
+          emissiveIntensity={0.3}
           roughness={0.5}
           metalness={0.3}
         />
@@ -153,9 +153,9 @@ export default function AgenticAICenterRoom() {
       </Billboard>
 
       {/* Lighting */}
-      <pointLight position={[0, 4, 0]} color="#8b5cf6" intensity={0.6} distance={12} />
-      <pointLight position={[-3, 2, 0]} color="#06b6d4" intensity={0.3} distance={8} />
-      <pointLight position={[3, 2, 0]} color="#10b981" intensity={0.3} distance={8} />
+      <pointLight position={[0, 4, 0]} color="#8b5cf6" intensity={1.5} distance={12} />
+      <pointLight position={[-3, 2, 0]} color="#06b6d4" intensity={1.5} distance={8} />
+      <pointLight position={[3, 2, 0]} color="#10b981" intensity={1.5} distance={8} />
 
       <Billboard position={[0, 7, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">

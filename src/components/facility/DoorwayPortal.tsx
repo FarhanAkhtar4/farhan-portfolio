@@ -34,15 +34,15 @@ export default function DoorwayPortal({
 
     if (portalMat) {
       const pulse = Math.sin(timeRef.current * 2.5) * 0.5 + 0.5;
-      portalMat.opacity = 0.1 + pulse * 0.12 + (hovered ? 0.15 : 0);
+      portalMat.opacity = 0.2 + pulse * 0.2 + (hovered ? 0.15 : 0);
     }
     if (glowMat) {
       const pulse = Math.sin(timeRef.current * 2.5 + 0.5) * 0.5 + 0.5;
-      glowMat.opacity = 0.03 + pulse * 0.05;
+      glowMat.opacity = 0.06 + pulse * 0.1;
     }
     if (arrowMat) {
       const pulse = Math.sin(timeRef.current * 2.5) * 0.5 + 0.5;
-      arrowMat.opacity = 0.5 + pulse * 0.4;
+      arrowMat.opacity = 0.8 + pulse * 0.2;
     }
     if (arrowMeshRef.current) {
       const bob = Math.sin(timeRef.current * 2) * 0.05;
@@ -80,7 +80,7 @@ export default function DoorwayPortal({
         <meshBasicMaterial
           color="#06b6d4"
           transparent
-          opacity={0.15}
+          opacity={0.35}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -92,7 +92,7 @@ export default function DoorwayPortal({
         <meshBasicMaterial
           color="#06b6d4"
           transparent
-          opacity={0.05}
+          opacity={0.12}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
@@ -117,7 +117,7 @@ export default function DoorwayPortal({
         <meshBasicMaterial
           color="#06b6d4"
           transparent
-          opacity={0.8}
+          opacity={1.0}
         />
       </mesh>
 

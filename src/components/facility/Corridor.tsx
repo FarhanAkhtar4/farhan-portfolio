@@ -34,9 +34,9 @@ export default function Corridor() {
   const lineMaterial = useMemo(
     () =>
       new THREE.MeshBasicMaterial({
-        color: '#0e7490',
+        color: '#06b6d4',
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.9,
       }),
     []
   );
@@ -44,9 +44,11 @@ export default function Corridor() {
   const wallMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: '#0a0f1a',
-        roughness: 0.9,
-        metalness: 0.1,
+        color: '#111827',
+        roughness: 0.85,
+        metalness: 0.15,
+        emissive: '#0e7490',
+        emissiveIntensity: 0.05,
       }),
     []
   );
@@ -54,9 +56,11 @@ export default function Corridor() {
   const floorMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: '#060a12',
-        roughness: 0.95,
-        metalness: 0.05,
+        color: '#0c1220',
+        roughness: 0.9,
+        metalness: 0.1,
+        emissive: '#0e7490',
+        emissiveIntensity: 0.02,
       }),
     []
   );
@@ -136,9 +140,9 @@ export default function Corridor() {
             >
               <boxGeometry args={[0.6, WALL_HEIGHT, 1]} />
               <meshStandardMaterial
-                color="#0a1628"
-                emissive="#0e7490"
-                emissiveIntensity={0.15}
+                color="#0f172a"
+                emissive="#06b6d4"
+                emissiveIntensity={0.35}
                 roughness={0.7}
                 metalness={0.3}
               />
@@ -149,9 +153,9 @@ export default function Corridor() {
             >
               <boxGeometry args={[0.6, WALL_HEIGHT, 1]} />
               <meshStandardMaterial
-                color="#0a1628"
-                emissive="#0e7490"
-                emissiveIntensity={0.15}
+                color="#0f172a"
+                emissive="#06b6d4"
+                emissiveIntensity={0.35}
                 roughness={0.7}
                 metalness={0.3}
               />
@@ -160,9 +164,9 @@ export default function Corridor() {
             <mesh position={[0, WALL_HEIGHT - 0.3, 0]}>
               <boxGeometry args={[CORRIDOR_WIDTH, 0.5, 1]} />
               <meshStandardMaterial
-                color="#0a1628"
-                emissive="#0e7490"
-                emissiveIntensity={0.2}
+                color="#0f172a"
+                emissive="#06b6d4"
+                emissiveIntensity={0.4}
                 roughness={0.7}
                 metalness={0.3}
               />
@@ -171,8 +175,8 @@ export default function Corridor() {
             <pointLight
               position={[0, WALL_HEIGHT - 0.5, 0.5]}
               color="#06b6d4"
-              intensity={0.3}
-              distance={8}
+              intensity={1.5}
+              distance={15}
               decay={2}
             />
           </group>

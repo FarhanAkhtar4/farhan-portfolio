@@ -22,9 +22,9 @@ export default function ContactTerminalRoom() {
       <mesh position={[0, 1.5, 0]}>
         <boxGeometry args={[3, 3, 1]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           emissive="#0e7490"
-          emissiveIntensity={0.15}
+          emissiveIntensity={0.3}
           roughness={0.5}
           metalness={0.4}
         />
@@ -36,20 +36,20 @@ export default function ContactTerminalRoom() {
         <meshStandardMaterial
           color="#020617"
           emissive="#06b6d4"
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.2}
         />
       </mesh>
 
       {/* Screen border */}
       <mesh position={[0, 2.5, 0.53]}>
         <boxGeometry args={[2.6, 1.9, 0.02]} />
-        <meshBasicMaterial color="#06b6d4" transparent opacity={0.15} />
+        <meshBasicMaterial color="#06b6d4" transparent opacity={0.25} />
       </mesh>
 
       {/* Scanning line */}
       <mesh ref={scanRef} position={[0, 2.5, 0.56]}>
         <boxGeometry args={[2.3, 0.02, 0.01]} />
-        <meshBasicMaterial color="#06b6d4" transparent opacity={0.4} />
+        <meshBasicMaterial color="#06b6d4" transparent opacity={0.6} />
       </mesh>
 
       {/* Input fields (placeholder) */}
@@ -62,7 +62,7 @@ export default function ContactTerminalRoom() {
           </Billboard>
           <mesh position={[0, -0.05, 0]}>
             <planeGeometry args={[2, 0.2]} />
-            <meshBasicMaterial color="#0e7490" transparent opacity={0.1} />
+            <meshBasicMaterial color="#0e7490" transparent opacity={0.15} />
           </mesh>
         </group>
       ))}
@@ -89,7 +89,7 @@ export default function ContactTerminalRoom() {
       {/* Console base */}
       <mesh position={[0, 0, 0]}>
         <cylinderGeometry args={[1.8, 2, 0.15, 8]} />
-        <meshStandardMaterial color="#0a1628" roughness={0.7} metalness={0.3} />
+        <meshStandardMaterial color="#111827" roughness={0.7} metalness={0.3} />
       </mesh>
 
       {/* Side panels */}
@@ -97,9 +97,9 @@ export default function ContactTerminalRoom() {
         <mesh key={x} position={[x, 1.5, 0]}>
           <boxGeometry args={[0.3, 2, 0.8]} />
           <meshStandardMaterial
-            color="#0a1628"
+            color="#111827"
             emissive="#8b5cf6"
-            emissiveIntensity={0.1}
+            emissiveIntensity={0.2}
             roughness={0.5}
             metalness={0.4}
           />
@@ -117,9 +117,9 @@ export default function ContactTerminalRoom() {
             <mesh>
               <boxGeometry args={[2, 0.6, 0.05]} />
               <meshStandardMaterial
-                color="#0a1628"
+                color="#111827"
                 emissive={link.color}
-                emissiveIntensity={0.15}
+                emissiveIntensity={0.3}
               />
             </mesh>
             <Billboard position={[0, 0, 0.04]}>
@@ -138,8 +138,8 @@ export default function ContactTerminalRoom() {
         </Text>
       </Billboard>
 
-      <pointLight position={[0, 4, 0]} color="#06b6d4" intensity={0.5} distance={12} />
-      <pointLight position={[0, 2, 1]} color="#8b5cf6" intensity={0.2} distance={6} />
+      <pointLight position={[0, 4, 0]} color="#06b6d4" intensity={1.5} distance={12} />
+      <pointLight position={[0, 2, 1]} color="#8b5cf6" intensity={1.5} distance={6} />
 
       <Billboard position={[0, 7.5, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">

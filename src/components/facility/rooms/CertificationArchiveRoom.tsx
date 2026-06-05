@@ -39,9 +39,9 @@ export default function CertificationArchiveRoom() {
               <mesh>
                 <boxGeometry args={[2.5, 3, 0.06]} />
                 <meshStandardMaterial
-                  color="#0a1628"
+                  color="#111827"
                   emissive={color}
-                  emissiveIntensity={0.12}
+                  emissiveIntensity={0.24}
                   transparent
                   opacity={0.85}
                   roughness={0.2}
@@ -52,7 +52,7 @@ export default function CertificationArchiveRoom() {
               {/* Border glow */}
               <mesh position={[0, 0, -0.01]}>
                 <boxGeometry args={[2.6, 3.1, 0.02]} />
-                <meshBasicMaterial color={color} transparent opacity={0.08} />
+                <meshBasicMaterial color={color} transparent opacity={0.12} />
               </mesh>
 
               {/* Category dot */}
@@ -92,7 +92,7 @@ export default function CertificationArchiveRoom() {
               {cert.verifyUrl && (
                 <mesh position={[0, -0.8, 0.05]}>
                   <planeGeometry args={[1.2, 0.2]} />
-                  <meshBasicMaterial color="#10b981" transparent opacity={0.15} />
+                  <meshBasicMaterial color="#10b981" transparent opacity={0.25} />
                 </mesh>
               )}
 
@@ -120,7 +120,7 @@ export default function CertificationArchiveRoom() {
         </Text>
       </Billboard>
 
-      <pointLight position={[0, 4, 0]} color="#f59e0b" intensity={0.4} distance={12} />
+      <pointLight position={[0, 4, 0]} color="#f59e0b" intensity={1.5} />
 
       <Billboard position={[0, 7.5, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">

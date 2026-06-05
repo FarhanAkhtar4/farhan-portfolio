@@ -34,9 +34,9 @@ function StatCounter({ target, suffix, sub, position, color }: {
         <mesh>
           <boxGeometry args={[1.8, 1.2, 0.05]} />
           <meshStandardMaterial
-            color="#0a1628"
+            color="#111827"
             emissive={color}
-            emissiveIntensity={0.15}
+            emissiveIntensity={0.3}
             transparent
             opacity={0.8}
             roughness={0.3}
@@ -75,9 +75,9 @@ export default function CommandCenterRoom() {
       <mesh position={[0, 0.3, 0]}>
         <cylinderGeometry args={[2, 2.5, 0.6, 8]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           emissive="#0e7490"
-          emissiveIntensity={0.2}
+          emissiveIntensity={0.4}
           roughness={0.5}
           metalness={0.4}
         />
@@ -104,16 +104,16 @@ export default function CommandCenterRoom() {
             <meshStandardMaterial
               color="#06b6d4"
               emissive="#06b6d4"
-              emissiveIntensity={0.2}
+              emissiveIntensity={0.4}
               transparent
-              opacity={0.5}
+              opacity={0.8}
               wireframe
             />
           </mesh>
           {/* Holographic scan lines */}
           <mesh position={[0, -0.3, 0.65]}>
             <planeGeometry args={[1.2, 2]} />
-            <meshBasicMaterial color="#06b6d4" transparent opacity={0.08} />
+            <meshBasicMaterial color="#06b6d4" transparent opacity={0.12} />
           </mesh>
         </group>
       </Float>
@@ -124,7 +124,7 @@ export default function CommandCenterRoom() {
         angle={0.4}
         penumbra={0.8}
         color="#06b6d4"
-        intensity={2}
+        intensity={3}
         distance={10}
         decay={2}
       />
@@ -148,7 +148,7 @@ export default function CommandCenterRoom() {
       </Billboard>
 
       {/* Ambient glow */}
-      <pointLight position={[0, 2, 0]} color="#06b6d4" intensity={0.5} distance={10} />
+      <pointLight position={[0, 2, 0]} color="#06b6d4" intensity={1.5} distance={10} />
 
       {/* Room label */}
       <Billboard position={[0, 7, 0]}>

@@ -64,14 +64,20 @@ export default function Scene() {
 
   return (
     <>
+      {/* Background color */}
+      <color attach="background" args={['#030712']} />
+
       {/* Fog */}
-      <fog attach="fog" ref={fogRef} args={['#030712', 15, 80]} />
+      <fog attach="fog" ref={fogRef} args={['#030712', 20, 120]} />
 
-      {/* Ambient */}
-      <ambientLight intensity={0.08} color="#4a5568" />
+      {/* Ambient - boosted for visibility */}
+      <ambientLight intensity={0.4} color="#94a3b8" />
 
-      {/* Global directional */}
-      <directionalLight position={[10, 20, 10]} intensity={0.3} color="#94a3b8" />
+      {/* Global directional - primary light source */}
+      <directionalLight position={[10, 20, 10]} intensity={1.2} color="#cbd5e1" />
+
+      {/* Secondary fill light from opposite side */}
+      <directionalLight position={[-10, 15, -5]} intensity={0.4} color="#64748b" />
 
       {/* Background stars */}
       <BackgroundStars />

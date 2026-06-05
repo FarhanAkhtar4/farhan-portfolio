@@ -46,9 +46,9 @@ export default function AISystemsLabRoom() {
               <mesh position={[0, -0.3, 0]}>
                 <cylinderGeometry args={[0.5, 0.6, 0.15, 8]} />
                 <meshStandardMaterial
-                  color="#0a1628"
+                  color="#111827"
                   emissive={color}
-                  emissiveIntensity={0.2}
+                  emissiveIntensity={0.4}
                   roughness={0.4}
                   metalness={0.4}
                 />
@@ -88,7 +88,7 @@ export default function AISystemsLabRoom() {
 
               {/* Highlight indicator */}
               {cat.highlight && (
-                <pointLight position={[0, 0.3, 0]} color={color} intensity={0.5} distance={3} />
+                <pointLight position={[0, 0.3, 0]} color={color} intensity={1.5} distance={3} />
               )}
             </group>
           </Float>
@@ -104,11 +104,11 @@ export default function AISystemsLabRoom() {
             emissive="#06b6d4"
             emissiveIntensity={0.4}
             transparent
-            opacity={0.5}
+            opacity={0.8}
             wireframe
           />
         </mesh>
-        <pointLight position={[0, 0, 0]} color="#06b6d4" intensity={0.5} distance={5} />
+        <pointLight position={[0, 0, 0]} color="#06b6d4" intensity={1.5} distance={5} />
       </group>
 
       {/* Title */}

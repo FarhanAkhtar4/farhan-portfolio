@@ -82,7 +82,7 @@ export default function SeismicLabRoom() {
               rotation={[0, data.rotY, 0]}
             >
               <cylinderGeometry args={[0.01, 0.01, data.length, 4]} />
-              <meshBasicMaterial color="#10b981" transparent opacity={0.3} />
+              <meshBasicMaterial color="#10b981" transparent opacity={0.45} />
             </mesh>
         ))}
       </group>
@@ -104,12 +104,12 @@ export default function SeismicLabRoom() {
             <meshStandardMaterial
               color={bar.color}
               emissive={bar.color}
-              emissiveIntensity={0.2}
+              emissiveIntensity={0.4}
             />
           </mesh>
           <mesh position={[bar.value * 1.25 + 0.15, 0, 0.15]}>
             <planeGeometry args={[0.4, 0.4]} />
-            <meshBasicMaterial color="#10b981" transparent opacity={0.15} />
+            <meshBasicMaterial color="#10b981" transparent opacity={0.25} />
           </mesh>
         </group>
       ))}
@@ -125,9 +125,9 @@ export default function SeismicLabRoom() {
       <mesh position={[0, 4, -5]}>
         <boxGeometry args={[8, 3, 0.1]} />
         <meshStandardMaterial
-          color="#0a1628"
+          color="#111827"
           emissive="#0e7490"
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.2}
         />
       </mesh>
       <Billboard position={[0, 4.8, -4.8]}>
@@ -137,8 +137,8 @@ export default function SeismicLabRoom() {
       </Billboard>
 
       {/* Lighting */}
-      <pointLight position={[0, 5, 0]} color="#10b981" intensity={0.5} distance={12} />
-      <pointLight position={[4, 2, 0]} color="#06b6d4" intensity={0.3} distance={8} />
+      <pointLight position={[0, 5, 0]} color="#10b981" intensity={1.5} distance={12} />
+      <pointLight position={[4, 2, 0]} color="#06b6d4" intensity={1.5} distance={8} />
 
       <Billboard position={[0, 7, 0]}>
         <Text fontSize={0.12} color="#475569" anchorX="center" anchorY="middle">
