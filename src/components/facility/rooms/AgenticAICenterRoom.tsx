@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { Float, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 
-function Agent({ position, color, label, speed }: {
+function Agent({ position: positionProp, color, label, speed }: {
   position: [number, number, number];
   color: string;
   label: string;
@@ -13,18 +13,22 @@ function Agent({ position, color, label, speed }: {
 }) {
   const ref = useRef<THREE.Mesh>(null);
   const timeRef = useRef(Math.random() * Math.PI * 2);
+  const posRef = useRef<[number, number, number]>(positionProp);
+  // Keep posRef in sync with the latest prop (avoids stale useFrame closures)
+  posRef.current = positionProp;
 
   useFrame((_, delta) => {
     timeRef.current += delta * speed;
-    if (ref.current) {
-      ref.current.position.x = position[0] + Math.sin(timeRef.current) * 2;
-      ref.current.position.z = position[2] + Math.cos(timeRef.current * 0.7) * 1.5;
+    const pos = posRef.current;
+    if (ref.current && pos) {
+      ref.current.position.x = pos[0] + Math.sin(timeRef.current) * 2;
+      ref.current.position.z = pos[2] + Math.cos(timeRef.current * 0.7) * 1.5;
     }
   });
 
   return (
     <group>
-      <mesh ref={ref} position={position}>
+      <mesh ref={ref} position={positionProp}>
         <sphereGeometry args={[0.35, 16, 16]} />
         <meshStandardMaterial
           color={color}
@@ -34,7 +38,7 @@ function Agent({ position, color, label, speed }: {
           opacity={0.7}
         />
       </mesh>
-      <Billboard position={position}>
+      <Billboard position={positionProp}>
         <Text fontSize={0.1} color={color} anchorX="center" anchorY="middle" position={[0, 0.55, 0]}>
           {label}
         </Text>
@@ -51,14 +55,14 @@ function ToolCube({ from, to, color, speed }: {
 }) {
   const ref = useRef<THREE.Mesh>(null);
   const timeRef = useRef(Math.random() * Math.PI * 2);
-  const fromVec = new THREE.Vector3(...from);
-  const toVec = new THREE.Vector3(...to);
+  const fromVec = useRef(new THREE.Vector3(...from));
+  const toVec = useRef(new THREE.Vector3(...to));
 
   useFrame((_, delta) => {
     timeRef.current += delta * speed;
     const t = (Math.sin(timeRef.current) + 1) / 2;
     if (ref.current) {
-      ref.current.position.lerpVectors(fromVec, toVec, t);
+      ref.current.position.lerpVectors(fromVec.current, toVec.current, t);
     }
   });
 

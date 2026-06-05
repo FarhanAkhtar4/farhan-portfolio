@@ -1,9 +1,18 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
+
+const CONNECTION_LINES: [number, number, number][][[number, number, number]] = [
+  [[-2, 2, 0], [-1, 2, 0]],
+  [[-1, 2, 0], [0, 2, 0]],
+  [[0, 2, 0], [1, 2, 0]],
+  [[1, 2, 0], [2, 2, 0]],
+  [[-2, 1, 1], [-2, 2, 0]],
+  [[2, 2, 0], [2, 1, 1]],
+];
 
 export default function SeismicLabRoom() {
   const networkRef = useRef<THREE.Group>(null);
@@ -26,6 +35,18 @@ export default function SeismicLabRoom() {
     { pos: [-2, 1, 1] as [number, number, number], label: 'TS Data' },
     { pos: [2, 1, 1] as [number, number, number], label: 'Predict' },
   ];
+
+  // Pre-compute connection line data to avoid creating Vector3 in render
+  const connectionData = useMemo(() => {
+    return CONNECTION_LINES.map((line) => {
+      const start = new THREE.Vector3(...line[0]);
+      const end = new THREE.Vector3(...line[1]);
+      const mid = start.clone().add(end).multiplyScalar(0.5);
+      const dir = end.clone().sub(start);
+      const length = dir.length();
+      return { mid, length, rotY: Math.atan2(dir.x, dir.z) };
+    });
+  }, []);
 
   return (
     <group>
@@ -54,31 +75,16 @@ export default function SeismicLabRoom() {
         ))}
 
         {/* Connection lines between nodes */}
-        {[
-          [[-2, 2, 0], [-1, 2, 0]],
-          [[-1, 2, 0], [0, 2, 0]],
-          [[0, 2, 0], [1, 2, 0]],
-          [[1, 2, 0], [2, 2, 0]],
-          [[-2, 1, 1], [-2, 2, 0]],
-          [[2, 2, 0], [2, 1, 1]],
-        ].map((line, i) => {
-          const start = new THREE.Vector3(...line[0]);
-          const end = new THREE.Vector3(...line[1]);
-          const mid = start.clone().add(end).multiplyScalar(0.5);
-          const dir = end.clone().sub(start);
-          const length = dir.length();
-
-          return (
+        {connectionData.map((data, i) => (
             <mesh
               key={i}
-              position={[mid.x, mid.y, mid.z]}
-              rotation={[0, Math.atan2(dir.x, dir.z), 0]}
+              position={[data.mid.x, data.mid.y, data.mid.z]}
+              rotation={[0, data.rotY, 0]}
             >
-              <cylinderGeometry args={[0.01, 0.01, length, 4]} />
+              <cylinderGeometry args={[0.01, 0.01, data.length, 4]} />
               <meshBasicMaterial color="#10b981" transparent opacity={0.3} />
             </mesh>
-          );
-        })}
+        ))}
       </group>
 
       {/* Comparison bars - 22% improvement */}

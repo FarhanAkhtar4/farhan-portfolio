@@ -1,12 +1,12 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { skillCategories } from '@/lib/data';
 
-const iconGeometries: (() => THREE.BufferGeometry)[] = [
+const iconGeometriesFactory: (() => THREE.BufferGeometry)[] = [
   () => new THREE.BoxGeometry(0.3, 0.3, 0.3),      // Languages - cube
   () => new THREE.SphereGeometry(0.2, 12, 12),     // ML/DL - sphere
   () => new THREE.OctahedronGeometry(0.25),         // LLM/Agentic - octahedron
@@ -16,6 +16,12 @@ const iconGeometries: (() => THREE.BufferGeometry)[] = [
 
 export default function AISystemsLabRoom() {
   const timeRef = useRef(0);
+
+  // Memoize geometries to avoid creating new objects every render
+  const iconGeometries = useMemo(
+    () => iconGeometriesFactory.map((factory) => factory()),
+    []
+  );
 
   useFrame((_, delta) => {
     timeRef.current += delta;
@@ -49,7 +55,7 @@ export default function AISystemsLabRoom() {
               </mesh>
 
               {/* Icon */}
-              <mesh geometry={Geo()}>
+              <mesh geometry={Geo}>
                 <meshStandardMaterial
                   color={color}
                   emissive={color}
