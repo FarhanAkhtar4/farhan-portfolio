@@ -83,11 +83,11 @@ export default function AgenticAICenterRoom() {
   });
 
   const agents = [
-    { pos: [-2.5, 2.5, 0] as [number, number, number], color: '#06b6d4', label: 'Research', speed: 0.8 },
-    { pos: [2.5, 2.5, 0] as [number, number, number], color: '#8b5cf6', label: 'Code', speed: 0.6 },
-    { pos: [0, 3.5, -2] as [number, number, number], color: '#10b981', label: 'Analysis', speed: 1.0 },
-    { pos: [-1.5, 2.5, 2] as [number, number, number], color: '#f59e0b', label: 'Planning', speed: 0.7 },
-    { pos: [1.5, 2.5, 2] as [number, number, number], color: '#ec4899', label: 'Execution', speed: 0.9 },
+    { position: [-2.5, 2.5, 0] as [number, number, number], color: '#06b6d4', label: 'Research', speed: 0.8 },
+    { position: [2.5, 2.5, 0] as [number, number, number], color: '#8b5cf6', label: 'Code', speed: 0.6 },
+    { position: [0, 3.5, -2] as [number, number, number], color: '#10b981', label: 'Analysis', speed: 1.0 },
+    { position: [-1.5, 2.5, 2] as [number, number, number], color: '#f59e0b', label: 'Planning', speed: 0.7 },
+    { position: [1.5, 2.5, 2] as [number, number, number], color: '#ec4899', label: 'Execution', speed: 0.9 },
   ];
 
   return (

@@ -6,7 +6,6 @@ import { Float, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 
 export default function DeepLearningChamberRoom() {
-  const towerRef = useRef<THREE.Group>(null);
   const beamsRef = useRef<THREE.Group>(null);
   const timeRef = useRef(0);
 
@@ -41,7 +40,7 @@ export default function DeepLearningChamberRoom() {
   return (
     <group>
       {/* SAINT tower */}
-      <group ref={towerRef} position={[0, 1, 0]}>
+      <group position={[0, 1, 0]}>
         {layers.map((layer, i) => (
           <group key={i} position={[0, layer.y, 0]}>
             <mesh>

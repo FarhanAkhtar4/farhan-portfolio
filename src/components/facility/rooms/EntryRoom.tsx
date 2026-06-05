@@ -6,7 +6,6 @@ import { Float, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 
 export default function EntryRoom() {
-  const doorRef = useRef<THREE.Mesh>(null);
   const pulseRef = useRef<THREE.PointLight>(null);
   const timeRef = useRef(0);
 
@@ -96,7 +95,6 @@ export default function EntryRoom() {
           color="#06b6d4"
           anchorX="center"
           anchorY="middle"
-          font={undefined}
         >
           FARHAN AI RESEARCH FACILITY
         </Text>
