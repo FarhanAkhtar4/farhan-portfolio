@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import EntryRoom from './rooms/EntryRoom';
@@ -15,6 +15,43 @@ import CertificationArchiveRoom from './rooms/CertificationArchiveRoom';
 import RecruiterCenterRoom from './rooms/RecruiterCenterRoom';
 import ContactTerminalRoom from './rooms/ContactTerminalRoom';
 import Corridor from './Corridor';
+import DoorwayPortals from './DoorwayPortals';
+import ParticleField from './ParticleField';
+
+function BackgroundStars() {
+  const pointsRef = useRef<THREE.Points>(null);
+
+  const { geometry, material } = useMemo(() => {
+    const count = 500;
+    const positions = new Float32Array(count * 3);
+
+    for (let i = 0; i < count; i++) {
+      // Distribute stars in a sphere far away
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const radius = 150 + Math.random() * 150; // 150-300 distance
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      positions[i * 3 + 2] = radius * Math.cos(phi) + (-170); // offset to center around corridor
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const mat = new THREE.PointsMaterial({
+      color: '#475569',
+      size: 0.3,
+      transparent: true,
+      opacity: 0.4,
+      sizeAttenuation: false,
+      depthWrite: false,
+    });
+
+    return { geometry: geo, material: mat };
+  }, []);
+
+  return <points ref={pointsRef} geometry={geometry} material={material} />;
+}
 
 export default function Scene() {
   const fogRef = useRef<THREE.Fog>(null);
@@ -36,8 +73,17 @@ export default function Scene() {
       {/* Global directional */}
       <directionalLight position={[10, 20, 10]} intensity={0.3} color="#94a3b8" />
 
+      {/* Background stars */}
+      <BackgroundStars />
+
+      {/* Atmospheric particles */}
+      <ParticleField />
+
       {/* Corridor / walls connecting rooms */}
       <Corridor />
+
+      {/* Doorway portals for navigation */}
+      <DoorwayPortals />
 
       {/* Room 0: Entry */}
       <group position={[0, 0, 30]}>

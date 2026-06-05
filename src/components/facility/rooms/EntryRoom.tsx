@@ -1,20 +1,39 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
+import { useFacilityStore } from '@/store/facility-store';
 
 export default function EntryRoom() {
   const pulseRef = useRef<THREE.PointLight>(null);
   const timeRef = useRef(0);
+  const doorRef = useRef<THREE.Mesh>(null);
+  const doorMaterialRef = useRef<THREE.MeshBasicMaterial>(null);
+  const [hovered, setHovered] = useState(false);
+  const hasEntered = useFacilityStore((s) => s.hasEntered);
 
   useFrame((_, delta) => {
     timeRef.current += delta;
     if (pulseRef.current) {
       pulseRef.current.intensity = 1.5 + Math.sin(timeRef.current * 2) * 0.5;
     }
+    // Hover glow effect on door
+    if (doorMaterialRef.current) {
+      const base = 0.0;
+      const hoverGlow = hovered ? 0.15 : 0;
+      doorMaterialRef.current.emissiveIntensity = base + hoverGlow;
+    }
   });
+
+  const handleDoorClick = () => {
+    const store = useFacilityStore.getState();
+    if (!store.hasEntered) {
+      store.setHasEntered(true);
+      store.setCurrentRoom(1);
+    }
+  };
 
   return (
     <group>
@@ -62,10 +81,28 @@ export default function EntryRoom() {
         />
       </mesh>
 
-      {/* Door opening (darker inset) */}
-      <mesh position={[0, 2.5, 4.05]}>
+      {/* Door opening (darker inset) - CLICKABLE */}
+      <mesh
+        ref={doorRef}
+        position={[0, 2.5, 4.05]}
+        onClick={handleDoorClick}
+        onPointerOver={() => {
+          setHovered(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = 'default';
+        }}
+      >
         <boxGeometry args={[2.2, 4, 0.1]} />
-        <meshBasicMaterial color="#020617" />
+        <meshStandardMaterial
+          ref={doorMaterialRef}
+          color="#020617"
+          emissive="#06b6d4"
+          emissiveIntensity={0}
+          roughness={1}
+        />
       </mesh>
 
       {/* Pulsing neon line around door */}
@@ -87,6 +124,20 @@ export default function EntryRoom() {
         distance={12}
         decay={2}
       />
+
+      {/* "CLICK TO ENTER" billboard above door - only when not entered */}
+      {!hasEntered && (
+        <Billboard position={[0, 5.8, 4.5]}>
+          <Text
+            fontSize={0.2}
+            color="#06b6d4"
+            anchorX="center"
+            anchorY="middle"
+          >
+            CLICK TO ENTER
+          </Text>
+        </Billboard>
+      )}
 
       {/* "FARHAN AI RESEARCH FACILITY" text on building */}
       <Billboard position={[0, 7.5, 4.1]}>

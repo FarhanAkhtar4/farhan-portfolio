@@ -17,6 +17,20 @@ export default function CameraController() {
   const cameraTarget = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
 
+  // Mouse drag state
+  const dragState = useRef({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    offsetX: 0, // radians
+    offsetY: 0, // radians
+    targetOffsetX: 0,
+    targetOffsetY: 0,
+  });
+
+  // Rotational offset for look-around
+  const lookOffset = useRef(new THREE.Vector2(0, 0));
+
   // Initial camera position
   useEffect(() => {
     camera.position.set(0, 3, 40);
@@ -25,16 +39,81 @@ export default function CameraController() {
     lookTarget.current.set(0, 2, 30);
   }, [camera]);
 
-  // Smooth camera look-at each frame
+  // Smooth camera look-at each frame with drag offset
   useEffect(() => {
     let raf: number;
     const update = () => {
-      camera.lookAt(lookTarget.current);
+      // Lerp offset back to 0 when not dragging
+      const ds = dragState.current;
+      if (!ds.isDragging) {
+        ds.targetOffsetX *= 0.95;
+        ds.targetOffsetY *= 0.95;
+      }
+      lookOffset.current.x += (ds.targetOffsetX - lookOffset.current.x) * 0.08;
+      lookOffset.current.y += (ds.targetOffsetY - lookOffset.current.y) * 0.08;
+
+      // Calculate offset direction from camera to look target
+      const dir = new THREE.Vector3().subVectors(lookTarget.current, camera.position).normalize();
+
+      // Create a right vector and up vector for rotational offsets
+      const worldUp = new THREE.Vector3(0, 1, 0);
+      const right = new THREE.Vector3().crossVectors(dir, worldUp).normalize();
+      const actualUp = new THREE.Vector3().crossVectors(right, dir).normalize();
+
+      // Apply horizontal (yaw) and vertical (pitch) rotation offsets
+      const offsetDir = dir
+        .clone()
+        .applyAxisAngle(worldUp, lookOffset.current.x)
+        .applyAxisAngle(right, -lookOffset.current.y);
+
+      const finalTarget = camera.position.clone().add(offsetDir.multiplyScalar(10));
+      camera.lookAt(finalTarget);
+
       raf = requestAnimationFrame(update);
     };
     raf = requestAnimationFrame(update);
     return () => cancelAnimationFrame(raf);
   }, [camera]);
+
+  // Mouse/touch drag event handlers on the canvas
+  useEffect(() => {
+    const canvas = document.querySelector('canvas');
+    if (!canvas) return;
+
+    const handlePointerDown = (e: PointerEvent) => {
+      dragState.current.isDragging = true;
+      dragState.current.startX = e.clientX;
+      dragState.current.startY = e.clientY;
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!dragState.current.isDragging) return;
+      const dx = e.clientX - dragState.current.startX;
+      const dy = e.clientY - dragState.current.startY;
+
+      // Sensitivity factor
+      const sensitivity = 0.002;
+
+      dragState.current.targetOffsetX = Math.max(-0.3, Math.min(0.3, dx * sensitivity));
+      dragState.current.targetOffsetY = Math.max(-0.15, Math.min(0.15, -dy * sensitivity));
+    };
+
+    const handlePointerUp = () => {
+      dragState.current.isDragging = false;
+    };
+
+    canvas.addEventListener('pointerdown', handlePointerDown);
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('pointerup', handlePointerUp);
+    canvas.addEventListener('pointerleave', handlePointerUp);
+
+    return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown);
+      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('pointerup', handlePointerUp);
+      canvas.removeEventListener('pointerleave', handlePointerUp);
+    };
+  }, []);
 
   const goToRoom = useCallback(
     (index: number) => {
@@ -45,6 +124,10 @@ export default function CameraController() {
       const targetLook = new THREE.Vector3(...room.position);
 
       setTransitioning(true);
+
+      // Reset drag offset on room change
+      dragState.current.targetOffsetX = 0;
+      dragState.current.targetOffsetY = 0;
 
       if (tweenRef.current) {
         tweenRef.current.kill();

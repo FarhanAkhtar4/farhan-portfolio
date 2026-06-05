@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { Preload } from '@react-three/drei';
+import { Preload, AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import { Suspense } from 'react';
 import Scene from './Scene';
 import CameraController from './CameraController';
@@ -22,6 +22,8 @@ export default function FacilityExperience() {
         performance={{ min: 0.5 }}
       >
         <Suspense fallback={null}>
+          <AdaptiveDpr pixelated />
+          <AdaptiveEvents />
           <Scene />
           <CameraController />
           <Preload all />

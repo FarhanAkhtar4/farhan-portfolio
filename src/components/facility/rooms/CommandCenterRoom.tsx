@@ -4,6 +4,59 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
+import { useState } from 'react';
+
+function StatCounter({ target, suffix, sub, position, color }: {
+  target: number;
+  suffix: string;
+  sub: string;
+  position: [number, number, number];
+  color: string;
+}) {
+  const timeRef = useRef(0);
+  const [displayText, setDisplayText] = useState('0');
+
+  useFrame((_, delta) => {
+    timeRef.current += delta;
+    // Ease-in count-up over 2 seconds
+    const t = Math.min(1, timeRef.current / 2);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    const newVal = Math.round(eased * target);
+    const newText = `${newVal}${suffix}`;
+    if (newText !== displayText) {
+      setDisplayText(newText);
+    }
+  });
+
+  return (
+    <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.3}>
+      <group position={position}>
+        <mesh>
+          <boxGeometry args={[1.8, 1.2, 0.05]} />
+          <meshStandardMaterial
+            color="#0a1628"
+            emissive={color}
+            emissiveIntensity={0.15}
+            transparent
+            opacity={0.8}
+            roughness={0.3}
+            metalness={0.5}
+          />
+        </mesh>
+        <Billboard position={[0, 0.25, 0.04]}>
+          <Text fontSize={0.3} color={color} anchorX="center" anchorY="middle">
+            {displayText}
+          </Text>
+        </Billboard>
+        <Billboard position={[0, -0.15, 0.04]}>
+          <Text fontSize={0.12} color="#94a3b8" anchorX="center" anchorY="middle">
+            {sub}
+          </Text>
+        </Billboard>
+      </group>
+    </Float>
+  );
+}
 
 export default function CommandCenterRoom() {
   const groupRef = useRef<THREE.Group>(null);
@@ -76,40 +129,11 @@ export default function CommandCenterRoom() {
         decay={2}
       />
 
-      {/* Floating stat panels */}
-      {[
-        { label: '22%', sub: 'Accuracy Gain', pos: [-4, 3, -2] as [number, number, number], color: '#10b981' },
-        { label: '6+', sub: 'Projects', pos: [4, 3, -2] as [number, number, number], color: '#8b5cf6' },
-        { label: '11+', sub: 'Certifications', pos: [-4, 3, 2] as [number, number, number], color: '#f59e0b' },
-        { label: 'RAG', sub: 'Core Pipeline', pos: [4, 3, 2] as [number, number, number], color: '#06b6d4' },
-      ].map((stat, i) => (
-        <Float key={i} speed={1.5 + i * 0.3} rotationIntensity={0.1} floatIntensity={0.3}>
-          <group position={stat.pos}>
-            <mesh>
-              <boxGeometry args={[1.8, 1.2, 0.05]} />
-              <meshStandardMaterial
-                color="#0a1628"
-                emissive={stat.color}
-                emissiveIntensity={0.15}
-                transparent
-                opacity={0.8}
-                roughness={0.3}
-                metalness={0.5}
-              />
-            </mesh>
-            <Billboard position={[0, 0.25, 0.04]}>
-              <Text fontSize={0.3} color={stat.color} anchorX="center" anchorY="middle">
-                {stat.label}
-              </Text>
-            </Billboard>
-            <Billboard position={[0, -0.15, 0.04]}>
-              <Text fontSize={0.12} color="#94a3b8" anchorX="center" anchorY="middle">
-                {stat.sub}
-              </Text>
-            </Billboard>
-          </group>
-        </Float>
-      ))}
+      {/* Animated stat counters */}
+      <StatCounter target={22} suffix="%" sub="Accuracy Gain" position={[-4, 3, -2]} color="#10b981" />
+      <StatCounter target={6} suffix="+" sub="Projects" position={[4, 3, -2]} color="#8b5cf6" />
+      <StatCounter target={11} suffix="+" sub="Certifications" position={[-4, 3, 2]} color="#f59e0b" />
+      <StatCounter target={100} suffix="%" sub="RAG Pipeline" position={[4, 3, 2]} color="#06b6d4" />
 
       {/* Name plate */}
       <Billboard position={[0, 5.5, 0]}>
