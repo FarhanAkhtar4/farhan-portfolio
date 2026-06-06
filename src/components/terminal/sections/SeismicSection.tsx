@@ -18,7 +18,7 @@ export default function SeismicSection() {
       y += L.LINE;
 
       <Card
-        title="Seismic Response Prediction"
+        title="[PLACEHOLDER – Seismic Response Prediction]"
         desc="[PLACEHOLDER – TFT model for structural response prediction]"
         x={0} y={y} w={12} h={L.CARD_H}
       />

@@ -11,7 +11,7 @@ export default function CertsSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <MetricBox label="TOTAL" value="11" x={-2.8} y={y} />
+      <MetricBox label="TOTAL" value="[PLACEHOLDER]" x={-2.8} y={y} />
       <MetricBox label="VERIFIED" value="[PLACEHOLDER]" x={1.2} y={y} />
       y -= 1.2;
 

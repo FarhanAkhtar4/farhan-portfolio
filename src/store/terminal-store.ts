@@ -156,30 +156,16 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     }
 
     if (normalizedCmd === 'download resume') {
-      try {
-        const link = document.createElement('a');
-        link.href = '/resumes/Farhan_Akhtar_AI_General.pdf';
-        link.download = 'Farhan_Akhtar_AI_General.pdf';
-        link.click();
-        set((state) => ({
-          commandOutput: [
-            ...state.commandOutput.slice(-8),
-            outputLine,
-            '[ DOWNLOAD INITIATED ] Resume PDF downloading...',
-            '',
-          ],
-          commandHistory: [...state.commandHistory, 'download resume'],
-        }));
-      } catch {
-        set((state) => ({
-          commandOutput: [
-            ...state.commandOutput.slice(-8),
-            outputLine,
-            '[ ERROR ] File not found.',
-            '',
-          ],
-        }));
-      }
+      set((state) => ({
+        commandOutput: [
+          ...state.commandOutput.slice(-8),
+          outputLine,
+          '[ NOTICE ] Resume downloads are placeholder templates only — not available in demo.',
+          '[ INFO ] Contact the subject directly for official resume documents.',
+          '',
+        ],
+        commandHistory: [...state.commandHistory, 'download resume'],
+      }));
       return;
     }
 

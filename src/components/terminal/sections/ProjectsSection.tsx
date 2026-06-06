@@ -11,9 +11,9 @@ export default function ProjectsSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <MetricBox label="TOTAL" value="12" x={-4} y={y} />
-      <MetricBox label="FLAGSHIP" value="4" x={0} y={y} accent />
-      <MetricBox label="CATEGORIES" value="4" x={4} y={y} />
+      <MetricBox label="TOTAL" value="[PLACEHOLDER]" x={-4} y={y} />
+      <MetricBox label="FLAGSHIP" value="[PLACEHOLDER]" x={0} y={y} accent />
+      <MetricBox label="CATEGORIES" value="[PLACEHOLDER]" x={4} y={y} />
       y -= 1.2;
 
       <Separator y={y} />
@@ -22,12 +22,12 @@ export default function ProjectsSection() {
       <T text="▸ FLAGSHIP PROJECTS" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.09} />
       y -= 1.3;
 
-      <Card title="Seismic Prediction" desc="[PLACEHOLDER – TFT model details]" x={-3} y={y} w={5.8} h={L.CARD_H} />
-      <Card title="AgentOS" desc="[PLACEHOLDER – Multi-agent SaaS]" x={3} y={y} w={5.8} h={L.CARD_H} />
+      <Card title="[PLACEHOLDER – Project 1]" desc="[PLACEHOLDER – TFT model details]" x={-3} y={y} w={5.8} h={L.CARD_H} />
+      <Card title="[PLACEHOLDER – Project 2]" desc="[PLACEHOLDER – Multi-agent SaaS]" x={3} y={y} w={5.8} h={L.CARD_H} />
       y -= L.CARD_H + 0.15;
 
-      <Card title="SAINT Model" desc="[PLACEHOLDER – Attention for tabular data]" x={-3} y={y} w={5.8} h={L.CARD_H} />
-      <Card title="GitDeploy AI" desc="[PLACEHOLDER – AI project builder]" x={3} y={y} w={5.8} h={L.CARD_H} accent />
+      <Card title="[PLACEHOLDER – Project 3]" desc="[PLACEHOLDER – Attention for tabular data]" x={-3} y={y} w={5.8} h={L.CARD_H} />
+      <Card title="[PLACEHOLDER – Project 4]" desc="[PLACEHOLDER – AI project builder]" x={3} y={y} w={5.8} h={L.CARD_H} accent />
       y -= L.CARD_H + 0.15;
 
       <Separator y={y} />
