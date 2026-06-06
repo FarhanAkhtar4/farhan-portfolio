@@ -107,7 +107,10 @@ export default function DossierLayout() {
       )}
 
       {/* Main content area */}
-      <main className="lg:ml-64 transition-all duration-300">
+      <main
+        className="transition-all duration-300"
+        style={{ marginLeft: isDesktop ? '16rem' : '0' }}
+      >
         <IdentificationSection />
         <SeismicSection />
         <AgenticSection />
@@ -121,7 +124,10 @@ export default function DossierLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="lg:ml-64 py-8 px-4 md:px-8 border-t border-cyan-400/10">
+      <footer
+        className="py-8 px-4 md:px-8 border-t border-cyan-400/10"
+        style={{ marginLeft: isDesktop ? '16rem' : '0' }}
+      >
         <div className="max-w-4xl mx-auto text-center space-y-3">
           <p className="text-[10px] font-mono tracking-[0.3em] text-slate-600 uppercase">
             The Neural Dossier // Classification Level: Restricted
