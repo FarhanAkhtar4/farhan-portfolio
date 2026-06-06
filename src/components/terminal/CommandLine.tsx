@@ -1,159 +1,169 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Html } from '@react-three/drei';
-import { useTerminalStore, COMMAND_MAP } from '@/store/terminal-store';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Text, Html } from '@react-three/drei';
+import * as THREE from 'three';
+import { useTerminalStore } from '@/store/terminal-store';
+import { C } from './TerminalUI';
 
 function CommandLine() {
-  const [inputValue, setInputValue] = useState('');
-  const [commandOutput, setCommandOutput] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { executeCommand, commandHistory, activeSection } = useTerminalStore();
+  const cursorGeo = useMemo(() => new THREE.PlaneGeometry(0.07, 0.14), []);
+  const cursorRef = useRef<THREE.Mesh>(null);
+  const cursorOpacityRef = useRef(1);
+  const frameCountRef = useRef(0);
 
-  const prevSectionRef = useRef(activeSection);
+  // Local state
+  const [inputValue, setInputValue] = useState('');
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [localHistory, setLocalHistory] = useState<string[]>([]);
 
-  // Focus input on mount and section change
+  const commandOutput = useTerminalStore((s) => s.commandOutput);
+  const executeCommand = useTerminalStore((s) => s.executeCommand);
+  const setActiveSection = useTerminalStore((s) => s.setActiveSection);
+
+  // Auto-focus hidden input on mount
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-    // Clear output only when section actually changes
-    if (prevSectionRef.current !== activeSection) {
-      prevSectionRef.current = activeSection;
-      // Use timeout to avoid synchronous setState in effect
-      const timer = setTimeout(() => {
-        setCommandOutput([]);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [activeSection]);
-
-  const handleExecute = useCallback((cmd: string) => {
-    const trimmed = cmd.trim();
-    if (!trimmed) return;
-
-    // Add to output log
-    setCommandOutput(prev => [...prev.slice(-5), `> ${trimmed}`]);
-
-    // Check if it's a valid command
-    const normalizedCmd = trimmed.toLowerCase();
-
-    if (normalizedCmd === 'help') {
-      const helpText = COMMAND_MAP.map(m => `  ${m.command.padEnd(12)} — ${m.description}`);
-      helpText.push(`  clear        — Clear terminal`);
-      helpText.push(`  download resume — Download resume`);
-      helpText.push(`  stats        — View tech stack`);
-      setCommandOutput(prev => [...prev.slice(-5), ...helpText]);
-    } else if (normalizedCmd === 'clear') {
-      setCommandOutput([]);
-    } else if (normalizedCmd === 'download resume') {
-      setCommandOutput(prev => [...prev.slice(-5), '  Downloading resume...']);
-      executeCommand(trimmed);
-    } else if (normalizedCmd === 'stats') {
-      executeCommand(trimmed);
-      setCommandOutput(prev => [...prev.slice(-5), '  Navigating to tech stack...']);
-    } else {
-      const found = COMMAND_MAP.find(m => m.command === normalizedCmd);
-      if (found) {
-        executeCommand(trimmed);
-        setCommandOutput(prev => [...prev.slice(-5), `  Navigating to ${found.description}...`]);
-      } else {
-        setCommandOutput(prev => [...prev.slice(-5), `  Unknown command: "${trimmed}". Type "help" for commands.`]);
+    // Try to focus periodically since R3F Html mounts may be deferred
+    const tryFocus = () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
       }
+    };
+    tryFocus();
+    const interval = setInterval(tryFocus, 500);
+    // Also focus on any click
+    const handleClick = () => {
+      tryFocus();
+    };
+    window.addEventListener('click', handleClick);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('click', handleClick);
+    };
+  }, []);
+
+  // Blink cursor using useFrame
+  useFrame(() => {
+    frameCountRef.current++;
+    if (frameCountRef.current % 30 === 0) {
+      cursorOpacityRef.current = cursorOpacityRef.current > 0.5 ? 0 : 1;
     }
+    if (cursorRef.current) {
+      const mat = cursorRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = cursorOpacityRef.current;
+    }
+  });
 
-    setInputValue('');
-    setHistoryIndex(-1);
-
-    // Focus after execute
-    setTimeout(() => {
-      if (inputRef.current) inputRef.current.focus();
-    }, 50);
-  }, [executeCommand]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleExecute(inputValue);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      const hist = commandHistory;
-      if (hist.length > 0) {
-        const newIndex = historyIndex === -1 ? hist.length - 1 : Math.max(0, historyIndex - 1);
+  // Handle key press
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const cmd = inputValue.trim();
+        if (cmd) {
+          setLocalHistory((prev) => [...prev, cmd]);
+          executeCommand(cmd);
+          setInputValue('');
+          setHistoryIndex(-1);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (localHistory.length === 0) return;
+        const newIndex = historyIndex === -1 ? localHistory.length - 1 : Math.max(0, historyIndex - 1);
         setHistoryIndex(newIndex);
-        setInputValue(hist[newIndex] || '');
-      }
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (historyIndex >= 0) {
+        setInputValue(localHistory[newIndex]);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex === -1) return;
         const newIndex = historyIndex + 1;
-        if (newIndex >= commandHistory.length) {
+        if (newIndex >= localHistory.length) {
           setHistoryIndex(-1);
           setInputValue('');
         } else {
           setHistoryIndex(newIndex);
-          setInputValue(commandHistory[newIndex] || '');
+          setInputValue(localHistory[newIndex]);
         }
       }
-    }
-  }, [inputValue, historyIndex, commandHistory, handleExecute]);
+    },
+    [inputValue, localHistory, historyIndex, executeCommand]
+  );
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  }, []);
+
+  // Calculate cursor position (after the typed text)
+  const promptText = 'FARHAN://mainframe > ';
+  const displayText = inputValue || '';
+
+  // Show last 3 command output lines
+  const visibleOutput = commandOutput.slice(-3);
 
   return (
-    <Html
-      position={[0, -3.8, -0.1]}
-      center
-      distanceFactor={8}
-      transform
-      style={{ width: '1600px' }}
-      zIndexRange={[0, 0]}
-    >
-      <div
-        className="command-line-wrapper"
-        style={{ fontFamily: "'Geist Mono', monospace" }}
-        onClick={() => inputRef.current?.focus()}
-      >
-        {/* Command output log */}
-        {commandOutput.length > 0 && (
-          <div style={{
-            position: 'absolute',
-            bottom: '100%',
-            left: 0,
-            right: 0,
-            padding: '8px 16px',
-            background: 'rgba(3, 15, 25, 0.95)',
-            borderBottom: '1px solid rgba(0, 240, 255, 0.1)',
-            maxHeight: '120px',
-            overflowY: 'auto',
-            fontSize: 11,
-          }}>
-            {commandOutput.map((line, i) => (
-              <div key={i} style={{
-                color: line.startsWith('>') ? '#4a6b7c' : '#7a9aaa',
-                marginBottom: 2,
-                fontSize: 11,
-              }}>
-                {line}
-              </div>
-            ))}
-          </div>
-        )}
+    <group position={[0, -2.5, -2]}>
+      {/* Command output lines above input */}
+      {visibleOutput.map((line, i) => (
+        <Text
+          key={`output-${i}-${line}`}
+          position={[-5.8, 0.35 + (visibleOutput.length - 1 - i) * 0.22, 0.01]}
+          fontSize={0.08}
+          color={C.dim}
+          anchorX="left"
+          maxWidth={12}
+        >
+          {line}
+        </Text>
+      ))}
 
-        <span className="command-line-prompt">FARHAN://mainframe/&gt;</span>
+      {/* Prompt text */}
+      <Text
+        position={[-5.8, 0, 0.01]}
+        fontSize={0.09}
+        color={C.cyan}
+        anchorX="left"
+      >
+        {promptText}
+      </Text>
+
+      {/* Typed text */}
+      <Text
+        position={[-5.8 + promptText.length * 0.048, 0, 0.01]}
+        fontSize={0.09}
+        color={C.text}
+        anchorX="left"
+        maxWidth={10}
+      >
+        {displayText}
+      </Text>
+
+      {/* Blinking cursor */}
+      <mesh ref={cursorRef} geometry={cursorGeo} position={[-5.8 + (promptText.length + displayText.length) * 0.048, 0, 0.012]}>
+        <meshBasicMaterial color={C.cyan} transparent opacity={1} />
+      </mesh>
+
+      {/* Hidden input for keyboard capture — ONLY allowed Html */}
+      <Html
+        position={[0, 0, 0]}
+        style={{ pointerEvents: 'none' }}
+        zIndexRange={[-1, -1]}
+      >
         <input
           ref={inputRef}
-          className="command-line-input"
+          className="terminal-hidden-input"
           type="text"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder="type 'help' for commands..."
-          spellCheck={false}
           autoComplete="off"
+          autoCorrect="off"
           autoCapitalize="off"
+          spellCheck={false}
+          tabIndex={-1}
         />
-        <span className="command-line-cursor">█</span>
-      </div>
-    </Html>
+      </Html>
+    </group>
   );
 }
 

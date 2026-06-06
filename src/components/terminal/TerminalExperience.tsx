@@ -34,12 +34,11 @@ function LoadingFallback() {
 function CanvasLoadingText() {
   return (
     <Text
-      position={[0, 0, 5]}
+      position={[0, 2.5, 5]}
       fontSize={0.5}
       color="#00F0FF"
       anchorX="center"
       anchorY="middle"
-      font="/fonts/geist-mono.woff"
       letterSpacing={0.15}
     >
       INITIALIZING...
@@ -86,8 +85,8 @@ function TerminalExperience() {
   const { setLoaded } = useTerminalStore();
 
   // Camera settings
-  const cameraPosition: [number, number, number] = [0, 2, 8];
-  const cameraLookAt: [number, number, number] = [0, 1, 0];
+  const cameraPosition: [number, number, number] = [0, 2.5, 9];
+  const cameraLookAt: [number, number, number] = [0, 2, 0];
 
   const handleCreated = useCallback((state: any) => {
     // Set camera to look at target

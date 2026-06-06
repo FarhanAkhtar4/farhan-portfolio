@@ -535,6 +535,26 @@ canvas {
 }
 
 /* ============================================================
+   Terminal Hidden Input — for keyboard capture in R3F
+   ============================================================ */
+.terminal-hidden-input {
+  position: fixed;
+  bottom: 8%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 100;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1px;
+  color: transparent;
+  caret-color: transparent;
+}
+
+/* ============================================================
    Selection
    ============================================================ */
 ::selection {

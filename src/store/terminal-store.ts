@@ -80,12 +80,17 @@ interface TerminalState {
   isLoaded: boolean;
   audioEnabled: boolean;
   previousSection: SectionId | null;
+  inputValue: string;
+  commandOutput: string[];
 
   setActiveSection: (section: SectionId) => void;
   executeCommand: (cmd: string) => void;
   toggleAudio: () => void;
   setLoaded: (loaded: boolean) => void;
   clearHistory: () => void;
+  setInputValue: (v: string) => void;
+  addCommandOutput: (line: string) => void;
+  clearCommandOutput: () => void;
 }
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
@@ -96,6 +101,8 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   isLoaded: false,
   audioEnabled: false,
   previousSection: null,
+  inputValue: '',
+  commandOutput: [],
 
   setActiveSection: (section: SectionId) => {
     const { activeSection, isTransitioning } = get();
@@ -116,14 +123,29 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   executeCommand: (cmd: string) => {
     const normalizedCmd = cmd.trim().toLowerCase();
 
+    // Add the command to output
+    const outputLine = `> ${cmd}`;
+    set((state) => ({
+      commandOutput: [...state.commandOutput.slice(-8), outputLine],
+    }));
+
     // Special commands
     if (normalizedCmd === 'clear') {
-      set({ commandHistory: [] });
+      set({ commandOutput: [] });
       return;
     }
 
     if (normalizedCmd === 'help') {
       set((state) => ({
+        commandOutput: [
+          ...state.commandOutput.slice(-8),
+          outputLine,
+          '[ AVAILABLE COMMANDS ]',
+          ...COMMAND_MAP.map((m) => `  ${m.command.padEnd(12)} — ${m.description}`),
+          '  clear           — Clear terminal output',
+          '  download resume — Download resume PDF',
+          '',
+        ],
         commandHistory: [...state.commandHistory, 'help'],
         activeSection: 'identification',
         isTransitioning: true,
@@ -134,19 +156,41 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     }
 
     if (normalizedCmd === 'download resume') {
-      // Trigger resume download
-      const link = document.createElement('a');
-      link.href = '/resumes/Farhan_Akhtar_AI_General.pdf';
-      link.download = 'Farhan_Akhtar_AI_General.pdf';
-      link.click();
-      set((state) => ({
-        commandHistory: [...state.commandHistory, 'download resume'],
-      }));
+      try {
+        const link = document.createElement('a');
+        link.href = '/resumes/Farhan_Akhtar_AI_General.pdf';
+        link.download = 'Farhan_Akhtar_AI_General.pdf';
+        link.click();
+        set((state) => ({
+          commandOutput: [
+            ...state.commandOutput.slice(-8),
+            outputLine,
+            '[ DOWNLOAD INITIATED ] Resume PDF downloading...',
+            '',
+          ],
+          commandHistory: [...state.commandHistory, 'download resume'],
+        }));
+      } catch {
+        set((state) => ({
+          commandOutput: [
+            ...state.commandOutput.slice(-8),
+            outputLine,
+            '[ ERROR ] File not found.',
+            '',
+          ],
+        }));
+      }
       return;
     }
 
     if (normalizedCmd === 'stats') {
       set((state) => ({
+        commandOutput: [
+          ...state.commandOutput.slice(-8),
+          outputLine,
+          `[ NAV ] Redirecting to TECH_STACK...`,
+          '',
+        ],
         commandHistory: [...state.commandHistory, 'stats'],
         activeSection: 'stack',
         isTransitioning: true,
@@ -162,12 +206,27 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     );
 
     if (mapping) {
+      set((state) => ({
+        commandOutput: [
+          ...state.commandOutput.slice(-8),
+          outputLine,
+          `[ NAV ] Switching to ${mapping.section.toUpperCase()}...`,
+          '',
+        ],
+      }));
       get().setActiveSection(mapping.section);
       return;
     }
 
-    // Unknown command — do nothing or show help
-    console.warn(`[TERMINAL] Unknown command: ${cmd}`);
+    // Unknown command
+    set((state) => ({
+      commandOutput: [
+        ...state.commandOutput.slice(-8),
+        outputLine,
+        `[ ERROR ] Unknown command: "${cmd}" — type "help" for available commands.`,
+        '',
+      ],
+    }));
   },
 
   toggleAudio: () => {
@@ -180,5 +239,19 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
 
   clearHistory: () => {
     set({ commandHistory: [] });
+  },
+
+  setInputValue: (v: string) => {
+    set({ inputValue: v });
+  },
+
+  addCommandOutput: (line: string) => {
+    set((state) => ({
+      commandOutput: [...state.commandOutput.slice(-20), line],
+    }));
+  },
+
+  clearCommandOutput: () => {
+    set({ commandOutput: [] });
   },
 }));

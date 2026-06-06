@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import {
   useTerminalStore,
@@ -11,114 +11,124 @@ import {
   SECTION_ICONS,
   type SectionId,
 } from '@/store/terminal-store';
+import { C } from './TerminalUI';
 
-interface SidebarItemProps {
-  section: SectionId;
+const ITEM_SIZE = 0.45;
+const ITEM_SPACING = 0.7;
+const SIDEBAR_X = -7.8;
+const CENTER_Y = 2.5;
+
+function SidebarItem({
+  sectionId,
+  index,
+  isActive,
+}: {
+  sectionId: SectionId;
   index: number;
-}
+  isActive: boolean;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const setActiveSection = useTerminalStore((s) => s.setActiveSection);
+  const isTransitioning = useTerminalStore((s) => s.isTransitioning);
 
-function SidebarItem({ section, index }: SidebarItemProps) {
-  const { activeSection, setActiveSection } = useTerminalStore();
-  const isActive = activeSection === section;
-  const itemRef = useRef<THREE.Group>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
+  const y = CENTER_Y - index * ITEM_SPACING + ((ALL_SECTIONS.length - 1) * ITEM_SPACING) / 2;
 
-  // Subtle floating animation offset per item
-  const floatOffset = useMemo(() => index * 0.3, [index]);
+  // Icon plane geometry
+  const iconGeo = useMemo(() => new THREE.PlaneGeometry(ITEM_SIZE, ITEM_SIZE), []);
+  const iconEdgeGeo = useMemo(() => new THREE.EdgesGeometry(iconGeo), [iconGeo]);
 
-  const ITEM_SPACING = 0.72;
-  const TOTAL_ITEMS = 10;
-  const START_Y = ((TOTAL_ITEMS - 1) * ITEM_SPACING) / 2;
-
-  useFrame((state) => {
-    if (itemRef.current) {
-      itemRef.current.position.y = -index * ITEM_SPACING + START_Y + Math.sin(state.clock.elapsedTime * 0.8 + floatOffset) * 0.03;
-    }
-  });
-
-  // Glow effect on hover/active
-  const glowMaterial = useMemo(() => {
+  // Active material
+  const iconMaterial = useMemo(() => {
     return new THREE.MeshBasicMaterial({
-      color: isActive ? new THREE.Color('#00F0FF') : new THREE.Color('#4A6B7C'),
+      color: isActive ? C.cyan : '#0a1525',
       transparent: true,
-      opacity: isActive ? 0.3 : 0.08,
+      opacity: isActive ? 0.25 : 0.6,
     });
   }, [isActive]);
 
   const borderMaterial = useMemo(() => {
     return new THREE.LineBasicMaterial({
-      color: isActive ? new THREE.Color('#00F0FF') : new THREE.Color('#4A6B7C'),
+      color: isActive ? C.cyan : C.muted,
       transparent: true,
-      opacity: isActive ? 0.5 : 0.15,
+      opacity: isActive ? 0.6 : 0.15,
     });
   }, [isActive]);
 
-  const iconGeometry = useMemo(() => new THREE.PlaneGeometry(0.5, 0.5), []);
-  const edgeGeometry = useMemo(() => new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.5, 0.5)), []);
+  // Floating animation — subtle per-item offset
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    const offset = index * 0.3;
+    groupRef.current.position.y = y + Math.sin(t * 1.2 + offset) * 0.02;
+  });
 
-  const handleClick = () => {
-    setActiveSection(section);
-  };
+  const handleClick = useCallback(() => {
+    if (isTransitioning) return;
+    setActiveSection(sectionId);
+  }, [sectionId, isTransitioning, setActiveSection]);
+
+  const iconChar = SECTION_ICONS[sectionId];
+  const label = SECTION_DISPLAY_NAMES[sectionId];
+
+  // Format label with spaces between words (replace _ with spaces)
+  const formattedLabel = label.replace(/_/g, ' ');
 
   return (
     <group
-      ref={itemRef}
-      position={[-8, -index * 0.72 + 3.24, 0]}
+      ref={groupRef}
+      position={[SIDEBAR_X, y, -2]}
+      onClick={handleClick}
+      onPointerOver={() => {
+        if (groupRef.current) {
+          document.body.style.cursor = 'pointer';
+        }
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = 'default';
+      }}
     >
-      {/* Icon background plane */}
-      <mesh
-        ref={meshRef}
-        geometry={iconGeometry}
-        material={glowMaterial}
-        onClick={handleClick}
-      />
+      {/* Icon plane */}
+      <mesh geometry={iconGeo} material={iconMaterial} />
+      <lineSegments geometry={iconEdgeGeo} material={borderMaterial} />
 
-      {/* Icon border */}
-      <lineSegments geometry={edgeGeometry} material={borderMaterial} />
-
-      {/* Label */}
-      <Html
-        position={[0.6, 0, 0]}
-        center
-        distanceFactor={8}
-        transform
-        style={{ fontFamily: "'Geist Mono', monospace" }}
-        zIndexRange={[0, 0]}
+      {/* Icon text (Unicode glyph) */}
+      <Text
+        position={[0, 0, 0.01]}
+        fontSize={isActive ? 0.2 : 0.16}
+        color={isActive ? C.cyan : C.muted}
+        anchorX="center"
+        anchorY="middle"
       >
-        <div
-          style={{
-            fontSize: 9,
-            whiteSpace: 'nowrap',
-            letterSpacing: 0.5,
-            cursor: 'pointer',
-            userSelect: 'none',
-            pointerEvents: 'auto',
-            color: isActive ? '#00F0FF' : '#4A6B7C',
-            transition: 'color 0.3s ease',
-            textShadow: isActive ? '0 0 8px rgba(0, 240, 255, 0.3)' : 'none',
-          }}
-          onClick={handleClick}
-        >
-          {SECTION_ICONS[section]} {SECTION_DISPLAY_NAMES[section].replace(/_/g, ' ')}
-        </div>
-      </Html>
+        {iconChar}
+      </Text>
+
+      {/* Label text — to the right */}
+      <Text
+        position={[ITEM_SIZE / 2 + 0.15, 0, 0.01]}
+        fontSize={isActive ? 0.075 : 0.065}
+        color={isActive ? C.cyan : C.muted}
+        anchorX="left"
+        anchorY="middle"
+        maxWidth={2.2}
+      >
+        {formattedLabel}
+      </Text>
     </group>
   );
 }
 
 function Sidebar() {
-  const sidebarRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (sidebarRef.current) {
-      sidebarRef.current.position.x = -8 + Math.sin(state.clock.elapsedTime * 0.3) * 0.02;
-    }
-  });
+  const activeSection = useTerminalStore((s) => s.activeSection);
 
   return (
-    <group ref={sidebarRef} position={[-8, 3.24, 0]}>
-      {ALL_SECTIONS.map((section, index) => (
-        <SidebarItem key={section} section={section} index={index} />
+    <group>
+      {ALL_SECTIONS.map((sectionId, index) => (
+        <SidebarItem
+          key={sectionId}
+          sectionId={sectionId}
+          index={index}
+          isActive={activeSection === sectionId}
+        />
       ))}
     </group>
   );
