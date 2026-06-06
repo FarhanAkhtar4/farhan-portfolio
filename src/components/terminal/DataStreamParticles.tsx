@@ -11,6 +11,7 @@ const BOUNDS_Y = 12;
 const BOUNDS_Z = 10;
 const ASCEND_SPEED = 0.3;
 const DRIFT_SPEED = 0.05;
+const DATA_PACKET_CHANCE = 0.08; // 8% of particles are larger "data packets"
 
 function createParticleTexture(): THREE.CanvasTexture {
   const size = 64;
@@ -19,7 +20,6 @@ function createParticleTexture(): THREE.CanvasTexture {
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
 
-  // Create a circular gradient for soft particle
   const half = size / 2;
   const gradient = ctx.createRadialGradient(half, half, 0, half, half, half);
   gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
@@ -43,11 +43,11 @@ function DataStreamParticles() {
     ? PARTICLE_COUNT_MOBILE
     : PARTICLE_COUNT_DESKTOP;
 
-  // Create particle positions buffer
-  const { positions, colors, speeds } = useMemo(() => {
+  const { positions, colors, speeds, sizes } = useMemo(() => {
     const pos = new Float32Array(particleCount * 3);
     const col = new Float32Array(particleCount * 3);
     const spd = new Float32Array(particleCount);
+    const szs = new Float32Array(particleCount);
 
     const cyanColor = new THREE.Color('#00F0FF');
     const violetColor = new THREE.Color('#A855F7');
@@ -56,42 +56,45 @@ function DataStreamParticles() {
     for (let i = 0; i < particleCount; i++) {
       const i3 = i * 3;
 
-      // Random positions within bounds
-      pos[i3] = (Math.random() - 0.5) * BOUNDS_X * 2;       // x
-      pos[i3 + 1] = Math.random() * BOUNDS_Y * 2 - BOUNDS_Y; // y
-      pos[i3 + 2] = (Math.random() - 0.5) * BOUNDS_Z * 2;     // z
+      pos[i3] = (Math.random() - 0.5) * BOUNDS_X * 2;
+      pos[i3 + 1] = Math.random() * BOUNDS_Y * 2 - BOUNDS_Y;
+      pos[i3 + 2] = (Math.random() - 0.5) * BOUNDS_Z * 2;
 
-      // Random color between cyan and violet
       const t = Math.random();
       mixedColor.copy(cyanColor).lerp(violetColor, t * 0.6);
       col[i3] = mixedColor.r;
       col[i3 + 1] = mixedColor.g;
       col[i3 + 2] = mixedColor.b;
 
-      // Random ascent speed
       spd[i] = 0.5 + Math.random() * 1.5;
+
+      // Data packets: 8% of particles are larger
+      if (Math.random() < DATA_PACKET_CHANCE) {
+        szs[i] = 0.2 + Math.random() * 0.15; // larger data packets
+      } else {
+        szs[i] = 0.1; // standard particles (up from 0.08)
+      }
     }
 
-    return { positions: pos, colors: col, speeds: spd };
+    return { positions: pos, colors: col, speeds: spd, sizes: szs };
   }, [particleCount]);
 
-  // Create particle texture
   const particleTexture = useMemo(() => createParticleTexture(), []);
 
-  // Geometry and material
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
     return geo;
-  }, [positions, colors]);
+  }, [positions, colors, sizes]);
 
   const material = useMemo(() => {
     return new THREE.PointsMaterial({
-      size: 0.08,
+      size: 0.1,
       map: particleTexture,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.7, // slightly brighter (up from 0.6)
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       vertexColors: true,

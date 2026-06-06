@@ -1,7 +1,72 @@
 'use client';
 
-import { T, SectionHeader, DataRow, Separator, Card, MetricBox, Tag } from '../TerminalUI';
-import { C, L, C as Colors } from '../TerminalUI';
+import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { Text } from '@react-three/drei';
+import * as THREE from 'three';
+import { T, SectionHeader, DataRow, Separator, Card, Tag, Section3DVisual, C } from '../TerminalUI';
+import { L } from '../TerminalUI';
+
+/* ============================================================
+   Recruiter Section — Data Matrix Rain Effect (vertical falling characters)
+   ============================================================ */
+function MatrixRain() {
+  const groupRef = useRef<THREE.Group>(null);
+
+  const columns = useMemo(() => {
+    const cols: { x: number; chars: string[]; speed: number; offset: number }[] = [];
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%';
+    for (let i = 0; i < 6; i++) {
+      const charColumn: string[] = [];
+      for (let j = 0; j < 6; j++) {
+        charColumn.push(chars[Math.floor(Math.random() * chars.length)]);
+      }
+      cols.push({
+        x: (i - 2.5) * 0.15,
+        chars: charColumn,
+        speed: 0.5 + Math.random() * 0.5,
+        offset: Math.random() * 10,
+      });
+    }
+    return cols;
+  }, []);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+
+    // Scroll characters down
+    groupRef.current.children.forEach((child) => {
+      if (child instanceof THREE.Group) {
+        child.position.y = -((t * 0.5) % 1.5) - 0.75;
+      }
+    });
+  });
+
+  return (
+    <Section3DVisual position={[5.5, -0.8, 0.5]}>
+      <group ref={groupRef}>
+        {columns.map((col, ci) => (
+          <group key={ci} position={[col.x, 0, 0]}>
+            {col.chars.map((char, ri) => (
+              <Text
+                key={ri}
+                position={[0, ri * 0.2 - 0.5, 0]}
+                fontSize={0.08}
+                color={ri === col.chars.length - 1 ? C.cyan : C.muted}
+                anchorX="center"
+                anchorY="middle"
+                fillOpacity={ri === col.chars.length - 1 ? 0.8 : 0.2}
+              >
+                {char}
+              </Text>
+            ))}
+          </group>
+        ))}
+      </group>
+    </Section3DVisual>
+  );
+}
 
 export default function RecruiterSection() {
   let y = L.TOP + L.LINE * 3;
@@ -60,6 +125,9 @@ export default function RecruiterSection() {
       <T text="LINK PLACEHOLDER — [PLACEHOLDER GitHub]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.08} />
       y -= 0.25;
       <T text="LINK PLACEHOLDER — [PLACEHOLDER HuggingFace]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.08} />
+
+      {/* Section-specific 3D: Matrix Rain */}
+      <MatrixRain />
     </group>
   );
 }

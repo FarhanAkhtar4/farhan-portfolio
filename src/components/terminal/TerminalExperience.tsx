@@ -1,9 +1,9 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Suspense, useCallback, useRef, useState } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Text, AdaptiveDpr } from '@react-three/drei';
-import { EffectComposer, Vignette } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import SceneSetup from './SceneSetup';
 import CyberGrid from './CyberGrid';
@@ -47,6 +47,45 @@ function CanvasLoadingText() {
 }
 
 /* ============================================================
+   Camera Controller — subtle continuous sway + pulse on section change
+   Uses a scene group transform instead of direct camera mutation
+   ============================================================ */
+function CameraSway() {
+  const groupRef = useRef<THREE.Group>(null);
+  const prevSectionRef = useRef<string | null>(null);
+  const pulseTimerRef = useRef(0);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    const activeSection = useTerminalStore.getState().activeSection;
+
+    // Detect section change → pulse
+    if (activeSection !== prevSectionRef.current) {
+      pulseTimerRef.current = 1.0;
+      prevSectionRef.current = activeSection;
+    }
+
+    // Continuous sinusoidal sway applied to scene group
+    const swayX = Math.sin(t * 0.15) * 0.08;
+    const swayY = Math.sin(t * 0.2 + 0.5) * 0.06;
+
+    // Pulse decay (zoom in then back)
+    if (pulseTimerRef.current > 0) {
+      pulseTimerRef.current = Math.max(0, pulseTimerRef.current - 0.04);
+    }
+    const pulseAmount = pulseTimerRef.current * 0.4;
+    const pulseEase = Math.sin(pulseTimerRef.current * Math.PI);
+
+    groupRef.current.position.x = swayX;
+    groupRef.current.position.y = swayY;
+    groupRef.current.position.z = -pulseEase * pulseAmount;
+  });
+
+  return <group ref={groupRef} />;
+}
+
+/* ============================================================
    Scene Content — All 3D elements
    ============================================================ */
 function SceneContent() {
@@ -58,20 +97,26 @@ function SceneContent() {
       <HolographicScreen />
       <CommandLine />
       <Sidebar />
+      <CameraSway />
     </>
   );
 }
 
 /* ============================================================
-   Post Processing Effects
+   Post Processing Effects — Bloom + Vignette
    ============================================================ */
 function Effects() {
   return (
-    <EffectComposer>
+    <EffectComposer multisampling={0}>
+      <Bloom
+        intensity={1.5}
+        luminanceThreshold={0.2}
+        luminanceSmoothing={0.9}
+        mipmapBlur
+      />
       <Vignette
         offset={0.3}
-        darkness={0.7}
-        blendFunction={undefined}
+        darkness={0.6}
       />
     </EffectComposer>
   );
@@ -89,29 +134,24 @@ function TerminalExperience() {
   const cameraLookAt: [number, number, number] = [0, 2, 0];
 
   const handleCreated = useCallback((state: any) => {
-    // Set camera to look at target
     if (state.camera) {
       state.camera.lookAt(new THREE.Vector3(...cameraLookAt));
     }
 
-    // Mark as loaded after a short delay for assets
     const timer = setTimeout(() => {
       setIsReady(true);
       setLoaded(true);
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [setLoaded]);
+  }, [setLoaded, cameraLookAt]);
 
-  // Handle dpr changes
   const dpr: [number, number] = [0.8, 1.5];
 
   return (
     <>
-      {/* Audio toggle overlay (HTML, not in Canvas) */}
       <AudioToggle />
 
-      {/* Main 3D Canvas */}
       <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%' }}>
         <Canvas
           dpr={dpr}
@@ -133,7 +173,6 @@ function TerminalExperience() {
           frameloop="always"
           performance={{ min: 0.5 }}
         >
-          {/* Loading state — shows text until ready */}
           {!isReady ? (
             <CanvasLoadingText />
           ) : (
@@ -143,7 +182,6 @@ function TerminalExperience() {
             </Suspense>
           )}
 
-          {/* Post processing — always active */}
           <Suspense fallback={null}>
             <Effects />
           </Suspense>

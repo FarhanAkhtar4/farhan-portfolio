@@ -1,7 +1,74 @@
 'use client';
 
-import { T, SectionHeader, Separator, Card, MetricBox } from '../TerminalUI';
-import { C, L } from '../TerminalUI';
+import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import { T, SectionHeader, Separator, Card, MetricBox, Section3DVisual, C } from '../TerminalUI';
+import { L } from '../TerminalUI';
+
+/* ============================================================
+   Projects Section — Rotating hexagonal tiles in background
+   ============================================================ */
+function HexTiles() {
+  const groupRef = useRef<THREE.Group>(null);
+  const hexGeo = useMemo(() => new THREE.CircleGeometry(0.25, 6), []);
+  const hexEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.CircleGeometry(0.25, 6)), []);
+
+  const tiles = useMemo(() => {
+    const t: { pos: THREE.Vector3; rot: number; color: string }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      t.push({
+        pos: new THREE.Vector3(
+          Math.cos(angle) * 0.6,
+          Math.sin(angle) * 0.6,
+          (i % 3) * 0.1 - 0.1
+        ),
+        rot: angle,
+        color: i % 2 === 0 ? C.cyan : C.violet,
+      });
+    }
+    return t;
+  }, []);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    groupRef.current.rotation.y = t * 0.25;
+    groupRef.current.rotation.x = Math.sin(t * 0.1) * 0.1;
+
+    // Animate individual tiles
+    groupRef.current.children.forEach((child, i) => {
+      if (child instanceof THREE.Mesh && i < tiles.length) {
+        child.rotation.z = tiles[i].rot + t * 0.5;
+      }
+    });
+  });
+
+  return (
+    <Section3DVisual position={[5.5, -1.2, 0.5]}>
+      <group ref={groupRef}>
+        {tiles.map((tile, i) => (
+          <group key={i} position={tile.pos}>
+            <mesh geometry={hexGeo}>
+              <meshBasicMaterial
+                color={tile.color}
+                transparent
+                opacity={0.1}
+                side={THREE.DoubleSide}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+            <lineSegments geometry={hexEdgeGeo}>
+              <lineBasicMaterial color={tile.color} transparent opacity={0.4} />
+            </lineSegments>
+          </group>
+        ))}
+      </group>
+    </Section3DVisual>
+  );
+}
 
 export default function ProjectsSection() {
   let y = L.TOP + L.LINE * 3;
@@ -34,6 +101,9 @@ export default function ProjectsSection() {
       y += L.LINE;
 
       <T text="[PLACEHOLDER – Additional projects available on request]" position={[0, y, 0.01]} color={C.dim} size={0.08} anchor="center" />
+
+      {/* Section-specific 3D: Hex Tiles */}
+      <HexTiles />
     </group>
   );
 }

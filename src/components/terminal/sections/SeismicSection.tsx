@@ -1,7 +1,106 @@
 'use client';
 
-import { T, SectionHeader, DataRow, Separator, Card, MetricBox, PlaceholderImage } from '../TerminalUI';
-import { C, L } from '../TerminalUI';
+import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
+import { T, SectionHeader, DataRow, Separator, Card, MetricBox, Section3DVisual, C } from '../TerminalUI';
+import { L } from '../TerminalUI';
+
+/* ============================================================
+   Seismic Section — 3D Node Graph Visualization
+   ============================================================ */
+function NodeGraph() {
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Nodes — small spheres at fixed positions
+  const nodes = useMemo(() => {
+    const n: { pos: THREE.Vector3; color: string }[] = [];
+    const cyanC = C.cyan;
+    const violetC = C.violet;
+    // Create a small graph layout
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const radius = 0.6 + (i % 3) * 0.3;
+      n.push({
+        pos: new THREE.Vector3(
+          Math.cos(angle) * radius,
+          Math.sin(angle * 0.7) * 0.4,
+          Math.sin(angle) * radius
+        ),
+        color: i % 2 === 0 ? cyanC : violetC,
+      });
+    }
+    // Central node
+    n.push({ pos: new THREE.Vector3(0, 0, 0), color: C.cyan });
+    return n;
+  }, []);
+
+  // Connection lines between nodes
+  const connections = useMemo(() => {
+    const lines: THREE.Vector3[] = [];
+    const center = nodes[nodes.length - 1];
+    for (let i = 0; i < nodes.length - 1; i++) {
+      lines.push(nodes[i].pos.clone());
+      lines.push(center.pos.clone());
+    }
+    // A few inter-node connections
+    for (let i = 0; i < nodes.length - 1; i += 2) {
+      if (i + 1 < nodes.length - 1) {
+        lines.push(nodes[i].pos.clone());
+        lines.push(nodes[i + 1].pos.clone());
+      }
+    }
+    return lines;
+  }, [nodes]);
+
+  const lineGeo = useMemo(() => new THREE.BufferGeometry().setFromPoints(connections), [connections]);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.06, 8, 8), []);
+
+  // Animated pulse on a sphere
+  const pulseRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
+    // Slowly rotate the whole graph
+    groupRef.current.rotation.y = t * 0.2;
+    groupRef.current.rotation.x = Math.sin(t * 0.15) * 0.15;
+
+    // Pulse the center sphere
+    if (pulseRef.current) {
+      const s = 1.0 + Math.sin(t * 3) * 0.2;
+      pulseRef.current.scale.set(s, s, s);
+    }
+  });
+
+  return (
+    <Section3DVisual position={[5.5, -1.0, 0.5]}>
+      <group ref={groupRef}>
+        {/* Connection lines */}
+        <line geometry={lineGeo}>
+          <lineBasicMaterial color={C.cyan} transparent opacity={0.25} />
+        </line>
+        {/* Nodes */}
+        {nodes.map((node, i) => (
+          <mesh
+            key={i}
+            position={node.pos}
+            geometry={sphereGeo}
+            ref={i === nodes.length - 1 ? pulseRef : undefined}
+          >
+            <meshBasicMaterial
+              color={node.color}
+              transparent
+              opacity={0.6}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        ))}
+      </group>
+    </Section3DVisual>
+  );
+}
 
 function ArchCard({ label, sublabel, x, y }: { label: string; sublabel: string; x: number; y: number }) {
   return (
@@ -43,6 +142,9 @@ export default function SeismicSection() {
       y -= 1.1;
 
       <T text="[PLACEHOLDER – Performance comparison chart with 22% marker]" position={[0, y, 0.01]} color={C.dim} size={0.08} anchor="center" />
+
+      {/* Section-specific 3D: Node Graph */}
+      <NodeGraph />
     </group>
   );
 }

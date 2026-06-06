@@ -7,14 +7,23 @@ import * as THREE from 'three';
 import { useTerminalStore } from '@/store/terminal-store';
 import { C } from './TerminalUI';
 
+const CMD_AREA_W = 12.0;
+const CMD_AREA_H = 0.8;
+
 function CommandLine() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const promptRef = useRef<THREE.Mesh>(null);
   const cursorGeo = useMemo(() => new THREE.PlaneGeometry(0.07, 0.14), []);
   const cursorRef = useRef<THREE.Mesh>(null);
   const cursorOpacityRef = useRef(1);
   const frameCountRef = useRef(0);
 
-  // Local state
+  // Terminal frame geometries
+  const frameGeo = useMemo(() => new THREE.PlaneGeometry(CMD_AREA_W, CMD_AREA_H), []);
+  const frameEdgeGeo = useMemo(() => new THREE.EdgesGeometry(frameGeo), [frameGeo]);
+  const scanGeo = useMemo(() => new THREE.PlaneGeometry(CMD_AREA_W * 0.9, 0.015), []);
+
   const [inputValue, setInputValue] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [localHistory, setLocalHistory] = useState<string[]>([]);
@@ -23,9 +32,7 @@ function CommandLine() {
   const executeCommand = useTerminalStore((s) => s.executeCommand);
   const setActiveSection = useTerminalStore((s) => s.setActiveSection);
 
-  // Auto-focus hidden input on mount
   useEffect(() => {
-    // Try to focus periodically since R3F Html mounts may be deferred
     const tryFocus = () => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -33,7 +40,6 @@ function CommandLine() {
     };
     tryFocus();
     const interval = setInterval(tryFocus, 500);
-    // Also focus on any click
     const handleClick = () => {
       tryFocus();
     };
@@ -44,8 +50,7 @@ function CommandLine() {
     };
   }, []);
 
-  // Blink cursor using useFrame
-  useFrame(() => {
+  useFrame((state) => {
     frameCountRef.current++;
     if (frameCountRef.current % 30 === 0) {
       cursorOpacityRef.current = cursorOpacityRef.current > 0.5 ? 0 : 1;
@@ -54,9 +59,14 @@ function CommandLine() {
       const mat = cursorRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = cursorOpacityRef.current;
     }
+
+    // Subtle prompt pulse
+    if (promptRef.current) {
+      const mat = promptRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.08 + Math.sin(state.clock.elapsedTime * 2.5) * 0.04;
+    }
   });
 
-  // Handle key press
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
@@ -94,20 +104,39 @@ function CommandLine() {
     setInputValue(e.target.value);
   }, []);
 
-  // Calculate cursor position (after the typed text)
   const promptText = 'FARHAN://mainframe > ';
   const displayText = inputValue || '';
 
-  // Show last 3 command output lines
   const visibleOutput = commandOutput.slice(-3);
 
   return (
-    <group position={[0, -2.5, -2]}>
+    <group ref={groupRef} position={[0, -2.5, -2]}>
+      {/* Glowing terminal frame background */}
+      <mesh geometry={frameGeo} position={[0, 0.3, -0.001]}>
+        <meshBasicMaterial color="#030a15" transparent opacity={0.9} />
+      </mesh>
+
+      {/* Frame edges — bright cyan for bloom */}
+      <lineSegments geometry={frameEdgeGeo} position={[0, 0.3, 0.001]}>
+        <lineBasicMaterial color={C.cyan} transparent opacity={0.45} />
+      </lineSegments>
+
+      {/* Inner subtle glow fill behind prompt */}
+      <mesh ref={promptRef} geometry={frameGeo} position={[0, 0.3, -0.0005]}>
+        <meshBasicMaterial
+          color={C.cyan}
+          transparent
+          opacity={0.08}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+
       {/* Command output lines above input */}
       {visibleOutput.map((line, i) => (
         <Text
           key={`output-${i}-${line}`}
-          position={[-5.8, 0.35 + (visibleOutput.length - 1 - i) * 0.22, 0.01]}
+          position={[-5.8, 0.65 + (visibleOutput.length - 1 - i) * 0.22, 0.01]}
           fontSize={0.08}
           color={C.dim}
           anchorX="left"
@@ -117,9 +146,9 @@ function CommandLine() {
         </Text>
       ))}
 
-      {/* Prompt text */}
+      {/* Prompt text — pulsing */}
       <Text
-        position={[-5.8, 0, 0.01]}
+        position={[-5.8, 0.3, 0.01]}
         fontSize={0.09}
         color={C.cyan}
         anchorX="left"
@@ -129,7 +158,7 @@ function CommandLine() {
 
       {/* Typed text */}
       <Text
-        position={[-5.8 + promptText.length * 0.048, 0, 0.01]}
+        position={[-5.8 + promptText.length * 0.048, 0.3, 0.01]}
         fontSize={0.09}
         color={C.text}
         anchorX="left"
@@ -139,11 +168,22 @@ function CommandLine() {
       </Text>
 
       {/* Blinking cursor */}
-      <mesh ref={cursorRef} geometry={cursorGeo} position={[-5.8 + (promptText.length + displayText.length) * 0.048, 0, 0.012]}>
+      <mesh ref={cursorRef} geometry={cursorGeo} position={[-5.8 + (promptText.length + displayText.length) * 0.048, 0.3, 0.012]}>
         <meshBasicMaterial color={C.cyan} transparent opacity={1} />
       </mesh>
 
-      {/* Hidden input for keyboard capture — ONLY allowed Html */}
+      {/* Scanning line through command area */}
+      <mesh geometry={scanGeo} position={[0, 0.3, 0.002]}>
+        <meshBasicMaterial
+          color={C.cyan}
+          transparent
+          opacity={0.06}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Hidden input for keyboard capture */}
       <Html
         position={[0, 0, 0]}
         style={{ pointerEvents: 'none' }}

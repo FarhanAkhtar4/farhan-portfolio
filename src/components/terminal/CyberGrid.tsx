@@ -54,12 +54,21 @@ const gridFragmentShader = `
     // Subtle pulse
     float pulse = sin(uTime * 0.5) * 0.15 + 0.85;
 
-    // Final color
-    vec3 color = uColor * grid * fade * pulse * 0.35;
+    // PULSE WAVE emanating from center — bright ring expanding outward
+    float distFromCenter = length(vWorldPosition.xz);
+    float waveSpeed = 2.0;
+    float waveWidth = 3.0;
+    float wave = smoothstep(waveWidth, 0.0, abs(distFromCenter - mod(uTime * waveSpeed, 30.0))) * 0.35;
+
+    // Final color — BRIGHTER lines (0.45 instead of 0.35)
+    vec3 color = uColor * grid * fade * pulse * 0.45;
 
     // Add subtle glow at intersections
     float intersections = max(lineX * lineZ, 0.0) * fade;
     color += uColor * intersections * 0.5;
+
+    // Add pulse wave
+    color += uColor * wave * fade;
 
     // Base dark with subtle noise-like variation
     float noise = fract(sin(dot(vWorldPosition.xz, vec2(12.9898, 78.233))) * 43758.5453) * 0.01;
@@ -97,7 +106,6 @@ function CyberGrid() {
       ref={meshRef}
       rotation={[-Math.PI / 2, 0, 0]}
       position={[0, -0.01, 0]}
-
     >
       <planeGeometry args={[80, 80, 1, 1]} />
       <shaderMaterial
