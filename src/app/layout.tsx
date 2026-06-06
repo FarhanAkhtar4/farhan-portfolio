@@ -1,44 +1,50 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Inter } from "next/font/google";
 import "./globals.css";
 
-/* --- Font --- */
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+/* --- Fonts --- */
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const inter = Inter({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 /* --- Viewport --- */
 export const viewport: Viewport = {
-  themeColor: "#030712",
+  themeColor: "#0A0A0A",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 /* --- Metadata --- */
 export const metadata: Metadata = {
-  title: "FARHAN AI MATRIX TERMINAL",
+  title: "THE NEURAL DOSSIER — Farhan Akhtar Makandar",
   description:
-    "FARHAN AI MATRIX TERMINAL — AI Research Mainframe. Portfolio of Farhan Akhtar Makandar — ML Systems Engineer specializing in Agentic AI, Deep Learning, and Transformers.",
+    "Classified Intelligence Portfolio — AI Systems Engineer & Deep Learning Specialist. Temporal Fusion Transformers, Agentic AI, Multi-Agent Orchestration.",
   keywords: [
     "Farhan Akhtar Makandar",
-    "FARHAN AI MATRIX TERMINAL",
-    "ML Systems Engineer",
+    "THE NEURAL DOSSIER",
+    "AI Systems Engineer",
+    "Deep Learning Specialist",
+    "Temporal Fusion Transformer",
     "Agentic AI",
-    "Deep Learning",
-    "Transformers",
-    "RAG",
     "PyTorch",
-    "Terminal Portfolio",
+    "RAG",
+    "Multi-Agent",
   ],
   authors: [{ name: "Farhan Akhtar Makandar" }],
   openGraph: {
-    title: "FARHAN AI MATRIX TERMINAL",
+    title: "THE NEURAL DOSSIER — Farhan Akhtar Makandar",
     description:
-      "AI Research Mainframe — Building ML systems, agentic AI workflows, and transformer-based predictive models.",
+      "Classified Intelligence Portfolio — AI Systems Engineer specializing in Deep Learning, Transformers, and Agentic AI.",
     type: "website",
     locale: "en_US",
   },
@@ -52,7 +58,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${geistMono.variable} main-canvas-root`} style={{ fontFamily: 'var(--font-geist-mono), monospace' }}>
+      <body
+        className={`${ibmPlexMono.variable} ${inter.variable} antialiased`}
+        style={{
+          fontFamily: "var(--font-mono), var(--font-body), monospace",
+          background: "#0A0A0A",
+          color: "#c8d6d0",
+          overflowY: "auto",
+        }}
+      >
         {children}
       </body>
     </html>

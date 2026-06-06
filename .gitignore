@@ -49,3 +49,10 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# Temp & generated files
+/agent-ctx/
+/download/
+/worklog.md
+.zscripts/
+upload/
