@@ -21,3 +21,31 @@ Stage Summary:
 - All new files have 'use client' directive
 - No THREE objects created in render (using useRef/useMemo patterns)
 - No Three.js objects used as React children (all use geometry={} props or JSX elements)
+---
+Task ID: 1
+Agent: main
+Task: Complete rebuild — FARHAN AI MATRIX TERMINAL
+
+Work Log:
+- Removed all old corridor/facility components (28 files) and portfolio components (15 files)
+- Removed old facility-store.ts and animations.ts
+- Created terminal-store.ts (Zustand) with 10 sections, 12 commands, transition state
+- Created TerminalExperience.tsx — main Canvas wrapper with post-processing vignette
+- Created CyberGrid.tsx — GLSL shader animated neon cyan grid floor
+- Created DataStreamParticles.tsx — 1000 particles (500 mobile) with additive blending
+- Created HolographicScreen.tsx — main screen with 10 inline section renderers
+- Created CommandLine.tsx — terminal input with 12 commands, history, help
+- Created Sidebar.tsx — left navigation with 10 floating icons, compact layout
+- Created GlitchTransition.tsx — GSAP clip-path glitch + RGB split
+- Created AudioToggle.tsx — fixed top-right audio toggle
+- Created SceneSetup.tsx — ambient + point lights, fog
+- Simplified globals.css (no Tailwind), layout.tsx (Geist Mono only), page.tsx (dynamic import)
+- Fixed sidebar positioning: compact 0.72 spacing, centered vertically, x=-8
+- Build passes 0 errors, lint passes 0 errors
+- Pushed 2 commits to main
+
+Stage Summary:
+- Complete rewrite from corridor-based 3D portfolio to cyberpunk terminal interface
+- All 10 holographic sections implemented with real data from data.ts
+- Key files: src/components/terminal/*, src/store/terminal-store.ts
+- Deployed to Vercel via auto-deploy from push
