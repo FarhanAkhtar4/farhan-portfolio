@@ -13,9 +13,9 @@ function RadarRings() {
   const groupRef = useRef<THREE.Group>(null);
 
   const rings = useMemo(() => [
-    { radius: 0.2, speed: 0.8 },
-    { radius: 0.4, speed: 0.6 },
-    { radius: 0.6, speed: 0.4 },
+    { radius: 0.3, speed: 0.8 },
+    { radius: 0.55, speed: 0.6 },
+    { radius: 0.8, speed: 0.4 },
   ], []);
 
   const ringGeometries = useMemo(() =>
@@ -41,7 +41,7 @@ function RadarRings() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -0.5, 0.5]}>
+    <Section3DVisual position={[4.5, -0.5, 0.8]}>
       <group ref={groupRef}>
         {/* Sonar rings */}
         {ringGeometries.map((geo, i) => (
@@ -70,17 +70,17 @@ function RadarRings() {
         {/* Cross hairs */}
         <line geometry={useMemo(() => {
           const pts = [
-            new THREE.Vector3(-0.7, 0, 0),
-            new THREE.Vector3(0.7, 0, 0),
+            new THREE.Vector3(-0.9, 0, 0),
+            new THREE.Vector3(0.9, 0, 0),
           ];
           return new THREE.BufferGeometry().setFromPoints(pts);
         }, [])}>
-          <lineBasicMaterial color={C.cyan} transparent opacity={0.15} />
+          <lineBasicMaterial color={C.cyan} transparent opacity={0.25} />
         </line>
         <line geometry={useMemo(() => {
           const pts = [
-            new THREE.Vector3(0, -0.7, 0),
-            new THREE.Vector3(0, 0.7, 0),
+            new THREE.Vector3(0, -0.9, 0),
+            new THREE.Vector3(0, 0.9, 0),
           ];
           return new THREE.BufferGeometry().setFromPoints(pts);
         }, [])}>
@@ -113,15 +113,15 @@ export default function ContactSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ TRANSMIT MESSAGE" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.09} />
+      <T text="▸ TRANSMIT MESSAGE" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.11} />
       y -= 0.4;
-      <T text="[PLACEHOLDER – Message console — not functional in demo]" position={[0, y, 0.01]} color={C.dim} size={0.09} anchor="center" />
+      <T text="[PLACEHOLDER – Message console — not functional in demo]" position={[0, y, 0.01]} color={C.dim} size={0.11} anchor="center" />
       y -= 0.6;
 
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="● ENCRYPTED CHANNEL ACTIVE — TRANSMISSION SECURE" position={[0, y, 0.01]} color={C.success} size={0.09} anchor="center" />
+      <T text="● ENCRYPTED CHANNEL ACTIVE — TRANSMISSION SECURE" position={[0, y, 0.01]} color={C.success} size={0.11} anchor="center" />
 
       {/* Section-specific 3D: Radar/Sonar Rings */}
       <RadarRings />

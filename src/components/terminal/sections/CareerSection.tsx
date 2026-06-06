@@ -11,7 +11,7 @@ import { L } from '../TerminalUI';
    ============================================================ */
 function TimelinePath() {
   const groupRef = useRef<THREE.Group>(null);
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.07, 10, 10), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.1, 10, 10), []);
 
   // Timeline milestones
   const milestones = useMemo(() => [
@@ -31,7 +31,7 @@ function TimelinePath() {
   const lineGeo = useMemo(() => new THREE.BufferGeometry().setFromPoints(linePoints), [linePoints]);
 
   // Pulse ring
-  const pulseGeo = useMemo(() => new THREE.RingGeometry(0.12, 0.14, 16), []);
+  const pulseGeo = useMemo(() => new THREE.RingGeometry(0.15, 0.18, 16), []);
   const pulseRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -49,11 +49,11 @@ function TimelinePath() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -0.5, 0.5]}>
+    <Section3DVisual position={[4.5, -0.5, 0.8]}>
       <group ref={groupRef}>
         {/* Timeline line */}
         <line geometry={lineGeo}>
-          <lineBasicMaterial color={C.cyan} transparent opacity={0.3} />
+          <lineBasicMaterial color={C.cyan} transparent opacity={0.4} />
         </line>
         {/* Milestone spheres */}
         {milestones.map((m, i) => (
@@ -91,7 +91,7 @@ export default function CareerSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ EXPERIENCE" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.09} />
+      <T text="▸ EXPERIENCE" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.11} />
       y -= 1.3;
 
       <Card
@@ -101,13 +101,13 @@ export default function CareerSection() {
       />
       y -= 1.55;
 
-      <T text="[PLACEHOLDER – Research responsibilities and achievements]" position={[L.LEFT, y, 0.01]} color={C.dim} size={0.09} />
+      <T text="[PLACEHOLDER – Research responsibilities and achievements]" position={[L.LEFT, y, 0.01]} color={C.dim} size={0.11} />
       y -= 0.6;
 
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ EDUCATION" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.09} />
+      <T text="▸ EDUCATION" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.11} />
       y -= 1.3;
 
       <Card
@@ -120,15 +120,15 @@ export default function CareerSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ RESUME DOWNLOADS" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.09} />
+      <T text="▸ RESUME DOWNLOADS" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.11} />
       y -= 0.35;
 
-      <T text="[PLACEHOLDER – Resume PDF downloads — templates only]" position={[L.LEFT, y, 0.01]} color={C.dim} size={0.09} />
+      <T text="[PLACEHOLDER – Resume PDF downloads — templates only]" position={[L.LEFT, y, 0.01]} color={C.dim} size={0.11} />
       y -= 0.3;
 
-      <T text='LINK PLACEHOLDER: [PLACEHOLDER – AI Engineer Resume]' position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.08} />
+      <T text='LINK PLACEHOLDER: [PLACEHOLDER – AI Engineer Resume]' position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.1} />
       y -= 0.25;
-      <T text='LINK PLACEHOLDER: [PLACEHOLDER – ML Engineer Resume]' position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.08} />
+      <T text='LINK PLACEHOLDER: [PLACEHOLDER – ML Engineer Resume]' position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.1} />
 
       {/* Section-specific 3D: Timeline Path */}
       <TimelinePath />

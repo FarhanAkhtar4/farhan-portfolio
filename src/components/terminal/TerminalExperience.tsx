@@ -1,8 +1,8 @@
 'use client';
 
-import { Suspense, useCallback, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Text, AdaptiveDpr } from '@react-three/drei';
+import { Suspense, useCallback, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Text, AdaptiveDpr, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import SceneSetup from './SceneSetup';
@@ -47,42 +47,67 @@ function CanvasLoadingText() {
 }
 
 /* ============================================================
-   Camera Controller — subtle continuous sway + pulse on section change
-   Uses a scene group transform instead of direct camera mutation
+   Background Layer — Space nebula + atmospheric glow orbs
    ============================================================ */
-function CameraSway() {
-  const groupRef = useRef<THREE.Group>(null);
-  const prevSectionRef = useRef<string | null>(null);
-  const pulseTimerRef = useRef(0);
+function BackgroundLayer() {
+  const [spaceTexture] = useTexture(['/textures/space-bg.png']);
 
-  useFrame((state) => {
-    if (!groupRef.current) return;
-    const t = state.clock.elapsedTime;
-    const activeSection = useTerminalStore.getState().activeSection;
-
-    // Detect section change → pulse
-    if (activeSection !== prevSectionRef.current) {
-      pulseTimerRef.current = 1.0;
-      prevSectionRef.current = activeSection;
+  const spaceBgRef = useCallback((mesh: THREE.Mesh | null) => {
+    if (mesh) {
+      mesh.material = new THREE.MeshBasicMaterial({
+        map: spaceTexture,
+        transparent: true,
+        opacity: 0.6,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
     }
+  }, [spaceTexture]);
 
-    // Continuous sinusoidal sway applied to scene group
-    const swayX = Math.sin(t * 0.15) * 0.08;
-    const swayY = Math.sin(t * 0.2 + 0.5) * 0.06;
+  return (
+    <group>
+      {/* Space background plane — far behind everything */}
+      <mesh ref={spaceBgRef} position={[0, 3, -30]}>
+        <planeGeometry args={[60, 40]} />
+      </mesh>
 
-    // Pulse decay (zoom in then back)
-    if (pulseTimerRef.current > 0) {
-      pulseTimerRef.current = Math.max(0, pulseTimerRef.current - 0.04);
-    }
-    const pulseAmount = pulseTimerRef.current * 0.4;
-    const pulseEase = Math.sin(pulseTimerRef.current * Math.PI);
+      {/* Atmospheric glow orb 1 — cyan, large, dim */}
+      <mesh position={[-8, 4, -15]}>
+        <sphereGeometry args={[8, 16, 16]} />
+        <meshBasicMaterial
+          color="#00F0FF"
+          transparent
+          opacity={0.02}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
 
-    groupRef.current.position.x = swayX;
-    groupRef.current.position.y = swayY;
-    groupRef.current.position.z = -pulseEase * pulseAmount;
-  });
+      {/* Atmospheric glow orb 2 — violet, medium */}
+      <mesh position={[8, 2, -12]}>
+        <sphereGeometry args={[6, 16, 16]} />
+        <meshBasicMaterial
+          color="#A855F7"
+          transparent
+          opacity={0.015}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
 
-  return <group ref={groupRef} />;
+      {/* Atmospheric glow orb 3 — cyan, very large, very dim */}
+      <mesh position={[0, 6, -20]}>
+        <sphereGeometry args={[10, 16, 16]} />
+        <meshBasicMaterial
+          color="#00F0FF"
+          transparent
+          opacity={0.01}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
 }
 
 /* ============================================================
@@ -97,21 +122,20 @@ function SceneContent() {
       <HolographicScreen />
       <CommandLine />
       <Sidebar />
-      <CameraSway />
     </>
   );
 }
 
 /* ============================================================
-   Post Processing Effects — Bloom + Vignette
+   Post Processing Effects — STRONG Bloom + Vignette
    ============================================================ */
 function Effects() {
   return (
     <EffectComposer multisampling={0}>
       <Bloom
-        intensity={1.5}
-        luminanceThreshold={0.2}
-        luminanceSmoothing={0.9}
+        intensity={2.5}
+        luminanceThreshold={0.1}
+        luminanceSmoothing={0.4}
         mipmapBlur
       />
       <Vignette
@@ -129,8 +153,8 @@ function TerminalExperience() {
   const [isReady, setIsReady] = useState(false);
   const { setLoaded } = useTerminalStore();
 
-  // Camera settings
-  const cameraPosition: [number, number, number] = [0, 2.5, 9];
+  // Camera settings — CLOSER and WIDER for dramatic 3D perspective
+  const cameraPosition: [number, number, number] = [0, 2.2, 7];
   const cameraLookAt: [number, number, number] = [0, 2, 0];
 
   const handleCreated = useCallback((state: any) => {
@@ -157,7 +181,7 @@ function TerminalExperience() {
           dpr={dpr}
           camera={{
             position: cameraPosition,
-            fov: 50,
+            fov: 60,
             near: 0.1,
             far: 100,
           }}
@@ -173,6 +197,10 @@ function TerminalExperience() {
           frameloop="always"
           performance={{ min: 0.5 }}
         >
+          <Suspense fallback={<CanvasLoadingText />}>
+            <BackgroundLayer />
+          </Suspense>
+
           {!isReady ? (
             <CanvasLoadingText />
           ) : (

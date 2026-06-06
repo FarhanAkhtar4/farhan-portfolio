@@ -48,7 +48,7 @@ function CircuitLine() {
     <group>
       {/* Static vertical line */}
       <line geometry={geo}>
-        <lineBasicMaterial color={C.muted} transparent opacity={0.15} />
+        <lineBasicMaterial color={C.muted} transparent opacity={0.25} />
       </line>
 
       {/* Traveling pulse dot */}
@@ -97,7 +97,7 @@ function SidebarItem({
     return new THREE.LineBasicMaterial({
       color: isActive ? C.cyan : C.muted,
       transparent: true,
-      opacity: isActive ? 0.7 : 0.15,
+      opacity: isActive ? 1.0 : 0.25,
     });
   }, [isActive]);
 
@@ -152,7 +152,7 @@ function SidebarItem({
           <meshBasicMaterial
             color={C.cyan}
             transparent
-            opacity={0.06}
+            opacity={0.15}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
           />
@@ -173,7 +173,7 @@ function SidebarItem({
       {/* Label text */}
       <Text
         position={[ITEM_SIZE / 2 + 0.15, 0, 0.03]}
-        fontSize={isActive ? 0.075 : 0.065}
+        fontSize={isActive ? 0.09 : 0.08}
         color={isActive ? C.cyan : C.muted}
         anchorX="left"
         anchorY="middle"

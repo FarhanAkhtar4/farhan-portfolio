@@ -11,8 +11,8 @@ import { L } from '../TerminalUI';
    ============================================================ */
 function HexTiles() {
   const groupRef = useRef<THREE.Group>(null);
-  const hexGeo = useMemo(() => new THREE.CircleGeometry(0.25, 6), []);
-  const hexEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.CircleGeometry(0.25, 6)), []);
+  const hexGeo = useMemo(() => new THREE.CircleGeometry(0.35, 6), []);
+  const hexEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.CircleGeometry(0.35, 6)), []);
 
   const tiles = useMemo(() => {
     const t: { pos: THREE.Vector3; rot: number; color: string }[] = [];
@@ -20,8 +20,8 @@ function HexTiles() {
       const angle = (i / 6) * Math.PI * 2;
       t.push({
         pos: new THREE.Vector3(
-          Math.cos(angle) * 0.6,
-          Math.sin(angle) * 0.6,
+          Math.cos(angle) * 0.8,
+          Math.sin(angle) * 0.8,
           (i % 3) * 0.1 - 0.1
         ),
         rot: angle,
@@ -46,7 +46,7 @@ function HexTiles() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -1.2, 0.5]}>
+    <Section3DVisual position={[4.5, -1.2, 0.8]}>
       <group ref={groupRef}>
         {tiles.map((tile, i) => (
           <group key={i} position={tile.pos}>
@@ -86,7 +86,7 @@ export default function ProjectsSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ FLAGSHIP PROJECTS" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.09} />
+      <T text="▸ FLAGSHIP PROJECTS" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.11} />
       y -= 1.3;
 
       <Card title="[PLACEHOLDER – Project 1]" desc="[PLACEHOLDER – TFT model details]" x={-3} y={y} w={5.8} h={L.CARD_H} />
@@ -100,7 +100,7 @@ export default function ProjectsSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="[PLACEHOLDER – Additional projects available on request]" position={[0, y, 0.01]} color={C.dim} size={0.08} anchor="center" />
+      <T text="[PLACEHOLDER – Additional projects available on request]" position={[0, y, 0.01]} color={C.dim} size={0.1} anchor="center" />
 
       {/* Section-specific 3D: Hex Tiles */}
       <HexTiles />

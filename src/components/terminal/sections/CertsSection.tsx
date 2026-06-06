@@ -11,8 +11,8 @@ import { L } from '../TerminalUI';
    ============================================================ */
 function FloatingBadges() {
   const groupRef = useRef<THREE.Group>(null);
-  const badgeGeo = useMemo(() => new THREE.PlaneGeometry(0.4, 0.4), []);
-  const badgeEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(0.4, 0.4, 0.03)), []);
+  const badgeGeo = useMemo(() => new THREE.PlaneGeometry(0.55, 0.55), []);
+  const badgeEdgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(0.55, 0.55, 0.04)), []);
 
   const badges = useMemo(() => [
     { x: -0.3, y: 0.3, z: 0, rotX: 0.3, rotY: 0.5, color: C.cyan },
@@ -37,7 +37,7 @@ function FloatingBadges() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -1.0, 0.5]}>
+    <Section3DVisual position={[4.5, -1.0, 0.8]}>
       <group ref={groupRef}>
         {badges.map((badge, i) => (
           <group key={i} position={[badge.x, badge.y, badge.z]} rotation={[badge.rotX, badge.rotY, 0]}>
@@ -76,7 +76,7 @@ export default function CertsSection() {
       y -= 1.2;
 
       {/* AI & ML */}
-      <T text="▸ AI & ML" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.09} />
+      <T text="▸ AI & ML" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.11} />
       y -= 0.85;
       <Card title="[PLACEHOLDER – IBM Python for Data Science]" desc="[PLACEHOLDER – Issuer]" x={0} y={y} w={5.8} h={0.7} />
       <Card title="[PLACEHOLDER – Deep Learning Fundamentals]" desc="[PLACEHOLDER – Issuer]" x={0} y={y - 0.85} w={5.8} h={0.7} />
@@ -86,7 +86,7 @@ export default function CertsSection() {
       y += L.LINE;
 
       {/* GenAI & Agentic AI */}
-      <T text="▸ GenAI & AGENTIC AI" position={[L.LEFT, y, 0.01]} color={C.violet} size={0.09} />
+      <T text="▸ GenAI & AGENTIC AI" position={[L.LEFT, y, 0.01]} color={C.violet} size={0.11} />
       y -= 0.85;
       <Card title="[PLACEHOLDER – NVIDIA RAG Agents with LLMs]" desc="[PLACEHOLDER – Issuer]" x={0} y={y} w={5.8} h={0.7} />
       y -= 1.2;
@@ -95,13 +95,13 @@ export default function CertsSection() {
       y += L.LINE;
 
       {/* Cloud & Data */}
-      <T text="▸ CLOUD & DATA" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.09} />
+      <T text="▸ CLOUD & DATA" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.11} />
       y -= 0.85;
       <Card title="[PLACEHOLDER – Oracle Cloud AI Foundations]" desc="[PLACEHOLDER – Issuer]" x={0} y={y} w={5.8} h={0.7} />
       y -= 1.2;
 
       {/* Other */}
-      <T text="▸ OTHER" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.09} />
+      <T text="▸ OTHER" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.11} />
       y -= 0.85;
       <Card title="[PLACEHOLDER – HTML Training]" desc="[PLACEHOLDER – Issuer]" x={0} y={y} w={5.8} h={0.7} />
 

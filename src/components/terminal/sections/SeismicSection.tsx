@@ -54,7 +54,7 @@ function NodeGraph() {
   }, [nodes]);
 
   const lineGeo = useMemo(() => new THREE.BufferGeometry().setFromPoints(connections), [connections]);
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.06, 8, 8), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.09, 8, 8), []);
 
   // Animated pulse on a sphere
   const pulseRef = useRef<THREE.Mesh>(null);
@@ -74,11 +74,11 @@ function NodeGraph() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -1.0, 0.5]}>
+    <Section3DVisual position={[4.5, -1, 0.8]}>
       <group ref={groupRef}>
         {/* Connection lines */}
         <line geometry={lineGeo}>
-          <lineBasicMaterial color={C.cyan} transparent opacity={0.25} />
+          <lineBasicMaterial color={C.cyan} transparent opacity={0.4} />
         </line>
         {/* Nodes */}
         {nodes.map((node, i) => (
@@ -131,7 +131,7 @@ export default function SeismicSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ ARCHITECTURE LAYERS" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.09} />
+      <T text="▸ ARCHITECTURE LAYERS" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.11} />
       y -= 0.9;
 
       <ArchCard label="Input" sublabel="[PLACEHOLDER]" x={-4.8} y={y} />
@@ -141,7 +141,7 @@ export default function SeismicSection() {
       <ArchCard label="Output" sublabel="Prediction" x={4.8} y={y} />
       y -= 1.1;
 
-      <T text="[PLACEHOLDER – Performance comparison chart with 22% marker]" position={[0, y, 0.01]} color={C.dim} size={0.08} anchor="center" />
+      <T text="[PLACEHOLDER – Performance comparison chart with 22% marker]" position={[0, y, 0.01]} color={C.dim} size={0.1} anchor="center" />
 
       {/* Section-specific 3D: Node Graph */}
       <NodeGraph />

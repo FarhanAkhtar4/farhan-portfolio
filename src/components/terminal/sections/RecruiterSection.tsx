@@ -44,7 +44,7 @@ function MatrixRain() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -0.8, 0.5]}>
+    <Section3DVisual position={[4.5, -0.8, 0.8]}>
       <group ref={groupRef}>
         {columns.map((col, ci) => (
           <group key={ci} position={[col.x, 0, 0]}>
@@ -82,7 +82,7 @@ export default function RecruiterSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ RESUME DOCUMENTS — TEMPLATES ONLY" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.09} />
+      <T text="▸ RESUME DOCUMENTS — TEMPLATES ONLY" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.11} />
       y -= 1.2;
 
       <Card title="[PLACEHOLDER – AI Engineer Resume]" desc="[PLACEHOLDER – Lorem ipsum template content]" x={-3} y={y} w={3.8} h={1.0} />
@@ -92,9 +92,9 @@ export default function RecruiterSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ ATS KEYWORD MATRIX — DEMO ILLUSTRATION ONLY" position={[L.LEFT, y, 0.01]} color={C.warning} size={0.1} />
+      <T text="▸ ATS KEYWORD MATRIX — DEMO ILLUSTRATION ONLY" position={[L.LEFT, y, 0.01]} color={C.warning} size={0.12} />
       y -= 0.3;
-      <T text="⚠ This ATS analysis is for illustration purposes only." position={[L.LEFT, y, 0.01]} color={C.warning} size={0.08} />
+      <T text="⚠ This ATS analysis is for illustration purposes only." position={[L.LEFT, y, 0.01]} color={C.warning} size={0.1} />
       y -= 0.8;
 
       {/* 3×3 grid of sample ATS keywords */}
@@ -118,13 +118,13 @@ export default function RecruiterSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ PROFILE LINKS" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.09} />
+      <T text="▸ PROFILE LINKS" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.11} />
       y -= 0.3;
-      <T text="LINK PLACEHOLDER — [PLACEHOLDER LinkedIn]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.08} />
+      <T text="LINK PLACEHOLDER — [PLACEHOLDER LinkedIn]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.1} />
       y -= 0.25;
-      <T text="LINK PLACEHOLDER — [PLACEHOLDER GitHub]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.08} />
+      <T text="LINK PLACEHOLDER — [PLACEHOLDER GitHub]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.1} />
       y -= 0.25;
-      <T text="LINK PLACEHOLDER — [PLACEHOLDER HuggingFace]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.08} />
+      <T text="LINK PLACEHOLDER — [PLACEHOLDER HuggingFace]" position={[L.LEFT, y, 0.01]} color={C.cyan} size={0.1} />
 
       {/* Section-specific 3D: Matrix Rain */}
       <MatrixRain />

@@ -118,7 +118,7 @@ function CommandLine() {
 
       {/* Frame edges — bright cyan for bloom */}
       <lineSegments geometry={frameEdgeGeo} position={[0, 0.3, 0.001]}>
-        <lineBasicMaterial color={C.cyan} transparent opacity={0.45} />
+        <lineBasicMaterial color={C.cyan} transparent opacity={0.7} />
       </lineSegments>
 
       {/* Inner subtle glow fill behind prompt */}
@@ -126,7 +126,7 @@ function CommandLine() {
         <meshBasicMaterial
           color={C.cyan}
           transparent
-          opacity={0.08}
+          opacity={0.15}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
@@ -137,7 +137,7 @@ function CommandLine() {
         <Text
           key={`output-${i}-${line}`}
           position={[-5.8, 0.65 + (visibleOutput.length - 1 - i) * 0.22, 0.01]}
-          fontSize={0.08}
+          fontSize={0.1}
           color={C.dim}
           anchorX="left"
           maxWidth={12}
@@ -149,7 +149,7 @@ function CommandLine() {
       {/* Prompt text — pulsing */}
       <Text
         position={[-5.8, 0.3, 0.01]}
-        fontSize={0.09}
+        fontSize={0.11}
         color={C.cyan}
         anchorX="left"
       >
@@ -158,8 +158,8 @@ function CommandLine() {
 
       {/* Typed text */}
       <Text
-        position={[-5.8 + promptText.length * 0.048, 0.3, 0.01]}
-        fontSize={0.09}
+        position={[-5.8 + promptText.length * 0.055, 0.3, 0.01]}
+        fontSize={0.11}
         color={C.text}
         anchorX="left"
         maxWidth={10}
@@ -168,7 +168,7 @@ function CommandLine() {
       </Text>
 
       {/* Blinking cursor */}
-      <mesh ref={cursorRef} geometry={cursorGeo} position={[-5.8 + (promptText.length + displayText.length) * 0.048, 0.3, 0.012]}>
+      <mesh ref={cursorRef} geometry={cursorGeo} position={[-5.8 + (promptText.length + displayText.length) * 0.055, 0.3, 0.012]}>
         <meshBasicMaterial color={C.cyan} transparent opacity={1} />
       </mesh>
 
@@ -177,7 +177,7 @@ function CommandLine() {
         <meshBasicMaterial
           color={C.cyan}
           transparent
-          opacity={0.06}
+          opacity={0.1}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />

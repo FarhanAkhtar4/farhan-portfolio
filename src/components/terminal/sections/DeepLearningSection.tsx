@@ -11,7 +11,7 @@ import { L } from '../TerminalUI';
    ============================================================ */
 function NeuralNetworkViz() {
   const groupRef = useRef<THREE.Group>(null);
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.04, 6, 6), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.06, 6, 6), []);
 
   // Build 3 layers of nodes
   const layers = useMemo(() => {
@@ -56,11 +56,11 @@ function NeuralNetworkViz() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -1.5, 0.5]}>
+    <Section3DVisual position={[4.5, -1.5, 0.8]}>
       <group ref={groupRef}>
         {/* Connection lines */}
         <line geometry={lineGeo}>
-          <lineBasicMaterial color={C.cyan} transparent opacity={0.1} />
+          <lineBasicMaterial color={C.cyan} transparent opacity={0.2} />
         </line>
         {/* Nodes */}
         {layers.map((layer, li) =>
@@ -106,7 +106,7 @@ export default function DeepLearningSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ ATTENTION VISUALIZATION" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.09} />
+      <T text="▸ ATTENTION VISUALIZATION" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.11} />
       y -= 1.8;
 
       <PlaceholderImage x={0} y={y} w={10} h={3} label="SCREENSHOT PLACEHOLDER — SAINT Network" />

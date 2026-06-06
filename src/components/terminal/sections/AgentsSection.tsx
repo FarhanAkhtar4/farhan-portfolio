@@ -11,14 +11,14 @@ import { L } from '../TerminalUI';
    ============================================================ */
 function AgentOrbs() {
   const groupRef = useRef<THREE.Group>(null);
-  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.1, 12, 12), []);
-  const ringGeo = useMemo(() => new THREE.TorusGeometry(0.5, 0.008, 8, 48), []);
+  const sphereGeo = useMemo(() => new THREE.SphereGeometry(0.13, 12, 12), []);
+  const ringGeo = useMemo(() => new THREE.TorusGeometry(0.65, 0.01, 8, 48), []);
 
   const agents = useMemo(() => [
-    { color: C.cyan, orbitRadius: 0.5, speed: 0.8, tilt: 0 },
-    { color: C.violet, orbitRadius: 0.7, speed: 0.6, tilt: Math.PI / 4 },
-    { color: C.cyan, orbitRadius: 0.35, speed: 1.1, tilt: -Math.PI / 3 },
-    { color: '#10B981', orbitRadius: 0.55, speed: 0.9, tilt: Math.PI / 6 },
+    { color: C.cyan, orbitRadius: 0.65, speed: 0.8, tilt: 0 },
+    { color: C.violet, orbitRadius: 0.9, speed: 0.6, tilt: Math.PI / 4 },
+    { color: C.cyan, orbitRadius: 0.45, speed: 1.1, tilt: -Math.PI / 3 },
+    { color: '#10B981', orbitRadius: 0.7, speed: 0.9, tilt: Math.PI / 6 },
   ], []);
 
   useFrame((state) => {
@@ -39,7 +39,7 @@ function AgentOrbs() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -0.8, 0.5]}>
+    <Section3DVisual position={[4.5, -0.5, 0.8]}>
       <group ref={groupRef}>
         {/* Orbit ring */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
@@ -60,7 +60,7 @@ function AgentOrbs() {
         ))}
         {/* Central node */}
         <mesh>
-          <octahedronGeometry args={[0.12, 0]} />
+          <octahedronGeometry args={[0.15, 0]} />
           <meshBasicMaterial
             color={C.cyan}
             transparent
@@ -69,7 +69,7 @@ function AgentOrbs() {
             depthWrite={false}
           />
         </mesh>
-        <lineSegments geometry={useMemo(() => new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.12, 0)), [])}>
+        <lineSegments geometry={useMemo(() => new THREE.EdgesGeometry(new THREE.OctahedronGeometry(0.15, 0)), [])}>
           <lineBasicMaterial color={C.cyan} transparent opacity={0.4} />
         </lineSegments>
       </group>
@@ -85,7 +85,7 @@ export default function AgentsSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="[PLACEHOLDER – Agentic AI systems overview]" position={[L.LEFT, y, 0.01]} color={C.dim} size={0.09} />
+      <T text="[PLACEHOLDER – Agentic AI systems overview]" position={[L.LEFT, y, 0.01]} color={C.dim} size={0.11} />
       y -= 1.3;
 
       <Card
@@ -112,10 +112,10 @@ export default function AgentsSection() {
       <Separator y={y} />
       y += L.LINE;
 
-      <T text="▸ AGENT WORKFLOW" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.09} />
+      <T text="▸ AGENT WORKFLOW" position={[L.LEFT, y, 0.01]} color={C.muted} size={0.11} />
       y -= 1.5;
 
-      <T text="[PLACEHOLDER – Animated agent orbs visualization]" position={[0, y, 0.01]} color={C.dim} size={0.08} anchor="center" />
+      <T text="[PLACEHOLDER – Animated agent orbs visualization]" position={[0, y, 0.01]} color={C.dim} size={0.1} anchor="center" />
 
       {/* Section-specific 3D: Agent Orbs */}
       <AgentOrbs />

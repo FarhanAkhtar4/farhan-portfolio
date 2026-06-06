@@ -70,9 +70,9 @@ function DataStreamParticles() {
 
       // Data packets: 8% of particles are larger
       if (Math.random() < DATA_PACKET_CHANCE) {
-        szs[i] = 0.2 + Math.random() * 0.15; // larger data packets
+        szs[i] = 0.25 + Math.random() * 0.15; // larger data packets
       } else {
-        szs[i] = 0.1; // standard particles (up from 0.08)
+        szs[i] = 0.12; // standard particles (up from 0.1)
       }
     }
 
@@ -91,10 +91,10 @@ function DataStreamParticles() {
 
   const material = useMemo(() => {
     return new THREE.PointsMaterial({
-      size: 0.1,
+      size: 0.12,
       map: particleTexture,
       transparent: true,
-      opacity: 0.7, // slightly brighter (up from 0.6)
+      opacity: 0.85, // brighter for bloom
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       vertexColors: true,

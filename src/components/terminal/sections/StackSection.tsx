@@ -22,7 +22,7 @@ function FloatingBars() {
         height: h,
         color: colors[i],
         x: (i - 2) * 0.2,
-        edgeGeo: new THREE.EdgesGeometry(new THREE.BoxGeometry(0.08, h, 0.08)),
+        edgeGeo: new THREE.EdgesGeometry(new THREE.BoxGeometry(0.12, h, 0.12)),
       });
     }
     return b;
@@ -42,7 +42,7 @@ function FloatingBars() {
   });
 
   return (
-    <Section3DVisual position={[5.5, -1.5, 0.5]}>
+    <Section3DVisual position={[4.5, -1.5, 0.8]}>
       <group ref={groupRef}>
         {bars.map((bar, i) => (
           <group key={i} position={[bar.x, bar.height / 2, 0]}>

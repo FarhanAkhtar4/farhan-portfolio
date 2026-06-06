@@ -58,10 +58,10 @@ const gridFragmentShader = `
     float distFromCenter = length(vWorldPosition.xz);
     float waveSpeed = 2.0;
     float waveWidth = 3.0;
-    float wave = smoothstep(waveWidth, 0.0, abs(distFromCenter - mod(uTime * waveSpeed, 30.0))) * 0.35;
+    float wave = smoothstep(waveWidth, 0.0, abs(distFromCenter - mod(uTime * waveSpeed, 30.0))) * 0.45;
 
-    // Final color — BRIGHTER lines (0.45 instead of 0.35)
-    vec3 color = uColor * grid * fade * pulse * 0.45;
+    // Final color — BRIGHTER lines (0.55)
+    vec3 color = uColor * grid * fade * pulse * 0.55;
 
     // Add subtle glow at intersections
     float intersections = max(lineX * lineZ, 0.0) * fade;

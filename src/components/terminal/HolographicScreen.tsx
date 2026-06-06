@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTerminalStore, type SectionId } from '@/store/terminal-store';
 import { C, L } from './TerminalUI';
@@ -34,7 +34,7 @@ const SECTION_COMPONENTS: Record<SectionId, React.ComponentType> = {
 };
 
 /* ============================================================
-   Corner Bracket — holographic frame accent at each corner
+   Corner Bracket — holographic frame accent at each corner — BRIGHTER
    ============================================================ */
 function CornerBracket({ position, rotation, color = '#00F0FF' }: {
   position: [number, number, number];
@@ -52,12 +52,12 @@ function CornerBracket({ position, rotation, color = '#00F0FF' }: {
   return (
     <group position={position} rotation={rotation}>
       <line geometry={geo}>
-        <lineBasicMaterial color={color} transparent opacity={0.7} />
+        <lineBasicMaterial color={color} transparent opacity={1.0} />
       </line>
-      {/* Corner dot */}
+      {/* Corner dot — LARGER */}
       <mesh position={[-bracketLen, -bracketLen, 0.001]}>
-        <circleGeometry args={[0.025, 8]} />
-        <meshBasicMaterial color={color} transparent opacity={0.8} />
+        <circleGeometry args={[0.035, 8]} />
+        <meshBasicMaterial color={color} transparent opacity={1.0} />
       </mesh>
     </group>
   );
@@ -83,7 +83,7 @@ function ScanlineBeam({ width, height }: { width: number; height: number }) {
       <meshBasicMaterial
         color="#00F0FF"
         transparent
-        opacity={0.08}
+        opacity={0.12}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
@@ -91,10 +91,16 @@ function ScanlineBeam({ width, height }: { width: number; height: number }) {
   );
 }
 
+/* ============================================================
+   HolographicScreen with texture-backed background + scanline overlay
+   ============================================================ */
 function HolographicScreen() {
   const groupRef = useRef<THREE.Group>(null);
   const screenBackingRef = useRef<THREE.Mesh>(null);
   const activeSection = useTerminalStore((s) => s.activeSection);
+
+  // Load textures
+  const [holoTexture, scanlineTexture] = useTexture(['/textures/holo-bg.png', '/textures/scanlines.png']);
 
   const screenGeo = useMemo(() => new THREE.PlaneGeometry(L.SCREEN_W, L.SCREEN_H), []);
   const outerEdgeGeo = useMemo(() => new THREE.EdgesGeometry(screenGeo), [screenGeo]);
@@ -107,15 +113,11 @@ function HolographicScreen() {
 
   const scanGeo = useMemo(() => new THREE.PlaneGeometry(L.SCREEN_W - 0.3, L.SCREEN_H - 0.3), []);
 
-  // Animated gradient background plane
-  const gradientGeo = useMemo(() => new THREE.PlaneGeometry(L.SCREEN_W - 0.05, L.SCREEN_H - 0.05), []);
-  const gradientMatRef = useRef<THREE.ShaderMaterial>(null);
-  const gradientUniforms = useMemo(() => ({
-    uTime: { value: 0 },
-    uColor1: { value: new THREE.Color('#050d1a') },
-    uColor2: { value: new THREE.Color('#0a1530') },
-    uColor3: { value: new THREE.Color('#08041a') },
-  }), []);
+  // Holo-bg textured background plane
+  const holoBgGeo = useMemo(() => new THREE.PlaneGeometry(L.SCREEN_W - 0.05, L.SCREEN_H - 0.05), []);
+
+  // Scanline overlay plane
+  const scanlineOverlayGeo = useMemo(() => new THREE.PlaneGeometry(L.SCREEN_W - 0.1, L.SCREEN_H - 0.1), []);
 
   // Floating animation + flicker/hum
   useFrame((state) => {
@@ -130,11 +132,6 @@ function HolographicScreen() {
       const mat = screenBackingRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = 0.965 + Math.sin(t * 7.5) * 0.035;
     }
-
-    // Update gradient time
-    if (gradientMatRef.current) {
-      gradientMatRef.current.uniforms.uTime.value = t;
-    }
   });
 
   const ActiveSectionComponent = SECTION_COMPONENTS[activeSection];
@@ -145,37 +142,24 @@ function HolographicScreen() {
 
   return (
     <group ref={groupRef} position={[0, 2.5, -2]}>
-      {/* Animated gradient background */}
-      <mesh geometry={gradientGeo} position={[0, 0, -0.002]}>
-        <shaderMaterial
-          ref={gradientMatRef}
-          uniforms={gradientUniforms}
-          vertexShader={`
-            varying vec2 vUv;
-            void main() {
-              vUv = uv;
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-            }
-          `}
-          fragmentShader={`
-            uniform float uTime;
-            uniform vec3 uColor1;
-            uniform vec3 uColor2;
-            uniform vec3 uColor3;
-            varying vec2 vUv;
-            void main() {
-              float wave = sin(vUv.y * 3.0 + uTime * 0.3) * 0.5 + 0.5;
-              float wave2 = sin(vUv.x * 2.0 + uTime * 0.2 + 1.0) * 0.5 + 0.5;
-              vec3 col = mix(uColor1, uColor2, wave);
-              col = mix(col, uColor3, wave2 * 0.3);
-              // Subtle vertical fade
-              float fade = smoothstep(0.0, 0.15, vUv.y) * smoothstep(1.0, 0.85, vUv.y);
-              col *= fade + 0.7;
-              gl_FragColor = vec4(col, 0.95);
-            }
-          `}
+      {/* Holographic circuit board texture background */}
+      <mesh geometry={holoBgGeo} position={[0, 0, -0.002]}>
+        <meshBasicMaterial
+          map={holoTexture}
           transparent
+          opacity={0.35}
           depthWrite={false}
+        />
+      </mesh>
+
+      {/* Scanline overlay texture */}
+      <mesh geometry={scanlineOverlayGeo} position={[0, 0, 0.0055]}>
+        <meshBasicMaterial
+          map={scanlineTexture}
+          transparent
+          opacity={0.08}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
         />
       </mesh>
 
@@ -189,17 +173,17 @@ function HolographicScreen() {
         />
       </mesh>
 
-      {/* Outer glowing frame — cyan — BRIGHTER for bloom */}
+      {/* Outer glowing frame — cyan — MUCH BRIGHTER for bloom */}
       <lineSegments geometry={outerEdgeGeo}>
-        <lineBasicMaterial color={C.cyan} transparent opacity={0.55} />
+        <lineBasicMaterial color={C.cyan} transparent opacity={0.85} />
       </lineSegments>
 
       {/* Inner glowing frame — violet — BRIGHTER for bloom */}
       <lineSegments geometry={innerEdgeGeo}>
-        <lineBasicMaterial color={C.violet} transparent opacity={0.35} />
+        <lineBasicMaterial color={C.violet} transparent opacity={0.6} />
       </lineSegments>
 
-      {/* Holographic corner brackets */}
+      {/* Holographic corner brackets — FULL BRIGHTNESS */}
       <CornerBracket position={[-hw + 0.05, hh - 0.05, 0.003]} rotation={[0, 0, 0]} />
       <CornerBracket position={[hw - 0.05, hh - 0.05, 0.003]} rotation={[0, 0, Math.PI / 2]} />
       <CornerBracket position={[hw - 0.05, -hh + 0.05, 0.003]} rotation={[0, 0, Math.PI]} />
@@ -209,8 +193,8 @@ function HolographicScreen() {
       <ScanlineBeam width={L.SCREEN_W} height={L.SCREEN_H} />
 
       {/* Static scanline overlay */}
-      <mesh geometry={scanGeo} position={[0, 0, 0.005]}>
-        <meshBasicMaterial color={C.bg} transparent opacity={0.04} />
+      <mesh geometry={scanGeo} position={[0, 0, 0.006]}>
+        <meshBasicMaterial color={C.bg} transparent opacity={0.03} />
       </mesh>
 
       {/* Section content */}
