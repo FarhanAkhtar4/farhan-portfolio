@@ -1,7 +1,6 @@
-@import "tailwindcss";
-
 /* ============================================================
-   THE NEURAL DOSSIER — Global Styles
+   FARHAN AI MATRIX TERMINAL — Global Styles
+   NO Tailwind CSS — Pure minimal CSS
    ============================================================ */
 
 /* --- Full Reset --- */
@@ -16,7 +15,8 @@
 html,
 body {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   background: #030712;
   color: #e0f7fa;
   font-family: 'Geist Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'SF Mono', 'Consolas', 'Monaco', monospace;
@@ -27,15 +27,7 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Allow scrolling for dossier view */
- #__next {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Hide scrollbars globally but allow vertical scroll */
+/* Hide scrollbars globally */
 * {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -45,306 +37,25 @@ body {
   display: none;
 }
 
-/* Canvas container — hidden in dossier mode */
-canvas {
-  display: none;
-}
-
-/* ============================================================
-   DOSSIER THEME — Core Styles
-   ============================================================ */
-
-/* ── Glitch Stamp Animation ── */
-@keyframes glitchStamp {
-  0%, 100% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(0) rotate(-6deg);
-  }
-  10% {
-    clip-path: inset(20% 0 40% 0);
-    transform: translate(-2px, 1px) rotate(-5deg);
-  }
-  20% {
-    clip-path: inset(60% 0 10% 0);
-    transform: translate(2px, -1px) rotate(-7deg);
-  }
-  30% {
-    clip-path: inset(10% 0 70% 0);
-    transform: translate(-1px, 2px) rotate(-6deg);
-  }
-  40% {
-    clip-path: inset(50% 0 20% 0);
-    transform: translate(1px, -1px) rotate(-5.5deg);
-  }
-  50% {
-    clip-path: inset(30% 0 30% 0);
-    transform: translate(-2px, 0) rotate(-6.5deg);
-  }
-  60% {
-    clip-path: inset(70% 0 5% 0);
-    transform: translate(0, 1px) rotate(-6deg);
-  }
-  70% {
-    clip-path: inset(5% 0 60% 0);
-    transform: translate(1px, -2px) rotate(-5.5deg);
-  }
-  80% {
-    clip-path: inset(40% 0 30% 0);
-    transform: translate(-1px, 0) rotate(-6deg);
-  }
-  90% {
-    clip-path: inset(15% 0 50% 0);
-    transform: translate(2px, 1px) rotate(-6.5deg);
-  }
-}
-
-.dossier-stamp {
-  animation: glitchStamp 3s steps(20) infinite;
-}
-
-.dossier-stamp-text {
-  text-shadow: 0 0 8px rgba(239, 68, 68, 0.4), 0 0 20px rgba(239, 68, 68, 0.15);
-}
-
-/* ── Dossier Card ── */
-.dossier-card {
-  background: rgba(3, 15, 25, 0.85);
-  border: 1px solid rgba(0, 240, 255, 0.12);
-  border-radius: 6px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.dossier-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), transparent);
-  pointer-events: none;
-}
-
-.dossier-card:hover {
-  border-color: rgba(0, 240, 255, 0.25);
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
-}
-
-/* ── Glassmorphism Card ── */
-.dossier-glass-card {
-  background: rgba(0, 240, 255, 0.03);
-  border: 1px solid rgba(0, 240, 255, 0.12);
-  border-radius: 8px;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.dossier-glass-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
-  pointer-events: none;
-}
-
-.dossier-glass-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at top left, rgba(0, 240, 255, 0.04), transparent 60%);
-  pointer-events: none;
-}
-
-/* ── Pipeline Box ── */
-.dossier-pipeline-box {
-  background: rgba(0, 240, 255, 0.04);
-  border: 1px solid rgba(0, 240, 255, 0.15);
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.dossier-pipeline-box:hover {
-  background: rgba(0, 240, 255, 0.08);
-  border-color: rgba(0, 240, 255, 0.3);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.08);
-}
-
-/* ── Architecture Box ── */
-.dossier-arch-box {
-  background: rgba(0, 240, 255, 0.03);
-  border: 1px solid;
-  border-radius: 6px;
-  min-width: 130px;
-  transition: all 0.2s ease;
-}
-
-.dossier-arch-box:hover {
-  background: rgba(0, 240, 255, 0.06);
-}
-
-/* ── Folder Card ── */
-.dossier-folder-card {
-  background: rgba(3, 15, 25, 0.9);
-  border: 1px solid rgba(0, 240, 255, 0.1);
-  border-radius: 0 0 6px 6px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.dossier-folder-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.2), transparent);
-  pointer-events: none;
-}
-
-.dossier-folder-card:hover {
-  border-color: rgba(0, 240, 255, 0.2);
-}
-
-/* Folder Tab */
-.dossier-folder-tab {
-  width: 60px;
-  height: 12px;
-  background: rgba(0, 240, 255, 0.08);
-  border: 1px solid rgba(0, 240, 255, 0.15);
-  border-bottom: none;
-  border-radius: 6px 6px 0 0;
-  margin-left: 12px;
-  position: relative;
-  top: -1px;
-}
-
-.dossier-folder-tab::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), rgba(0, 240, 255, 0.1));
-}
-
-/* ============================================================
-   DOSSER Header / Navigation
-   ============================================================ */
-.dossier-header {
-  background: rgba(3, 7, 18, 0.95);
-  border-bottom: 1px solid rgba(0, 240, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.dossier-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), transparent);
-}
-
-/* ============================================================
-   DOSSER Footer
-   ============================================================ */
-.dossier-footer {
-  background: rgba(3, 7, 18, 0.95);
-  border-top: 1px solid rgba(0, 240, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.dossier-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
-}
-
-/* ============================================================
-   Redacted Bar Utility
-   ============================================================ */
-.redacted {
-  position: relative;
-  display: inline-block;
-}
-
-.redacted::after {
-  content: '';
-  position: absolute;
-  inset: -2px 0;
-  background: #0f172a;
-  z-index: 1;
-}
-
-/* ============================================================
-   Scanline Overlay (subtle)
-   ============================================================ */
-.scanline-overlay,
-.dossier-scanlines::before {
-  content: '';
+/* Canvas container — fixed, full viewport */
+#__next,
+.main-canvas-root {
   position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 240, 255, 0.015) 2px,
-    rgba(0, 240, 255, 0.015) 4px
-  );
-  pointer-events: none;
-  z-index: 9998;
-}
-
-.scanline-overlay {
-  content: normal;
-}
-
-/* ============================================================
-   TOP SECRET Watermark
-   ============================================================ */
-.dossier-watermark {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-30deg);
-  font-size: 120px;
-  font-weight: 900;
-  color: rgba(0, 240, 255, 0.03);
-  white-space: nowrap;
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
-  letter-spacing: 0.1em;
-  user-select: none;
 }
 
-/* ============================================================
-   Selection
-   ============================================================ */
-::selection {
-  background: rgba(0, 240, 255, 0.25);
-  color: #e0f7fa;
+/* R3F Canvas fills viewport */
+canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none !important;
 }
 
 /* ============================================================
@@ -518,7 +229,7 @@ canvas {
 }
 
 /* ============================================================
-   Holographic Screen Panel CSS
+   Holographic Screen Panel CSS (injected via Html)
    ============================================================ */
 .holo-panel {
   background: rgba(3, 15, 25, 0.85);
@@ -841,6 +552,14 @@ canvas {
   font-size: 1px;
   color: transparent;
   caret-color: transparent;
+}
+
+/* ============================================================
+   Selection
+   ============================================================ */
+::selection {
+  background: rgba(0, 240, 255, 0.25);
+  color: #e0f7fa;
 }
 
 /* ============================================================

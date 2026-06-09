@@ -1,50 +1,44 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Inter } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-/* --- Fonts --- */
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-mono",
+/* --- Font --- */
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 /* --- Viewport --- */
 export const viewport: Viewport = {
-  themeColor: "#0A0A0A",
+  themeColor: "#030712",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 /* --- Metadata --- */
 export const metadata: Metadata = {
-  title: "THE NEURAL DOSSIER — Farhan Akhtar Makandar",
+  title: "FARHAN AI MATRIX TERMINAL",
   description:
-    "Classified Intelligence Portfolio — AI Systems Engineer & Deep Learning Specialist. Temporal Fusion Transformers, Agentic AI, Multi-Agent Orchestration.",
+    "FARHAN AI MATRIX TERMINAL — AI Research Mainframe. Portfolio of Farhan Akhtar Makandar — ML Systems Engineer specializing in Agentic AI, Deep Learning, and Transformers.",
   keywords: [
     "Farhan Akhtar Makandar",
-    "THE NEURAL DOSSIER",
-    "AI Systems Engineer",
-    "Deep Learning Specialist",
-    "Temporal Fusion Transformer",
+    "FARHAN AI MATRIX TERMINAL",
+    "ML Systems Engineer",
     "Agentic AI",
-    "PyTorch",
+    "Deep Learning",
+    "Transformers",
     "RAG",
-    "Multi-Agent",
+    "PyTorch",
+    "Terminal Portfolio",
   ],
   authors: [{ name: "Farhan Akhtar Makandar" }],
   openGraph: {
-    title: "THE NEURAL DOSSIER — Farhan Akhtar Makandar",
+    title: "FARHAN AI MATRIX TERMINAL",
     description:
-      "Classified Intelligence Portfolio — AI Systems Engineer specializing in Deep Learning, Transformers, and Agentic AI.",
+      "AI Research Mainframe — Building ML systems, agentic AI workflows, and transformer-based predictive models.",
     type: "website",
     locale: "en_US",
   },
@@ -58,15 +52,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body
-        className={`${ibmPlexMono.variable} ${inter.variable} antialiased`}
-        style={{
-          fontFamily: "var(--font-mono), var(--font-body), monospace",
-          background: "#0A0A0A",
-          color: "#c8d6d0",
-          overflowY: "auto",
-        }}
-      >
+      <body className={`${geistMono.variable} main-canvas-root`} style={{ fontFamily: 'var(--font-geist-mono), monospace' }}>
         {children}
       </body>
     </html>
