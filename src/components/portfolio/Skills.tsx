@@ -2,6 +2,50 @@
 
 import { skillCategories } from '@/lib/data';
 import FadeIn from './FadeIn';
+import { motion } from 'framer-motion';
+
+/* Proficiency weights for visual bars — based on project evidence */
+const skillProficiency: Record<string, number> = {
+  // LLM & Agentic AI (core — highest)
+  'RAG Pipelines': 95,
+  'Prompt Engineering': 92,
+  'LLM Integration': 90,
+  'Agentic Workflows': 92,
+  'Vector Databases': 88,
+  'LangChain': 90,
+  'Fine-Tuning': 85,
+  'Embeddings': 85,
+  // ML & Deep Learning
+  'PyTorch': 92,
+  'Transformers': 90,
+  'Scikit-learn': 85,
+  'TensorFlow': 78,
+  'Keras': 78,
+  'XGBoost': 80,
+  'CNN': 80,
+  'LSTM': 82,
+  'RNN': 78,
+  'GANs': 70,
+  // Languages
+  'Python': 95,
+  'SQL': 82,
+  'C': 60,
+  'R': 65,
+  'HTML/CSS': 75,
+  // Data Science
+  'Pandas': 90,
+  'NumPy': 88,
+  'Feature Engineering': 85,
+  'Matplotlib': 82,
+  'Seaborn': 82,
+  'Jupyter': 88,
+  // Cloud & Tools
+  'Git/GitHub': 90,
+  'AWS': 72,
+  'Cloudflare': 75,
+  'Vercel': 78,
+  'Oracle Cloud': 65,
+};
 
 export default function Skills() {
   return (
@@ -14,9 +58,9 @@ export default function Skills() {
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white/95">
             Technical Toolkit
           </h2>
-          <p className="mt-3 text-white/40 text-sm max-w-xl">
-            My core competencies span the full ML/AI stack — from foundational programming
-            to production deployment and agentic orchestration.
+          <p className="mt-3 text-white/40 text-sm max-w-xl leading-relaxed">
+            Proficiency levels are derived from project evidence — each bar
+            represents demonstrated capability across shipped work.
           </p>
         </FadeIn>
 
@@ -26,7 +70,7 @@ export default function Skills() {
               <div
                 className={`p-5 rounded-xl border card-glow h-full ${
                   cat.highlight
-                    ? 'bg-emerald-500/[0.03] border-emerald-500/15'
+                    ? 'bg-emerald-500/[0.02] border-emerald-500/12'
                     : 'bg-white/[0.02] border-white/[0.06]'
                 }`}
               >
@@ -41,19 +85,41 @@ export default function Skills() {
                     </span>
                   )}
                 </h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {cat.skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                        cat.highlight
-                          ? 'bg-emerald-500/8 text-emerald-300/70 border border-emerald-500/10'
-                          : 'bg-white/[0.04] text-white/50 border border-white/[0.06]'
-                      }`}
-                    >
-                      {skill}
-                    </span>
-                  ))}
+                <div className="space-y-3">
+                  {cat.skills.map((skill) => {
+                    const prof = skillProficiency[skill] || 70;
+                    return (
+                      <div key={skill}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span
+                            className={`text-xs font-medium ${
+                              cat.highlight
+                                ? 'text-emerald-300/70'
+                                : 'text-white/50'
+                            }`}
+                          >
+                            {skill}
+                          </span>
+                          <span className="text-[10px] font-mono text-white/20">
+                            {prof}%
+                          </span>
+                        </div>
+                        <div className="skill-bar-track">
+                          <motion.div
+                            className="skill-bar-fill"
+                            initial={{ transform: 'scaleX(0)' }}
+                            whileInView={{ transform: `scaleX(${prof / 100})` }}
+                            viewport={{ once: true }}
+                            transition={{
+                              duration: 1,
+                              ease: [0.25, 0.1, 0.25, 1],
+                              delay: 0.1,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </FadeIn>

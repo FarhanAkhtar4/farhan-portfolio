@@ -54,41 +54,38 @@
   }
 }
 
-/* ============================================================
-   SMOOTH SCROLL
-   ============================================================ */
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
 }
 
-/* ============================================================
-   SELECTION
-   ============================================================ */
 ::selection {
   background: hsl(160 84% 39% / 0.25);
   color: hsl(var(--foreground));
 }
 
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: hsl(var(--background)); }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(160 84% 39% / 0.4); }
+
 /* ============================================================
-   CUSTOM SCROLLBAR
+   SCROLL PROGRESS BAR
    ============================================================ */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: hsl(var(--background));
-}
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(160 84% 39% / 0.4);
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, hsl(160 84% 39%), hsl(200 80% 55%));
+  z-index: 9999;
+  transform-origin: left;
+  will-change: transform;
+  box-shadow: 0 0 8px hsl(160 84% 39% / 0.4);
 }
 
 /* ============================================================
-   GRADIENT TEXT UTILITY
+   GRADIENT TEXT
    ============================================================ */
 .gradient-text {
   background: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 60% 60%));
@@ -97,26 +94,15 @@ html {
   background-clip: text;
 }
 
-.gradient-text-warm {
-  background: linear-gradient(135deg, hsl(160 84% 50%), hsl(200 80% 55%));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 /* ============================================================
    GLOW EFFECTS
    ============================================================ */
-.glow-emerald {
-  box-shadow: 0 0 20px hsl(160 84% 39% / 0.15), 0 0 60px hsl(160 84% 39% / 0.05);
-}
-
 .glow-dot {
   box-shadow: 0 0 8px hsl(160 84% 39% / 0.5);
 }
 
 /* ============================================================
-   NOISE TEXTURE OVERLAY (subtle)
+   NOISE + DOT GRID OVERLAY
    ============================================================ */
 .noise-bg::before {
   content: '';
@@ -124,24 +110,23 @@ html {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.03;
+  opacity: 0.025;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* Subtle dot grid overlay */
 .noise-bg::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.025;
-  background-image: radial-gradient(hsl(160 84% 39% / 0.5) 1px, transparent 1px);
-  background-size: 32px 32px;
+  opacity: 0.02;
+  background-image: radial-gradient(hsl(160 84% 39% / 0.4) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 /* ============================================================
-   ANIMATED GRADIENT BG MESH
+   GRADIENT MESH + PARALLAX ORBS
    ============================================================ */
 .gradient-mesh {
   position: fixed;
@@ -149,66 +134,101 @@ html {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  will-change: transform;
   background:
-    radial-gradient(ellipse 60% 50% at 15% 15%, hsl(160 84% 39% / 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 85% 75%, hsl(200 80% 50% / 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 50% at 50% 40%, hsl(160 60% 50% / 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 30% at 70% 20%, hsl(280 50% 40% / 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 60% 50% at 15% 15%, hsl(160 84% 39% / 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, hsl(200 80% 50% / 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 50% 40%, hsl(160 60% 50% / 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 70% 20%, hsl(280 50% 40% / 0.025) 0%, transparent 50%);
 }
 
-/* Floating orbs — ambient depth */
-.gradient-mesh::before,
-.gradient-mesh::after {
-  content: '';
+.gradient-mesh .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  animation: float-orb 20s ease-in-out infinite;
+  filter: blur(100px);
+  will-change: transform;
 }
 
-.gradient-mesh::before {
-  width: 500px;
-  height: 500px;
-  top: -10%;
-  left: -5%;
+.gradient-mesh .orb-1 {
+  width: 600px;
+  height: 600px;
+  top: -15%;
+  left: -8%;
   background: hsl(160 84% 39% / 0.06);
+  animation: orb-drift-1 25s ease-in-out infinite;
 }
 
-.gradient-mesh::after {
-  width: 400px;
-  height: 400px;
-  bottom: -10%;
-  right: -5%;
+.gradient-mesh .orb-2 {
+  width: 450px;
+  height: 450px;
+  bottom: -12%;
+  right: -6%;
   background: hsl(200 70% 50% / 0.04);
-  animation-delay: -10s;
-  animation-direction: reverse;
+  animation: orb-drift-2 30s ease-in-out infinite;
 }
 
-@keyframes float-orb {
+.gradient-mesh .orb-3 {
+  width: 300px;
+  height: 300px;
+  top: 40%;
+  left: 60%;
+  background: hsl(280 50% 45% / 0.025);
+  animation: orb-drift-3 22s ease-in-out infinite;
+}
+
+@keyframes orb-drift-1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(40px, -30px) scale(1.1); }
-  50% { transform: translate(-20px, 20px) scale(0.95); }
-  75% { transform: translate(30px, 40px) scale(1.05); }
+  33% { transform: translate(60px, -40px) scale(1.15); }
+  66% { transform: translate(-30px, 30px) scale(0.9); }
+}
+
+@keyframes orb-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-50px, 30px) scale(1.1); }
+  66% { transform: translate(40px, -20px) scale(0.95); }
+}
+
+@keyframes orb-drift-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-40px, -50px) scale(1.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gradient-mesh .orb,
+  .marquee-track {
+    animation: none !important;
+  }
 }
 
 /* ============================================================
-   CARD HOVER GLOW
+   CARD HOVER GLOW — refined
    ============================================================ */
 .card-glow {
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
   position: relative;
+  will-change: transform;
 }
 .card-glow::before {
   content: '';
   position: absolute;
-  inset: -1px;
+  inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, hsl(160 84% 39% / 0), hsl(160 84% 39% / 0));
-  z-index: -1;
-  transition: background 0.3s ease;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(160 84% 39% / 0.06), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+  pointer-events: none;
 }
 .card-glow:hover::before {
-  background: linear-gradient(135deg, hsl(160 84% 39% / 0.15), hsl(200 80% 50% / 0.08));
+  opacity: 1;
+}
+.card-glow:hover {
+  border-color: hsl(160 84% 39% / 0.15) !important;
+  transform: translateY(-2px);
+}
+.card-glow > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ============================================================
@@ -237,4 +257,189 @@ html {
 .section-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+}
+
+/* ============================================================
+   PHOTO ROTATING GRADIENT BORDER
+   ============================================================ */
+.photo-ring {
+  position: relative;
+  border-radius: 1rem;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    hsl(160 84% 39% / 0.6),
+    hsl(200 80% 50% / 0.3),
+    hsl(280 50% 45% / 0.2),
+    hsl(160 60% 50% / 0.4),
+    hsl(160 84% 39% / 0.6)
+  );
+  animation: ring-rotate 8s linear infinite;
+}
+
+@keyframes ring-rotate {
+  to { background: conic-gradient(
+    from 360deg,
+    hsl(160 84% 39% / 0.6),
+    hsl(200 80% 50% / 0.3),
+    hsl(280 50% 45% / 0.2),
+    hsl(160 60% 50% / 0.4),
+    hsl(160 84% 39% / 0.6)
+  ); }
+}
+
+.photo-ring-inner {
+  border-radius: calc(1rem - 2px);
+  overflow: hidden;
+  background: hsl(0 0% 2%);
+}
+
+/* ============================================================
+   MARQUEE — Tech keywords ticker
+   ============================================================ */
+.marquee-container {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 40s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-item {
+  flex-shrink: 0;
+  padding: 0 1.5rem;
+  font-size: 12px;
+  font-family: var(--font-mono), monospace;
+  color: hsl(0 0% 35%);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.marquee-item .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: hsl(160 84% 39% / 0.3);
+}
+
+/* ============================================================
+   TYPING CURSOR
+   ============================================================ */
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: hsl(160 84% 39%);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink-cursor 1s step-end infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ============================================================
+   SKILL BAR
+   ============================================================ */
+.skill-bar-track {
+  height: 4px;
+  background: hsl(0 0% 8%);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, hsl(160 84% 39% / 0.6), hsl(160 84% 39%));
+  transform-origin: left;
+  transition: transform 1s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ============================================================
+   ARCHITECTURE PIPELINE
+   ============================================================ */
+.arch-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.arch-node {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: hsl(0 0% 5%);
+  border: 1px solid hsl(0 0% 12%);
+  text-align: center;
+  min-width: 72px;
+}
+
+.arch-node .arch-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(0 0% 75%);
+}
+
+.arch-node .arch-sub {
+  font-size: 9px;
+  color: hsl(0 0% 35%);
+  margin-top: 1px;
+}
+
+.arch-arrow {
+  flex-shrink: 0;
+  width: 24px;
+  height: 1px;
+  background: hsl(160 84% 39% / 0.25);
+  position: relative;
+}
+
+.arch-arrow::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -2.5px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid hsl(160 84% 39% / 0.4);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+
+/* ============================================================
+   METRICS STRIP
+   ============================================================ */
+.metric-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.metric-chip .metric-val {
+  font-size: 15px;
+  font-weight: 700;
 }

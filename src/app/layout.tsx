@@ -57,7 +57,11 @@ export default function RootLayout({
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
         style={{ background: "hsl(0 0% 2%)" }}
       >
-        <div className="gradient-mesh" />
+        <div className="gradient-mesh">
+          <div className="orb orb-1" />
+          <div className="orb orb-2" />
+          <div className="orb orb-3" />
+        </div>
         <div className="noise-bg" />
         <div className="relative z-10">{children}</div>
       </body>

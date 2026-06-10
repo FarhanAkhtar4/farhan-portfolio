@@ -9,6 +9,7 @@ interface FadeInProps {
   delay?: number;
   direction?: 'up' | 'down' | 'left' | 'right' | 'none';
   duration?: number;
+  distance?: number;
 }
 
 export default function FadeIn({
@@ -16,33 +17,29 @@ export default function FadeIn({
   className = '',
   delay = 0,
   direction = 'up',
-  duration = 0.6,
+  duration = 0.7,
+  distance = 24,
 }: FadeInProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  const directionMap = {
-    up: { y: 30 },
-    down: { y: -30 },
-    left: { x: 30 },
-    right: { x: -30 },
-    none: {},
-  };
+  const axis = direction === 'left' ? 'x' : direction === 'right' ? 'x' : 'y';
+  const sign = direction === 'up' ? 1 : direction === 'left' ? 1 : -1;
+  const offset = direction === 'none' ? 0 : distance * sign;
 
   const variants: Variants = {
     hidden: {
       opacity: 0,
-      ...directionMap[direction],
-      filter: shouldReduceMotion ? 'none' : 'blur(4px)',
+      [axis]: offset,
+      filter: shouldReduceMotion ? 'none' : 'blur(6px)',
     },
     visible: {
       opacity: 1,
-      x: 0,
-      y: 0,
+      [axis]: 0,
       filter: 'blur(0px)',
       transition: {
         duration: shouldReduceMotion ? 0.3 : duration,
         delay,
-        ease: [0.25, 0.1, 0.25, 1],
+        ease: [0.22, 1, 0.36, 1], // easeOutQuint — snappy settle
       },
     },
   };
@@ -51,7 +48,7 @@ export default function FadeIn({
     <motion.div
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px' }}
+      viewport={{ once: true, margin: '-40px' }}
       variants={variants}
       className={className}
     >
