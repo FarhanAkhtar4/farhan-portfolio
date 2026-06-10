@@ -124,8 +124,20 @@ html {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.025;
+  opacity: 0.03;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Subtle dot grid overlay */
+.noise-bg::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: radial-gradient(hsl(160 84% 39% / 0.5) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 /* ============================================================
@@ -136,10 +148,47 @@ html {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
   background:
-    radial-gradient(ellipse 80% 50% at 20% 20%, hsl(160 84% 39% / 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, hsl(200 80% 50% / 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 60% at 50% 50%, hsl(160 60% 50% / 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 60% 50% at 15% 15%, hsl(160 84% 39% / 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, hsl(200 80% 50% / 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 50% 40%, hsl(160 60% 50% / 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 70% 20%, hsl(280 50% 40% / 0.03) 0%, transparent 50%);
+}
+
+/* Floating orbs — ambient depth */
+.gradient-mesh::before,
+.gradient-mesh::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: float-orb 20s ease-in-out infinite;
+}
+
+.gradient-mesh::before {
+  width: 500px;
+  height: 500px;
+  top: -10%;
+  left: -5%;
+  background: hsl(160 84% 39% / 0.06);
+}
+
+.gradient-mesh::after {
+  width: 400px;
+  height: 400px;
+  bottom: -10%;
+  right: -5%;
+  background: hsl(200 70% 50% / 0.04);
+  animation-delay: -10s;
+  animation-direction: reverse;
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(40px, -30px) scale(1.1); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(30px, 40px) scale(1.05); }
 }
 
 /* ============================================================

@@ -93,8 +93,8 @@ export const education: Education[] = [
   {
     institution: "Yenepoya Institute of Technology, Moodbidri (VTU)",
     degree: "B.E. in Artificial Intelligence & Machine Learning",
-    period: "Expected 2026",
-    details: "Deep Learning, Neural Networks, Data Structures & Algorithms, Linear Algebra, Probability & Statistics, DBMS",
+    period: "2022 – 2026",
+    details: "Graduated in Artificial Intelligence & Machine Learning. Core coursework: Deep Learning, Neural Networks, Data Structures & Algorithms, Linear Algebra, Probability & Statistics, DBMS.",
   },
   {
     institution: "M.E.S Pre-University College, Sirsi",

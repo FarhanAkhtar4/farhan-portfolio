@@ -28,8 +28,8 @@ export default function About() {
                 to multi-agent orchestration platforms with LLM-powered reasoning and retrieval.
               </p>
               <p className="text-white/55 leading-relaxed text-[15px]">
-                Currently pursuing my B.E. in Artificial Intelligence &amp; Machine Learning at
-                Yenepoya Institute of Technology (VTU), I&apos;ve completed a research internship
+                I hold a B.E. in Artificial Intelligence &amp; Machine Learning from
+                Yenepoya Institute of Technology (VTU) and completed a research internship
                 at NIT Calicut working on transformer-based predictive models. My work spans deep
                 learning, agentic AI workflows, RAG pipelines, and full-stack SaaS applications.
               </p>
