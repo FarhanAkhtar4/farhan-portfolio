@@ -1,50 +1,51 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-/* --- Font --- */
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
 });
 
-/* --- Viewport --- */
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const viewport: Viewport = {
-  themeColor: "#030712",
+  themeColor: "#050505",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
-/* --- Metadata --- */
 export const metadata: Metadata = {
-  title: "FARHAN AI MATRIX TERMINAL",
+  title: "Farhan Akhtar Makandar — ML Systems Engineer",
   description:
-    "FARHAN AI MATRIX TERMINAL — AI Research Mainframe. Portfolio of Farhan Akhtar Makandar — ML Systems Engineer specializing in Agentic AI, Deep Learning, and Transformers.",
+    "Portfolio of Farhan Akhtar Makandar — ML Systems Engineer specializing in Agentic AI, Deep Learning, and Transformers. Building production AI systems with PyTorch, LLMs, and Multi-Agent Orchestration.",
   keywords: [
     "Farhan Akhtar Makandar",
-    "FARHAN AI MATRIX TERMINAL",
     "ML Systems Engineer",
     "Agentic AI",
     "Deep Learning",
     "Transformers",
+    "Temporal Fusion Transformer",
     "RAG",
     "PyTorch",
-    "Terminal Portfolio",
+    "Multi-Agent",
+    "Portfolio",
   ],
   authors: [{ name: "Farhan Akhtar Makandar" }],
   openGraph: {
-    title: "FARHAN AI MATRIX TERMINAL",
+    title: "Farhan Akhtar Makandar — ML Systems Engineer",
     description:
-      "AI Research Mainframe — Building ML systems, agentic AI workflows, and transformer-based predictive models.",
+      "ML Systems Engineer specializing in Agentic AI, Deep Learning, and Transformers.",
     type: "website",
     locale: "en_US",
   },
 };
 
-/* --- Root Layout --- */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -52,8 +53,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${geistMono.variable} main-canvas-root`} style={{ fontFamily: 'var(--font-geist-mono), monospace' }}>
-        {children}
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        style={{ background: "hsl(0 0% 2%)" }}
+      >
+        <div className="gradient-mesh" />
+        <div className="noise-bg" />
+        <div className="relative z-10">{children}</div>
       </body>
     </html>
   );

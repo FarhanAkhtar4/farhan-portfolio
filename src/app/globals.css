@@ -1,596 +1,191 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+}
+
 /* ============================================================
-   FARHAN AI MATRIX TERMINAL — Global Styles
-   NO Tailwind CSS — Pure minimal CSS
+   CUSTOM THEME — Obsidian & Emerald
    ============================================================ */
-
-/* --- Full Reset --- */
-*,
-*::before,
-*::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #030712;
-  color: #e0f7fa;
-  font-family: 'Geist Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'SF Mono', 'Consolas', 'Monaco', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-/* Hide scrollbars globally */
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-*::-webkit-scrollbar {
-  display: none;
-}
-
-/* Canvas container — fixed, full viewport */
-#__next,
-.main-canvas-root {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-
-/* R3F Canvas fills viewport */
-canvas {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  outline: none !important;
+:root {
+  --background: 0 0% 2%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 5.5%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 5.5%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 160 84% 39%;
+  --primary-foreground: 0 0% 2%;
+  --secondary: 0 0% 8%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 8%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 160 84% 39%;
+  --accent-foreground: 0 0% 2%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 10%;
+  --input: 0 0% 10%;
+  --ring: 160 84% 39%;
+  --radius: 0.625rem;
+  --chart-1: 160 84% 39%;
+  --chart-2: 160 60% 50%;
+  --chart-3: 200 80% 50%;
+  --chart-4: 30 80% 55%;
+  --chart-5: 280 60% 55%;
 }
 
 /* ============================================================
-   Audio Toggle — Fixed top-right
+   BASE STYLES
    ============================================================ */
-.audio-toggle-btn {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 10000;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(3, 15, 25, 0.85);
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  border-radius: 6px;
-  color: #00f0ff;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  pointer-events: auto;
-}
-
-.audio-toggle-btn:hover {
-  border-color: rgba(0, 240, 255, 0.5);
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
-  background: rgba(0, 240, 255, 0.08);
-}
-
-.audio-toggle-btn:active {
-  transform: scale(0.95);
-}
-
-.audio-toggle-btn .icon-muted {
-  opacity: 0.4;
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 /* ============================================================
-   Loading Screen
+   SMOOTH SCROLL
    ============================================================ */
-.loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #030712;
-  z-index: 9999;
-  gap: 20px;
-}
-
-.loading-screen .loading-text {
-  font-size: 20px;
-  color: #00f0ff;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  font-family: 'Geist Mono', monospace;
-  animation: loadingPulse 1.5s ease-in-out infinite;
-}
-
-.loading-screen .loading-bar {
-  width: 200px;
-  height: 2px;
-  background: rgba(0, 240, 255, 0.1);
-  border-radius: 1px;
-  overflow: hidden;
-}
-
-.loading-screen .loading-bar-fill {
-  width: 0%;
-  height: 100%;
-  background: linear-gradient(90deg, #00f0ff, #a855f7);
-  border-radius: 1px;
-  animation: loadingFill 2s ease-in-out forwards;
-}
-
-@keyframes loadingPulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
-
-@keyframes loadingFill {
-  0% { width: 0%; }
-  60% { width: 70%; }
-  100% { width: 100%; }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 /* ============================================================
-   Glitch Keyframes — Clip-path based
-   ============================================================ */
-@keyframes glitchClip1 {
-  0% { clip-path: inset(40% 0 61% 0); }
-  10% { clip-path: inset(92% 0 1% 0); }
-  20% { clip-path: inset(43% 0 1% 0); }
-  30% { clip-path: inset(25% 0 58% 0); }
-  40% { clip-path: inset(54% 0 7% 0); }
-  50% { clip-path: inset(58% 0 43% 0); }
-  60% { clip-path: inset(70% 0 14% 0); }
-  70% { clip-path: inset(21% 0 62% 0); }
-  80% { clip-path: inset(63% 0 6% 0); }
-  90% { clip-path: inset(64% 0 3% 0); }
-  100% { clip-path: inset(73% 0 15% 0); }
-}
-
-@keyframes glitchClip2 {
-  0% { clip-path: inset(65% 0 13% 0); }
-  10% { clip-path: inset(79% 0 2% 0); }
-  20% { clip-path: inset(47% 0 28% 0); }
-  30% { clip-path: inset(13% 0 71% 0); }
-  40% { clip-path: inset(1% 0 89% 0); }
-  50% { clip-path: inset(38% 0 45% 0); }
-  60% { clip-path: inset(87% 0 6% 0); }
-  70% { clip-path: inset(75% 0 18% 0); }
-  80% { clip-path: inset(24% 0 58% 0); }
-  90% { clip-path: inset(15% 0 65% 0); }
-  100% { clip-path: inset(55% 0 31% 0); }
-}
-
-@keyframes glitchShift1 {
-  0% { transform: translate(0); }
-  20% { transform: translate(-3px, 2px); }
-  40% { transform: translate(3px, -1px); }
-  60% { transform: translate(-2px, -2px); }
-  80% { transform: translate(2px, 1px); }
-  100% { transform: translate(0); }
-}
-
-@keyframes glitchShift2 {
-  0% { transform: translate(0); }
-  20% { transform: translate(3px, -2px); }
-  40% { transform: translate(-2px, 1px); }
-  60% { transform: translate(1px, 2px); }
-  80% { transform: translate(-3px, -1px); }
-  100% { transform: translate(0); }
-}
-
-/* Glitch effect class — applied during transitions */
-.glitch-effect {
-  position: relative;
-}
-
-.glitch-effect::before,
-.glitch-effect::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.glitch-effect::before {
-  color: #00f0ff;
-  animation: glitchClip1 0.3s steps(10) both, glitchShift1 0.3s steps(5) both;
-  opacity: 0.8;
-}
-
-.glitch-effect::after {
-  color: #a855f7;
-  animation: glitchClip2 0.3s steps(10) both, glitchShift2 0.3s steps(5) both;
-  opacity: 0.8;
-}
-
-/* ============================================================
-   Holographic Screen Panel CSS (injected via Html)
-   ============================================================ */
-.holo-panel {
-  background: rgba(3, 15, 25, 0.85);
-  border: 1px solid rgba(0, 240, 255, 0.15);
-  border-radius: 4px;
-  padding: 16px;
-  color: #e0f7fa;
-  font-family: 'Geist Mono', monospace;
-  font-size: 12px;
-  line-height: 1.7;
-  overflow-y: auto;
-  max-height: 100%;
-}
-
-.holo-panel::-webkit-scrollbar {
-  width: 3px;
-}
-
-.holo-panel::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.2);
-  border-radius: 3px;
-}
-
-.holo-panel .section-title {
-  color: #00f0ff;
-  font-size: 14px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.15);
-}
-
-.holo-panel .section-subtitle {
-  color: #a855f7;
-  font-size: 11px;
-  letter-spacing: 1px;
-  margin-bottom: 16px;
-  opacity: 0.7;
-}
-
-.holo-panel .data-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.05);
-}
-
-.holo-panel .data-label {
-  color: #4a6b7c;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.holo-panel .data-value {
-  color: #e0f7fa;
-  font-size: 12px;
-  text-align: right;
-}
-
-.holo-panel .data-value.accent {
-  color: #00f0ff;
-}
-
-.holo-panel .data-value.violet {
-  color: #a855f7;
-}
-
-.holo-panel .tag {
-  display: inline-block;
-  background: rgba(0, 240, 255, 0.08);
-  border: 1px solid rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 3px;
-  margin: 2px;
-  letter-spacing: 0.5px;
-}
-
-.holo-panel .tag.violet {
-  background: rgba(168, 85, 247, 0.08);
-  border-color: rgba(168, 85, 247, 0.15);
-  color: #a855f7;
-}
-
-.holo-panel .card {
-  background: rgba(0, 240, 255, 0.03);
-  border: 1px solid rgba(0, 240, 255, 0.08);
-  border-radius: 4px;
-  padding: 12px;
-  margin-bottom: 8px;
-  transition: border-color 0.3s ease;
-}
-
-.holo-panel .card:hover {
-  border-color: rgba(0, 240, 255, 0.25);
-}
-
-.holo-panel .card-title {
-  color: #00f0ff;
-  font-size: 13px;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-.holo-panel .card-desc {
-  color: #7a9aaa;
-  font-size: 11px;
-  line-height: 1.5;
-  margin-bottom: 8px;
-}
-
-.holo-panel .card-meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.holo-panel .metric-box {
-  background: rgba(0, 240, 255, 0.05);
-  border: 1px solid rgba(0, 240, 255, 0.1);
-  border-radius: 3px;
-  padding: 8px 12px;
-  text-align: center;
-  flex: 1;
-  min-width: 80px;
-}
-
-.holo-panel .metric-value {
-  color: #00f0ff;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.holo-panel .metric-label {
-  color: #4a6b7c;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
-
-.holo-panel .link-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0, 240, 255, 0.06);
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  color: #00f0ff;
-  font-size: 11px;
-  padding: 6px 14px;
-  border-radius: 3px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  font-family: 'Geist Mono', monospace;
-}
-
-.holo-panel .link-btn:hover {
-  background: rgba(0, 240, 255, 0.12);
-  border-color: rgba(0, 240, 255, 0.4);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.1);
-}
-
-.holo-panel .separator {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.15), transparent);
-  margin: 12px 0;
-}
-
-.holo-panel .highlight-list {
-  list-style: none;
-  padding: 0;
-}
-
-.holo-panel .highlight-list li {
-  position: relative;
-  padding-left: 16px;
-  margin-bottom: 4px;
-  color: #7a9aaa;
-  font-size: 11px;
-}
-
-.holo-panel .highlight-list li::before {
-  content: '▸';
-  position: absolute;
-  left: 0;
-  color: #00f0ff;
-  font-size: 10px;
-}
-
-/* ============================================================
-   Command Line Styles
-   ============================================================ */
-.command-line-wrapper {
-  background: rgba(3, 15, 25, 0.9);
-  border-top: 1px solid rgba(0, 240, 255, 0.12);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.command-line-prompt {
-  color: #00f0ff;
-  font-size: 13px;
-  font-family: 'Geist Mono', monospace;
-  white-space: nowrap;
-  user-select: none;
-}
-
-.command-line-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #e0f7fa;
-  font-family: 'Geist Mono', monospace;
-  font-size: 13px;
-  caret-color: #00f0ff;
-  width: 100%;
-}
-
-.command-line-input::placeholder {
-  color: rgba(0, 240, 255, 0.25);
-}
-
-.command-line-cursor {
-  color: #00f0ff;
-  font-size: 13px;
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* ============================================================
-   Sidebar Styles
-   ============================================================ */
-.sidebar-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 6px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 4px;
-  user-select: none;
-  min-width: 50px;
-}
-
-.sidebar-item:hover {
-  background: rgba(0, 240, 255, 0.06);
-}
-
-.sidebar-item.active {
-  background: rgba(0, 240, 255, 0.1);
-  border: 1px solid rgba(0, 240, 255, 0.2);
-}
-
-.sidebar-icon {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.sidebar-icon.normal {
-  background: rgba(74, 107, 124, 0.15);
-  border: 1px solid rgba(74, 107, 124, 0.2);
-  color: #4a6b7c;
-}
-
-.sidebar-icon.active {
-  background: rgba(0, 240, 255, 0.12);
-  border: 1px solid rgba(0, 240, 255, 0.35);
-  color: #00f0ff;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
-}
-
-.sidebar-label {
-  font-size: 8px;
-  color: #4a6b7c;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  text-align: center;
-  transition: color 0.3s ease;
-}
-
-.sidebar-label.active {
-  color: #00f0ff;
-}
-
-/* ============================================================
-   Terminal Hidden Input — for keyboard capture in R3F
-   ============================================================ */
-.terminal-hidden-input {
-  position: fixed;
-  bottom: 8%;
-  left: 50%;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  z-index: 100;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 1px;
-  color: transparent;
-  caret-color: transparent;
-}
-
-/* ============================================================
-   Selection
+   SELECTION
    ============================================================ */
 ::selection {
-  background: rgba(0, 240, 255, 0.25);
-  color: #e0f7fa;
+  background: hsl(160 84% 39% / 0.25);
+  color: hsl(var(--foreground));
 }
 
 /* ============================================================
-   Holographic screen border glow
+   CUSTOM SCROLLBAR
    ============================================================ */
-.holo-screen-frame {
-  border: 1px solid rgba(0, 240, 255, 0.2);
-  border-radius: 6px;
-  box-shadow:
-    0 0 30px rgba(0, 240, 255, 0.05),
-    inset 0 0 30px rgba(0, 240, 255, 0.02);
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(160 84% 39% / 0.4);
+}
+
+/* ============================================================
+   GRADIENT TEXT UTILITY
+   ============================================================ */
+.gradient-text {
+  background: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 60% 60%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-warm {
+  background: linear-gradient(135deg, hsl(160 84% 50%), hsl(200 80% 55%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   GLOW EFFECTS
+   ============================================================ */
+.glow-emerald {
+  box-shadow: 0 0 20px hsl(160 84% 39% / 0.15), 0 0 60px hsl(160 84% 39% / 0.05);
+}
+
+.glow-dot {
+  box-shadow: 0 0 8px hsl(160 84% 39% / 0.5);
+}
+
+/* ============================================================
+   NOISE TEXTURE OVERLAY (subtle)
+   ============================================================ */
+.noise-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* ============================================================
+   ANIMATED GRADIENT BG MESH
+   ============================================================ */
+.gradient-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, hsl(160 84% 39% / 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, hsl(200 80% 50% / 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, hsl(160 60% 50% / 0.03) 0%, transparent 50%);
+}
+
+/* ============================================================
+   CARD HOVER GLOW
+   ============================================================ */
+.card-glow {
+  transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
 }
-
-.holo-screen-frame::before {
+.card-glow::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, hsl(160 84% 39% / 0), hsl(160 84% 39% / 0));
+  z-index: -1;
+  transition: background 0.3s ease;
+}
+.card-glow:hover::before {
+  background: linear-gradient(135deg, hsl(160 84% 39% / 0.15), hsl(200 80% 50% / 0.08));
 }
 
-.holo-screen-frame::after {
+/* ============================================================
+   ANIMATED UNDERLINE
+   ============================================================ */
+.animated-underline {
+  position: relative;
+}
+.animated-underline::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -2px;
   left: 0;
-  right: 0;
+  width: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
+  background: hsl(160 84% 39%);
+  transition: width 0.3s ease;
+}
+.animated-underline:hover::after {
+  width: 100%;
+}
+
+/* ============================================================
+   SECTION DIVIDER
+   ============================================================ */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
 }

@@ -1,22 +1,33 @@
-'use client';
+import Navbar from '@/components/portfolio/Navbar';
+import Hero from '@/components/portfolio/Hero';
+import About from '@/components/portfolio/About';
+import Experience from '@/components/portfolio/Experience';
+import Projects from '@/components/portfolio/Projects';
+import Skills from '@/components/portfolio/Skills';
+import Certifications from '@/components/portfolio/Certifications';
+import Contact from '@/components/portfolio/Contact';
+import Footer from '@/components/portfolio/Footer';
 
-import dynamic from 'next/dynamic';
-
-const TerminalExperience = dynamic(
-  () => import('@/components/terminal/TerminalExperience'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="loading-screen">
-        <div className="loading-text">INITIALIZING SYSTEM...</div>
-        <div className="loading-bar">
-          <div className="loading-bar-fill" />
-        </div>
-      </div>
-    ),
-  }
-);
-
-export default function Page() {
-  return <TerminalExperience />;
+export default function Home() {
+  return (
+    <>
+      <Navbar />
+      <main>
+        <Hero />
+        <div className="section-divider mx-auto max-w-6xl" />
+        <About />
+        <div className="section-divider mx-auto max-w-6xl" />
+        <Experience />
+        <div className="section-divider mx-auto max-w-6xl" />
+        <Projects />
+        <div className="section-divider mx-auto max-w-6xl" />
+        <Skills />
+        <div className="section-divider mx-auto max-w-6xl" />
+        <Certifications />
+        <div className="section-divider mx-auto max-w-6xl" />
+        <Contact />
+      </main>
+      <Footer />
+    </>
+  );
 }
